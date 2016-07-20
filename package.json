@@ -1,0 +1,22 @@
+{
+  "name": "managed-history",
+  "version": "0.1.0",
+  "description": "Operate the browser history like Array.",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fenivana/managed-history.git"
+  },
+  "keywords": [
+    "history"
+  ],
+  "author": "Jiang Fengming",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/fenivana/managed-history/issues"
+  },
+  "homepage": "https://github.com/fenivana/managed-history#readme"
+}
