@@ -3,19 +3,25 @@
 Operate the browser history like Array.
 
 - history.length
-- history.currentAt
-- history.splice(start, deleteCount, ...insertItem)
-- history.push(item)
-- history.replace(item)
+- history.current -> { path, state, index }
+- history.splice(start, deleteCount, ...insertItems)
+- history.push(path, state)
+- history.replace(path, state)
+- history.reset(...items)
 - history.pop()
-- history.go(index)
+- history.go(n)
 - history.back()
 - history.forward()
-- history.filter(fn)
+- history.get(n) -> { path, state, index }
+- history.setState(state, n = history.current.index)
 
 
 ```js
 let managedHistory = new ManagedHistory({
   mode: 'auto', // hash, html5, auto
+  base: '/app/',
+  onNavigate: function(path, state, index) {
+
+  }
 });
 ```
