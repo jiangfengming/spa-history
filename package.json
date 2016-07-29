@@ -30,6 +30,6 @@
     "webpack-dev-server": "^2.1.0-beta.0"
   },
   "dependencies": {
-    "browser-url": "^1.2.4"
+    "browser-url": "^1.2.5"
   }
 }
