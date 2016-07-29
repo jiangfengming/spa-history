@@ -1,4 +1,4 @@
-import Url from 'url';
+import Url from 'browser-url';
 
 export default class {
   constructor() {
@@ -7,7 +7,6 @@ export default class {
     this.current = null;
     this.canUseHistoryAPI = history.pushState && location.protocol.indexOf('http') == 0;
 
-    new Url();
     this._nativeLength = history.length;
 
   }

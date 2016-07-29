@@ -1,8 +1,8 @@
 {
-  "name": "managed-history",
-  "version": "0.1.0",
+  "name": "spa-history",
+  "version": "0.1.0-dev",
   "description": "Operate the browser history like Array.",
-  "main": "dist/ManagedHistory.js",
+  "main": "dist/SpaHistory.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "webpack-dev-server --hot --inline --port 8010 --env.debug",
@@ -24,8 +24,8 @@
   "devDependencies": {
     "babel-core": "^6.11.4",
     "babel-loader": "^6.2.4",
-    "babel-preset-es2015": "^6.9.0",
     "babel-preset-es2015-webpack": "^6.4.2",
+    "babel-preset-es2015-webpack-loose": "^6.3.14",
     "webpack": "^2.1.0-beta.20",
     "webpack-dev-server": "^2.1.0-beta.0"
   },

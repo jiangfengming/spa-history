@@ -4,16 +4,22 @@ export default function(options = {}) {
 
     output: {
       path: './dist',
-      filename:  options.module ? 'ManagedHistory.js' : 'ManagedHistory.bundle.js',
-      library: 'ManagedHistory',
+      publicPath: '/dist/',
+      filename: options.module ? 'SpaHistory.js' : 'SpaHistory.bundle.js',
+      library: 'SpaHistory',
       libraryTarget: 'umd'
     },
 
-    devtool: 'cheap-module-eval-source-map',
-
     module: {
       loaders: [
-        { test: /\.js$/, exclude: /node_modules/, loader: 'babel-loader' }
+        {
+          test: /\.js$/,
+          exclude: /node_modules/,
+          loader: 'babel-loader',
+          query: {
+            presets: ['es2015-webpack-loose']
+          }
+        }
       ]
     },
 
@@ -24,6 +30,11 @@ export default function(options = {}) {
 
   if (options.module) {
     conf.externals = [/^[a-z\-0-9]+$/];
+  }
+
+  if (options.debug) {
+    conf.debug = true;
+    conf.devtool = 'cheap-module-eval-source-map';
   }
 
   return conf;
