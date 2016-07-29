@@ -1,4 +1,4 @@
-# managed-history
+# spa-history
 
 Operate the browser history like Array.
 
@@ -17,7 +17,7 @@ Operate the browser history like Array.
 
 
 ```js
-let managedHistory = new ManagedHistory({
+let spaHistory = new SpaHistory({
   mode: 'auto', // hash, html5, auto
   base: '/app/',
   onNavigate: function(path, state, index) {
