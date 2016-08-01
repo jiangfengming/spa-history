@@ -19,7 +19,7 @@ Operate the browser history like Array.
 ```js
 let spaHistory = new SpaHistory({
   mode: 'auto', // hash, html5, auto
-  base: '/app/',
+  base: '/app',
   onNavigate: function(path, state, index) {
 
   }

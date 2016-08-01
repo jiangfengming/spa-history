@@ -1,7 +1,7 @@
 import Url from 'browser-url';
 
 export default class {
-  constructor({ mode = null, base = '/', onNavigate = null } = {}) {
+  constructor({ mode = null, base = '', onNavigate = null } = {}) {
     this.mode = mode;
     this.base = base;
     this.onNavigate = onNavigate;
@@ -19,34 +19,28 @@ export default class {
       //
     }
 
-
-
-    if (history.pushState) {
-      this._push = (path, sid) => {
-        path = this.base + path;
-        this.pushState({ sid }, '', path);
-      };
-
-      this._replace = (path, sid) => {
-
-      };
-    } else {
-      this._push = (path, sid) => {
-
-      };
-
-      this._replace = (path, sid) => {
-
-      };
-    }
-
-
-
     this.length = 0;
     this.current = null;
 
     this._nativeLength = history.length;
+  }
 
+  _changeState(method, path, query) {
+    let sid = Math.random().toString(16).slice(2);
+    if (this.mode == 'html5') {
+      path = new Url(this.base + path).addQuery(query).href;
+      history[method + 'State']({ sid }, '', path);
+    } else {
+      path = new Url(path).addQuery(query);
+      if (history.pushState) {
+        path = '#!' + path.pathname + path.search + path.hash;
+        history[method + 'State']({ sid }, '', path);
+      } else {
+        path.addQuery('_sid', sid);
+        path = '#!' + path.pathname + path.search + path.hash;
+        location[method == 'push' ? 'assign' : 'replace'](path);
+      }
+    }
   }
 
   splice() {}

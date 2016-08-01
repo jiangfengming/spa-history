@@ -17,14 +17,18 @@ export default function(options = {}) {
           exclude: /node_modules/,
           loader: 'babel-loader',
           query: {
-            presets: ['es2015-webpack-loose']
+            presets: ['es2015-webpack-loose'],
+            plugins: [
+              'add-module-exports'
+            ]
           }
         }
       ]
     },
 
     devServer: {
-      contentBase: './examples'
+      contentBase: './examples',
+      historyApiFallback: true
     }
   };
 
