@@ -4,7 +4,6 @@ import Url from 'browser-url';
 session struct
 {
   current: { path, sid, state, query },
-  currentIndex,
   session: [
     [
       { path, sid, state, query }
@@ -18,22 +17,53 @@ session struct
 */
 
 export default class {
-  constructor({ mode = null, base = '/', onNavigate = null } = {}) {
+  constructor({ mode, base = '/', onNavigate } = {}) {
     this.mode = mode;
-    this.base = base;
-    this.onNavigate = onNavigate;
-
     if (!this.mode) {
       this.mode = history.pushState && location.protocol.indexOf('http') == 0 ? 'html5' : 'hash';
     }
 
-    let url = new Url();
+    this.base = base;
+    this._baseNoTrailingSlash = base.replace(/\/$/, '');
+    this.onNavigate = onNavigate;
 
     // convert hash to html5
-    if (this.mode == 'html5' && url.hash.indexOf('#!') == 0) {
-      history.replaceState();
-    } else if (this.mode == 'hash' && location.protocol.indexOf('http') == 0 && url.pathname != this.base) {
-      location.replace();
+    if (this.mode == 'html5' && location.hash.indexOf('#!') == 0) {
+      let url = this._baseNoTrailingSlash + (location.hash.slice(2) || '/');
+      url = new Url(url).removeQuery('_sid').href;
+      history.replaceState(null, '', url);
+    }
+    // convert html5 to hash
+    else if (this.mode == 'hash' && this.base && location.pathname != this.base && location.protocol.indexOf('http') == 0) {
+      let url = location.pathname.replace(this._baseNoTrailingSlash, '');
+      url = this.base + '#!' + url + location.search + location.hash;
+      location.replace(url);
+      return;
+    }
+
+    // get/init session
+    this.state = this._getState();
+
+    // get sid
+    if (history.pushState) {
+      // page is reloaded
+      if (history.state) {
+        let sid = history.state.sid;
+      }
+      // page is first loaded
+      else {
+
+      }
+    } else {
+      let url = new Url(location.hash.replace('#!', '') || '/');
+      // page is reloaded
+      if (url.query._sid) {
+
+      }
+      // page is first loaded
+      else {
+
+      }
     }
 
     this.length = 0;
@@ -56,17 +86,17 @@ export default class {
   _change(method, path, query) {
     let sid = Math.random().toString(16).slice(2);
     if (this.mode == 'html5') {
-      path = new Url(this.base.replace(/\/$/, '') + path).addQuery(query).href;
-      history[method + 'State']({ sid }, '', path);
+      let url = new Url(this._baseNoTrailingSlash + path).addQuery(query).href;
+      history[method + 'State']({ sid }, '', url);
     } else {
-      path = new Url(path).addQuery(query);
+      let url = new Url(path).addQuery(query);
       if (history.pushState) {
-        path = '#!' + path.pathname + path.search + path.hash;
-        history[method + 'State']({ sid }, '', path);
+        url = '#!' + url.pathname + url.search + url.hash;
+        history[method + 'State']({ sid }, '', url);
       } else {
-        path.addQuery('_sid', sid);
-        path = '#!' + path.pathname + path.search + path.hash;
-        location[method == 'push' ? 'assign' : 'replace'](path);
+        url.addQuery('_sid', sid);
+        url = '#!' + url.pathname + url.search + url.hash;
+        location[method == 'push' ? 'assign' : 'replace'](url);
       }
     }
     return sid;
@@ -77,7 +107,14 @@ export default class {
   }
 
   _readSession() {
+    let session = sessionStorage.getItem('_spaHistory');
+    if (session) {
+      return JSON.parse(session);
+    } else {
+      return {
 
+      };
+    }
   }
 
   splice() {}
