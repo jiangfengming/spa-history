@@ -42,6 +42,7 @@ export default class {
       if (history.state) {
         let hid = history.state.hid.split(':');
         this._sessionId = Number(hid[0]);
+        this.items = this._data.sessions[this._sessionId];
 
       }
       // page is first loaded
