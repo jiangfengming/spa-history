@@ -1,21 +1,5 @@
 import Url from 'browser-url';
 
-/*
-session struct
-{
-  current: { path, sid, state, query },
-  session: [
-    [
-      { path, sid, state, query }
-    ],
-
-    [
-      { path, sid, state, query }
-    ]
-  ]
-}
-*/
-
 export default class {
   constructor({ mode, base = '/', onNavigate } = {}) {
     this.mode = mode;
@@ -30,7 +14,7 @@ export default class {
     // convert hash to html5
     if (this.mode == 'html5' && location.hash.indexOf('#!') == 0) {
       let url = this._baseNoTrailingSlash + (location.hash.slice(2) || '/');
-      url = new Url(url).removeQuery('_sid').href;
+      url = new Url(url).removeQuery('_hid').href;
       history.replaceState(null, '', url);
     }
     // convert html5 to hash
@@ -41,23 +25,37 @@ export default class {
       return;
     }
 
-    // get/init session
-    this.state = this._getState();
+    // get session
+    this.session = this._readData();
 
-    // get sid
+    // init session
+    if (!this.session) {
+      this.session = {
+        current: null,
+        sessions: []
+      };
+    }
+
+    // get history id
     if (history.pushState) {
       // page is reloaded
       if (history.state) {
-        let sid = history.state.sid;
+        let hid = history.state.hid.split(':');
+        this._sessionId = Number(hid[0]);
+
       }
       // page is first loaded
       else {
-
+        let url = this._parseCurrentUrl();
+        if (this.mode == 'html5') {
+        } else {
+          this._change('replace');
+        }
       }
     } else {
       let url = new Url(location.hash.replace('#!', '') || '/');
       // page is reloaded
-      if (url.query._sid) {
+      if (url.query._hid) {
 
       }
       // page is first loaded
@@ -83,51 +81,67 @@ export default class {
     });
   }
 
-  _change(method, path, query) {
-    let sid = Math.random().toString(16).slice(2);
+  _parseCurrentUrl() {
+    if (this.mode == 'html5') {
+      return new Url();
+    } else {
+      return new Url(location.hash.slice(2) || '/');
+    }
+  }
+
+  _change(method, path, query, hid) {
+    if (!hid) {
+      hid = Math.random().toString(16).slice(2);
+    }
+
     if (this.mode == 'html5') {
       let url = new Url(this._baseNoTrailingSlash + path).addQuery(query).href;
-      history[method + 'State']({ sid }, '', url);
+      history[method + 'State']({ hid }, '', url);
     } else {
       let url = new Url(path).addQuery(query);
       if (history.pushState) {
         url = '#!' + url.pathname + url.search + url.hash;
-        history[method + 'State']({ sid }, '', url);
+        history[method + 'State']({ hid }, '', url);
       } else {
-        url.addQuery('_sid', sid);
+        url.addQuery('_hid', hid);
         url = '#!' + url.pathname + url.search + url.hash;
         location[method == 'push' ? 'assign' : 'replace'](url);
       }
     }
-    return sid;
+    return hid;
   }
 
-  _saveSession() {
-    sessionStorage.setItem('_spaHistory', JSON.stringify(this.session));
+
+  /*
+  struct
+  {
+    current: { path, hid, state, query },
+    sessions: [
+      [
+        { path, hid, state, query }
+      ],
+
+      [
+        { path, hid, state, query }
+      ]
+    ]
+  }
+  */
+  _saveData() {
+    sessionStorage.setItem('_spaHistory', JSON.stringify(this._data));
   }
 
-  _readSession() {
-    let session = sessionStorage.getItem('_spaHistory');
-    if (session) {
-      return JSON.parse(session);
-    } else {
-      return {
-
-      };
-    }
+  _readData() {
+    return JSON.parse(sessionStorage.getItem('_spaHistory'));
   }
 
   splice() {}
 
-  push(path, query, state) {
-    let sid = this._change('push', path, query);
-    this.session.push({
-      path,
-      sid,
-      query,
-      state
+  push(...items) {
+    let hid = this._change('push', path, query);
+    this._data.sessions[this._sessionId].push({
     });
-    this._saveSession();
+    this._saveData();
   }
 
   replace() {}
@@ -146,10 +160,6 @@ export default class {
 
   setState(state, index) {
     if (!index) {
-      index = this.current.index;
     }
-
-    this.session[index].state = state;
-    this._saveSession();
   }
 }
