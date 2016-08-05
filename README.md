@@ -12,13 +12,15 @@ Operate the browser history like Array.
 - history.pop()
 - history.go(n)
 - history.goById(id)
+- history.goByIndex(index)
 - history.back()
 - history.forward()
-- history.findById(id)
-- history.findByPath(path)
-- history.findLastByPath(path)
-- history.findAllByPath(path)
-- history.setState(state, id)
+- history.findById(id) -> { index, value }
+- history.findByPath(path) -> { index, value }
+- history.findLastByPath(path) -> { index, value }
+- history.findAllByPath(path) -> [...{ index, value }]
+- history.setState(state, index)
+- history.setStateById(state, id)
 
 
 ```js

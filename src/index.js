@@ -40,15 +40,21 @@ export default class {
     if (history.pushState) {
       // page is reloaded
       if (history.state) {
-        let hid = history.state.hid.split(':');
-        this._sessionId = Number(hid[0]);
+        let [sessionId, id] = history.state.id.split(':');
+        this._sessionId = Number(sessionId);
         this.items = this._data.sessions[this._sessionId];
+        let current = this.findById(id);
+        this.current = current.value;
+        this._currentIndex = current.index;
+
 
       }
       // page is first loaded
       else {
         let url = this._parseCurrentUrl();
+        
         if (this.mode == 'html5') {
+
         } else {
           this._change('replace');
         }
