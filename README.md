@@ -4,30 +4,31 @@ Operate the browser history like Array.
 
 - history.length
 - history.items
-- history.current -> { path, query, hash, state }
+- history.current -> { id, path, query, hash, state }
 - history.splice(start, deleteCount, ...insertItems)
-- history.push(...{path, query, hash, state})
-- history.replace(path, query, hash, state)
-- history.reset(...{path, query, hash, state})
+- history.push(...{ path, query, hash, state })
+- history.replace({ path, query, hash, state })
+- history.reset(...{ path, query, hash, state })
 - history.pop()
 - history.go(n)
-- history.goById(id)
 - history.goByIndex(index)
 - history.back()
 - history.forward()
-- history.findById(id) -> { index, value }
-- history.findByPath(path) -> { index, value }
-- history.findLastByPath(path) -> { index, value }
-- history.findAllByPath(path) -> [...{ index, value }]
+- history.findById(id) -> { id, path, query, hash, state }
+- history.findIndexById(id) -> index
+- history.findByPath(path) -> { id, path, query, hash, state }
+- history.findIndexByPath(path) -> index
+- history.findLastByPath(path) -> { id, path, query, hash, state }
+- history.findLastIndexByPath(path) -> index
+- history.getCurrentIndex() -> index
 - history.setState(state, index)
-- history.setStateById(state, id)
 
 
 ```js
 let spaHistory = new SpaHistory({
   mode: 'auto', // hash, html5, auto
   base: '/app/',
-  onNavigate: function({ path, query, hash, state }) {
+  onLocationChange: function({ id, path, query, hash, state }) {
 
   }
 });

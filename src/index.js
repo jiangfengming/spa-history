@@ -195,8 +195,25 @@ export default class {
     }
   }
 
+  findLastIndexByPath(path) {
+    for (let i = this.items.length - 1; i >= 0; i--) {
+      if (this.items[i].path == path) {
+        return i;
+      }
+    }
+  }
+
+  getCurrentIndex() {
+    return this.findIndexById(this.current.id);
+  }
+
   setState(state, index) {
     if (!index) {
+      this.current.state = state;
+    } else {
+      this.items[index].state = state;
     }
+
+    this._saveData();
   }
 }
