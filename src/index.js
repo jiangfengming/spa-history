@@ -25,12 +25,12 @@ export default class {
       return;
     }
 
-    // get session
-    this.session = this._readData();
+    // read data
+    this._data = this._readData();
 
-    // init session
-    if (!this.session) {
-      this.session = {
+    // init data
+    if (!this._data) {
+      this._data = {
         current: null,
         sessions: []
       };
@@ -43,21 +43,19 @@ export default class {
         let [sessionId, id] = history.state.id.split(':');
         this._sessionId = Number(sessionId);
         this.items = this._data.sessions[this._sessionId];
-        let current = this.findById(id);
-        this.current = current.value;
-        this._currentIndex = current.index;
-
-
+        this.current = this.findById(id).value;
+        this.onNavigate(this.current);
       }
       // page is first loaded
       else {
-        let url = this._parseCurrentUrl();
-        
-        if (this.mode == 'html5') {
-
-        } else {
-          this._change('replace');
-        }
+        this._sessionId = this._data.sessions.length;
+        this.items = [];
+        this._data.sessions.push(this.items);
+        let { pathname: path, query, hash } = this._parseCurrentUrl();
+        let id = this._change('replace', path, query, hash);
+        this.current = { id, path, query, hash };
+        this.items.push(this.current);
+        this.onNavigate(this.current);
       }
     } else {
       let url = new Url(location.hash.replace('#!', '') || '/');
@@ -96,7 +94,7 @@ export default class {
     }
   }
 
-  _change(method, path, query, hid) {
+  _change(method, path, query, hash, hid) {
     if (!hid) {
       hid = Math.random().toString(16).slice(2);
     }
@@ -164,6 +162,38 @@ export default class {
   forward() {}
 
   get() {}
+
+  findById(id) {
+    return this.items.find((value) => {
+      return value.id == id;
+    });
+  }
+
+  findIndexById(id) {
+    return this.items.findIndex((value) => {
+      return value.id == id;
+    });
+  }
+
+  findByPath(path) {
+    return this.items.find((value) => {
+      return value.path == path;
+    });
+  }
+
+  findIndexByPath(path) {
+    return this.items.findIndex((value) => {
+      return value.path == path;
+    });
+  }
+
+  findLastByPath(path) {
+    for (let i = this.items.length - 1; i >= 0; i--) {
+      if (this.items[i].path == path) {
+        return this.items[i];
+      }
+    }
+  }
 
   setState(state, index) {
     if (!index) {
