@@ -27,6 +27,7 @@ export default function(options = {}) {
     },
 
     devServer: {
+      port: 8010,
       contentBase: './examples',
       historyApiFallback: true
     }

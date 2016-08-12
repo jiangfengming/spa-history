@@ -79,79 +79,51 @@ export default class {
 
     window.addEventListener('popstate', function(e) {
       // e.state
+      console.log('popstate');
     });
 
     window.addEventListener('hashchange', function() {
-
+      console.log('hashchange');
     });
-  }
-
-  _parseCurrentUrl() {
-    if (this.mode == 'html5') {
-      return new Url();
-    } else {
-      return new Url(location.hash.slice(2) || '/');
-    }
-  }
-
-  _change(method, path, query, hash, hid) {
-    if (!hid) {
-      hid = Math.random().toString(16).slice(2);
-    }
-
-    if (this.mode == 'html5') {
-      let url = new Url(this._baseNoTrailingSlash + path).addQuery(query).href;
-      history[method + 'State']({ hid }, '', url);
-    } else {
-      let url = new Url(path).addQuery(query);
-      if (history.pushState) {
-        url = '#!' + url.pathname + url.search + url.hash;
-        history[method + 'State']({ hid }, '', url);
-      } else {
-        url.addQuery('_hid', hid);
-        url = '#!' + url.pathname + url.search + url.hash;
-        location[method == 'push' ? 'assign' : 'replace'](url);
-      }
-    }
-    return hid;
-  }
-
-
-  /*
-  struct
-  {
-    current: { path, hid, state, query },
-    sessions: [
-      [
-        { path, hid, state, query }
-      ],
-
-      [
-        { path, hid, state, query }
-      ]
-    ]
-  }
-  */
-  _saveData() {
-    sessionStorage.setItem('_spaHistory', JSON.stringify(this._data));
-  }
-
-  _readData() {
-    return JSON.parse(sessionStorage.getItem('_spaHistory'));
   }
 
   splice() {}
 
   push(...items) {
-    let hid = this._change('push', path, query);
-    this._data.sessions[this._sessionId].push({
-    });
+
+    for (let item of items) {
+      if (item.constructor == String) {
+        let url = new Url(item);
+        item = {
+          path: url.pathname,
+          query: url.query,
+          hash: url.hash,
+          state: null
+        };
+      }
+
+      let id = this._change('push', item);
+
+      this.items.push({
+      });
+    }
+
     this._saveData();
+    return this;
   }
 
   replace() {}
 
   reset() {}
+
+  goto(location) {
+    if (!location) {
+
+    } else {
+      this.push(location);
+      this._dispatchEvent();
+    }
+  }
 
   pop() {}
 
@@ -215,5 +187,73 @@ export default class {
     }
 
     this._saveData();
+  }
+
+  _parseCurrentUrl() {
+    if (this.mode == 'html5') {
+      return new Url();
+    } else {
+      return new Url(location.hash.slice(2) || '/');
+    }
+  }
+
+  _change(method, item) {
+    if (!item.id) {
+      item.id = Math.random().toString(16).slice(2);
+    }
+
+    if (this.mode == 'html5') {
+      let url = new Url(this._baseNoTrailingSlash + item.path).addQuery(item.query);
+
+      if (item.hash) {
+        url.hash = item.hash;
+      }
+
+      history[method + 'State']({ id: item.id }, '', url.href);
+    } else {
+      let url = new Url(item.path).addQuery(item.query);
+
+      if (item.hash) {
+        url.hash = item.hash;
+      }
+
+      if (history.pushState) {
+        url = '#!' + url.pathname + url.search + url.hash;
+        history[method + 'State']({ id }, '', url);
+      } else {
+        url.addQuery('_sid', id);
+        url = '#!' + url.pathname + url.search + url.hash;
+        location[method == 'push' ? 'assign' : 'replace'](url);
+      }
+    }
+    return id;
+  }
+
+
+  /*
+  struct
+  {
+    current: { path, hid, state, query },
+    sessions: [
+      [
+        { path, hid, state, query }
+      ],
+
+      [
+        { path, hid, state, query }
+      ]
+    ]
+  }
+  */
+  _saveData() {
+    sessionStorage.setItem('_spaHistory', JSON.stringify(this._data));
+  }
+
+  _readData() {
+    return JSON.parse(sessionStorage.getItem('_spaHistory'));
+  }
+
+  _dispatchEvent() {
+
   }
 }

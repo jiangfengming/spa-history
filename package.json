@@ -5,7 +5,7 @@
   "main": "dist/SpaHistory.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "webpack-dev-server --hot --inline --port 8010 --env.debug",
+    "dev": "webpack-dev-server --hot --inline --env.debug",
     "dist": "webpack --env.module && webpack"
   },
   "repository": {
