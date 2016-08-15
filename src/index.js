@@ -87,53 +87,63 @@ export default class {
     });
   }
 
-  splice() {}
-
   push(...items) {
-
-    for (let item of items) {
-      if (item.constructor == String) {
-        let url = new Url(item);
-        item = {
-          path: url.pathname,
-          query: url.query,
-          hash: url.hash,
-          state: null
-        };
-      }
-
-      let id = this._change('push', item);
-
-      this.items.push({
-      });
+    let item;
+    for (item of items) {
+      item = this._change('push', item);
+      this.items.push(item);
     }
 
+    this.current = item;
     this._saveData();
     return this;
   }
 
-  replace() {}
-
-  reset() {}
-
-  goto(location) {
-    if (!location) {
-
-    } else {
-      this.push(location);
-      this._dispatchEvent();
-    }
+  replace(item) {
+    item = this._change('replace', item);
+    let index = this.getCurrentIndex();
+    this.current = this.items[index] = item;
+    this._saveData();
+    return this;
   }
 
-  pop() {}
+  reset(...items) {
 
-  go() {}
+  }
 
-  back() {}
+  splice(start, deleteCount, ..insertItems) {
+    
+  }
+
+  goto(location) {
+    if (location) {
+      this.push(location);
+    }
+    this._saveData();
+    this._dispatchEvent();
+  }
+
+  pop() {
+    history.back();
+    let item = this.items.pop();
+    this._saveData();
+    return item;
+  }
+
+  go(n) {
+
+  }
+
+  back() {
+    history.back();
+
+  }
 
   forward() {}
 
-  get() {}
+  get(index) {
+    return this.items[index];
+  }
 
   findById(id) {
     return this.items.find((value) => {
@@ -187,6 +197,7 @@ export default class {
     }
 
     this._saveData();
+    return this;
   }
 
   _parseCurrentUrl() {
@@ -198,35 +209,40 @@ export default class {
   }
 
   _change(method, item) {
+    if (item.constructor == String) {
+      item = { path: item };
+    }
+
     if (!item.id) {
       item.id = Math.random().toString(16).slice(2);
     }
 
+    let url = new Url(item.path).addQuery(item.query);
+
+    if (item.hash) {
+      url.hash = item.hash;
+    }
+
+    item.path = url.pathname;
+    item.query = url.query;
+    item.hash = url.hash;
+
     if (this.mode == 'html5') {
-      let url = new Url(this._baseNoTrailingSlash + item.path).addQuery(item.query);
-
-      if (item.hash) {
-        url.hash = item.hash;
-      }
-
-      history[method + 'State']({ id: item.id }, '', url.href);
+      history[method + 'State']({ id: item.id }, '', this._baseNoTrailingSlash + url.pathname + url.search + url.hash);
     } else {
-      let url = new Url(item.path).addQuery(item.query);
-
-      if (item.hash) {
-        url.hash = item.hash;
-      }
-
       if (history.pushState) {
-        url = '#!' + url.pathname + url.search + url.hash;
-        history[method + 'State']({ id }, '', url);
+        history[method + 'State']({ id: item.id }, '', '#!' + url.pathname + url.search + url.hash);
       } else {
-        url.addQuery('_sid', id);
-        url = '#!' + url.pathname + url.search + url.hash;
-        location[method == 'push' ? 'assign' : 'replace'](url);
+        url.addQuery('_sid', item.id);
+        location[method == 'push' ? 'assign' : 'replace']('#!' + url.pathname + url.search + url.hash);
       }
     }
-    return id;
+
+    if (item.title) {
+      document.title = item.title;
+    }
+
+    return item;
   }
 
 
