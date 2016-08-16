@@ -1,29 +1,34 @@
 import Url from 'browser-url';
+import mixinHtml5 from './html5.js';
+import mixinHashbangWithHistoryApi from './hashbang-with-history-api.js';
+import mixinHashbangOnly from './hashbang-only.js';
 
 export default class {
   constructor({ mode, base = '/', onNavigate } = {}) {
     this.mode = mode;
     if (!this.mode) {
-      this.mode = history.pushState && location.protocol.indexOf('http') == 0 ? 'html5' : 'hash';
+      this.mode = history.pushState && location.protocol.indexOf('http') == 0 ? 'html5' : 'hashbang';
+    }
+
+    let mixin;
+    if (this.mode == 'html5') {
+      mixin = mixinHtml5;
+    } else if (history.pushState) {
+      mixin = mixinHashbangWithHistoryApi;
+    } else {
+      mixin = mixinHashbangOnly;
+    }
+
+    for (let method in mixin) {
+      this[method] = mixin[method];
     }
 
     this.base = base;
     this._baseNoTrailingSlash = base.replace(/\/$/, '');
     this.onNavigate = onNavigate;
 
-    // convert hash to html5
-    if (this.mode == 'html5' && location.hash.indexOf('#!') == 0) {
-      let url = this._baseNoTrailingSlash + (location.hash.slice(2) || '/');
-      url = new Url(url).removeQuery('_hid').href;
-      history.replaceState(null, '', url);
-    }
-    // convert html5 to hash
-    else if (this.mode == 'hash' && this.base && location.pathname != this.base && location.protocol.indexOf('http') == 0) {
-      let url = location.pathname.replace(this._baseNoTrailingSlash, '');
-      url = this.base + '#!' + url + location.search + location.hash;
-      location.replace(url);
-      return;
-    }
+    // fallback HTML5 URL to hashbang URL if browser doesn't support history API, and vise versa.
+    this._convertLocation();
 
     // read data
     this._data = this._readData();
@@ -108,11 +113,12 @@ export default class {
   }
 
   reset(...items) {
-
+    this.splice(0, this.items.length, ...items);
+    return this;
   }
 
-  splice(start, deleteCount, ..insertItems) {
-    
+  splice(start, deleteCount, ...insertItems) {
+
   }
 
   goto(location) {
@@ -131,15 +137,17 @@ export default class {
   }
 
   go(n) {
-
+    history.go(n);
+    return this;
   }
 
   back() {
-    history.back();
-
+    return this.go(-1);
   }
 
-  forward() {}
+  forward() {
+    return this.go(1);
+  }
 
   get(index) {
     return this.items[index];
@@ -227,22 +235,18 @@ export default class {
     item.query = url.query;
     item.hash = url.hash;
 
-    if (this.mode == 'html5') {
-      history[method + 'State']({ id: item.id }, '', this._baseNoTrailingSlash + url.pathname + url.search + url.hash);
-    } else {
-      if (history.pushState) {
-        history[method + 'State']({ id: item.id }, '', '#!' + url.pathname + url.search + url.hash);
-      } else {
-        url.addQuery('_sid', item.id);
-        location[method == 'push' ? 'assign' : 'replace']('#!' + url.pathname + url.search + url.hash);
-      }
-    }
+    this._changeHistory(method, item, url);
 
     if (item.title) {
       document.title = item.title;
     }
 
     return item;
+  }
+
+  _onNavigate() {
+    let url = this._parseCurrentUrl();
+
   }
 
 
