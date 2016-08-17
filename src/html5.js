@@ -14,7 +14,20 @@ export default {
     }
   },
 
-  _parseCurrentUrl() {
+  _getCurrentSessionId() {
+    return history.state ? history.state.id.split(':') : [];
+  },
 
+  _parseCurrentUrl() {
+    let url = new Url();
+    let item = {
+      path: url.pathname.replace(this._baseNoTrailingSlash, ''),
+      query: url.query,
+      hash: url.hash
+    };
+
+    if (history.state) {
+      let [sessionId, id] = history.state.id.split(':');
+    }
   }
 };

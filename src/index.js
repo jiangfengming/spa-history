@@ -41,84 +41,107 @@ export default class {
       };
     }
 
-    // get history id
-    if (history.pushState) {
-      // page is reloaded
-      if (history.state) {
-        let [sessionId, id] = history.state.id.split(':');
-        this._sessionId = Number(sessionId);
-        this.items = this._data.sessions[this._sessionId];
-        this.current = this.findById(id).value;
-        this.onNavigate(this.current);
-      }
-      // page is first loaded
-      else {
-        this._sessionId = this._data.sessions.length;
-        this.items = [];
-        this._data.sessions.push(this.items);
-        let { pathname: path, query, hash } = this._parseCurrentUrl();
-        let id = this._change('replace', path, query, hash);
-        this.current = { id, path, query, hash };
-        this.items.push(this.current);
-        this.onNavigate(this.current);
-      }
+    let [sessionId, id] = this._getCurrentSessionId();
+
+    if (sessionId) {
+      this._sessionId = Number(sessionId);
+      this.items = this._data.sessions[this._sessionId];
+      this.currentIndex = this.findIndexById(id);
+      this.current = this.items[this.currentIndex];
     } else {
-      let url = new Url(location.hash.replace('#!', '') || '/');
-      // page is reloaded
-      if (url.query._hid) {
-
-      }
-      // page is first loaded
-      else {
-
-      }
+      this._sessionId = this._data.sessions.length;
+      this.items = [];
+      this._data.sessions.push(this.items);
+      this.currentIndex = this.items.length;
+      this.current = this._parseCurrentUrl();
+      this._change('replace', this.current);
+      this.items.push(this.current);
     }
 
-    this.length = 0;
-    this.current = null;
-
-    this._nativeLength = history.length;
-
-    this.session = [];
-
-
-    window.addEventListener('popstate', function(e) {
-      // e.state
-      console.log('popstate');
-    });
-
-    window.addEventListener('hashchange', function() {
-      console.log('hashchange');
-    });
+    this.onNavigate(this.current);
   }
 
   push(...items) {
-    let item;
-    for (item of items) {
+    if (this.currentIndex != this.items.length - 1) {
+      this.items = this.items.slice(0, this.currentIndex + 1);
+    }
+
+    for (let item of items) {
       item = this._change('push', item);
       this.items.push(item);
     }
 
-    this.current = item;
+    this.currentIndex = this.items.length - 1;
+    this.current = this.items[this.currentIndex];
     this._saveData();
     return this;
   }
 
   replace(item) {
     item = this._change('replace', item);
-    let index = this.getCurrentIndex();
-    this.current = this.items[index] = item;
+    this.current = this.items[this.currentIndex] = item;
     this._saveData();
     return this;
   }
 
   reset(...items) {
-    this.splice(0, this.items.length, ...items);
-    return this;
+    return this.splice(0, this.items.length, ...items);
   }
 
   splice(start, deleteCount, ...insertItems) {
+    let goSteps, index;
+    let replaceFirst = false;
 
+    if (start < 2) {
+      goSteps = start - this.currentIndex * 2;
+      index = 0;
+      replaceFirst = true;
+    } else {
+      goSteps = start - this.currentIndex - 2;
+      index = start - 2;
+    }
+
+    this._disableEvents();
+    history.go(goSteps);
+
+    this.items.splice(start, deleteCount, ...insertItems);
+
+    for (; index < this.items.length; index++) {
+      let item = this.items[index];
+      if (replaceFirst) {
+        item = this._change('replace', item);
+        replaceFirst = false;
+      } else {
+        item = this._change('push', item);
+      }
+      this.items[index] = item;
+    }
+
+    if (this.items.length == 1) {
+      let first = this.items[0];
+      this._change('push', {
+        id: 'PLACEHOLDER',
+        path: first.path,
+        query: first.query,
+        hash: first.hash
+      });
+
+      history.back();
+    }
+
+    this.currentIndex = this.findIndexById(this.current.id);
+    let lastIndex = this.items.length - 1;
+    if (this.currentIndex == -1) {
+      this.currentIndex = lastIndex;
+    } else if (this.currentIndex != lastIndex) {
+      history.go(this.currentIndex - lastIndex);
+    }
+
+    this.current = this.items[this.currentIndex];
+
+    this._enableEvents();
+    this._saveData();
+    return this;
   }
 
   goto(location) {
@@ -127,13 +150,12 @@ export default class {
     }
     this._saveData();
     this._dispatchEvent();
+    return this;
   }
 
   pop() {
-    history.back();
-    let item = this.items.pop();
-    this._saveData();
-    return item;
+    this.splice(this.items.length - 1, 1);
+    return this;
   }
 
   go(n) {
@@ -193,10 +215,6 @@ export default class {
     }
   }
 
-  getCurrentIndex() {
-    return this.findIndexById(this.current.id);
-  }
-
   setState(state, index) {
     if (!index) {
       this.current.state = state;
@@ -244,12 +262,6 @@ export default class {
     return item;
   }
 
-  _onNavigate() {
-    let url = this._parseCurrentUrl();
-
-  }
-
-
   /*
   struct
   {
@@ -266,7 +278,9 @@ export default class {
   }
   */
   _saveData() {
+    this._data.sessions[this._sessionId] = this.items;
     sessionStorage.setItem('_spaHistory', JSON.stringify(this._data));
+    return this;
   }
 
   _readData() {
