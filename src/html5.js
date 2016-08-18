@@ -14,20 +14,22 @@ export default {
     }
   },
 
-  _getCurrentSessionId() {
-    return history.state ? history.state.id.split(':') : [];
+  _getCurrentItemId() {
+    return history.state ? history.state.id : null;
   },
 
-  _parseCurrentUrl() {
-    let url = new Url();
-    let item = {
+  _parseCurrentLocation() {
+    let url = new Url().sortQuery();
+    return {
       path: url.pathname.replace(this._baseNoTrailingSlash, ''),
       query: url.query,
       hash: url.hash
     };
+  },
 
-    if (history.state) {
-      let [sessionId, id] = history.state.id.split(':');
-    }
+  _registerEvent() {
+    window.addEventListener('popstate', () => {
+      this._onNavigate();
+    });
   }
 };

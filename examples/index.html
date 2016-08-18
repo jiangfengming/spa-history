@@ -8,8 +8,19 @@
   </head>
 
   <body>
+    <button type="button" onclick="spaHistory.goto('/foo')">goto page foo</button>
+    <button type="button" onclick="spaHistory.goto({ path: '/bar' })">goto page bar</button>
+    <button type="button" onclick="spaHistory.goto('/foo#a')">goto('/foo#a')</button>
+    <button type="button" onclick="spaHistory.reset('/a')">reset('/a')</button>
+    <button type="button" onclick="spaHistory.reset('/a', '/b')">reset('/a', '/b')</button>
+
     <script>
-    var spaHistory = new SpaHistory();
+    var spaHistory = new SpaHistory({
+      onLocationChange: function(loc) {
+        console.log(loc);
+        console.log(this._sessions);
+      }
+    });
     </script>
   </body>
 </html>

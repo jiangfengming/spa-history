@@ -1,3 +1,5 @@
+import hashbangWithHistoryApi from './hashbang-with-history-api';
+
 export default {
   _changeHistory(method, item, url) {
     url.addQuery('_sid', item.id);
@@ -15,7 +17,20 @@ export default {
     }
   },
 
-  _parseCurrentUrl() {
+  _getCurrentItemId() {
+    let item = hashbangWithHistoryApi._parseCurrentLocation.call(this);
+    return item.query._sid;
+  },
 
+  _parseCurrentLocation() {
+    let item = hashbangWithHistoryApi._parseCurrentLocation.call(this);
+    delete item.query._sid;
+    return item;
+  },
+
+  _registerEvent() {
+    window.addEventListener('hashchange', () => {
+      this._onNavigate();
+    });
   }
 };

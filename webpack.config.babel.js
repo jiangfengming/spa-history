@@ -17,7 +17,7 @@ export default function(options = {}) {
           exclude: /node_modules/,
           loader: 'babel-loader',
           query: {
-            presets: ['es2015-webpack-loose'],
+            presets: [['es2015', { modules: false }]],
             plugins: [
               'add-module-exports'
             ]
@@ -27,6 +27,7 @@ export default function(options = {}) {
     },
 
     devServer: {
+      host: '0.0.0.0',
       port: 8010,
       contentBase: './examples',
       historyApiFallback: true

@@ -4,7 +4,7 @@ import mixinHashbangWithHistoryApi from './hashbang-with-history-api.js';
 import mixinHashbangOnly from './hashbang-only.js';
 
 export default class {
-  constructor({ mode, base = '/', onNavigate } = {}) {
+  constructor({ mode, base = '/', onLocationChange, onHashChange } = {}) {
     this.mode = mode;
     if (!this.mode) {
       this.mode = history.pushState && location.protocol.indexOf('http') == 0 ? 'html5' : 'hashbang';
@@ -25,7 +25,8 @@ export default class {
 
     this.base = base;
     this._baseNoTrailingSlash = base.replace(/\/$/, '');
-    this.onNavigate = onNavigate;
+    this.onLocationChange = onLocationChange;
+    this.onHashChange = onHashChange;
 
     // fallback HTML5 URL to hashbang URL if browser doesn't support history API, and vise versa.
     this._convertLocation();
@@ -36,131 +37,163 @@ export default class {
     // init data
     if (!this._data) {
       this._data = {
-        current: null,
-        sessions: []
+        sessions: [],
+        states: {}
       };
     }
 
-    let [sessionId, id] = this._getCurrentSessionId();
-
-    if (sessionId) {
-      this._sessionId = Number(sessionId);
-      this.items = this._data.sessions[this._sessionId];
-      this.currentIndex = this.findIndexById(id);
-      this.current = this.items[this.currentIndex];
-    } else {
-      this._sessionId = this._data.sessions.length;
-      this.items = [];
-      this._data.sessions.push(this.items);
-      this.currentIndex = this.items.length;
-      this.current = this._parseCurrentUrl();
-      this._change('replace', this.current);
-      this.items.push(this.current);
+    let itemId = this._getCurrentItemId();
+    let sessionId, session;
+    let itemIndex = -1;
+    if (itemId) {
+      sessionId = Number(itemId.split(':')[0]);
+      session = this._data.sessions[sessionId];
+      if (session) {
+        itemIndex = session.findIndex((item) => {
+          item.id = itemId;
+        });
+      }
     }
 
-    this.onNavigate(this.current);
+    // new session
+    if (itemIndex == -1) {
+      this._sessionId = this._data.sessions.length;
+      this._session = [];
+      this._data.sessions.push(this._session);
+      let item = this._parseCurrentLocation();
+      this._change('replace', item);
+      this._session.push(item);
+      this._setCurrentItem(this._session.length - 1);
+    } else {
+      this._sessionId = sessionId;
+      this._session = session;
+      this._setCurrentItem(itemIndex);
+    }
+
+    this._saveData();
+    this._registerEvent();
+    this._dispatchEvent();
+  }
+
+  get length() {
+    return this._session.length;
   }
 
   push(...items) {
-    if (this.currentIndex != this.items.length - 1) {
-      this.items = this.items.slice(0, this.currentIndex + 1);
+    if (this.currentIndex != this._session.length - 1) {
+      this._session = this._session.slice(0, this.currentIndex + 1);
     }
 
     for (let item of items) {
       item = this._change('push', item);
-      this.items.push(item);
+      this._session.push(item);
     }
 
-    this.currentIndex = this.items.length - 1;
-    this.current = this.items[this.currentIndex];
+    this._setCurrentItem(this._session.length - 1);
     this._saveData();
     return this;
   }
 
   replace(item) {
     item = this._change('replace', item);
-    this.current = this.items[this.currentIndex] = item;
+    this._session[this.currentIndex] = item;
+    this._setCurrentItem(this.currentIndex);
     this._saveData();
     return this;
   }
 
   reset(...items) {
-    return this.splice(0, this.items.length, ...items);
+    return this.splice(0, this._session.length, ...items);
   }
 
   splice(start, deleteCount, ...insertItems) {
-    let goSteps, index;
-    let replaceFirst = false;
+    return new Promise((resolve) => {
+      let originalLength = this._session.length;
+      let goSteps, index;
+      let replaceFirst = false;
 
-    if (start < 2) {
-      goSteps = start - this.currentIndex * 2;
-      index = 0;
-      replaceFirst = true;
-    } else {
-      goSteps = start - this.currentIndex - 2;
-      index = start - 2;
-    }
-
-    this._disableEvents();
-    history.go(goSteps);
-
-    this.items.splice(start, deleteCount, ...insertItems);
-
-    for (; index < this.items.length; index++) {
-      let item = this.items[index];
-      if (replaceFirst) {
-        item = this._change('replace', item);
-        replaceFirst = false;
+      if (start < 2) {
+        goSteps = 0 - this.currentIndex;
+        index = 0;
+        replaceFirst = true;
       } else {
-        item = this._change('push', item);
+        goSteps = start - this.currentIndex - 2;
+        index = start - 2;
       }
-      this.items[index] = item;
-    }
 
-    if (this.items.length == 1) {
-      let first = this.items[0];
-      this._change('push', {
-        id: 'PLACEHOLDER',
-        path: first.path,
-        query: first.query,
-        hash: first.hash
+      this._disableEvent();
+      this.go(goSteps).then(() => {
+        this._session.splice(start, deleteCount, ...insertItems);
+        for (; index < this._session.length; index++) {
+          let item = this._session[index];
+          if (replaceFirst) {
+            item = this._change('replace', item);
+            replaceFirst = false;
+          } else {
+            item = this._change('push', item);
+          }
+          this._session[index] = item;
+        }
+
+        let promise;
+
+        if (this._session.length == 1 && originalLength > 1) {
+          this._setCurrentItem(0);
+          this._change('push', {
+            id: 'PLACEHOLDER',
+            path: this.current.path,
+            query: this.current.query,
+            hash: this.current.hash
+          });
+
+          promise = this.back();
+        } else {
+          let lastIndex = this._session.length - 1;
+          let currentIndex = this.findIndexById(this.current.id);
+          if (currentIndex == -1) {
+            currentIndex = lastIndex;
+          } else if (currentIndex != lastIndex) {
+            promise = this.go(currentIndex - lastIndex);
+          }
+
+          this._setCurrentItem(currentIndex);
+          this._saveData();
+        }
+
+        Promise.resolve(promise).then(() => {
+          this._enableEvent();
+          resolve();
+        });
       });
-
-      history.back();
-    }
-
-    this.currentIndex = this.findIndexById(this.current.id);
-    let lastIndex = this.items.length - 1;
-    if (this.currentIndex == -1) {
-      this.currentIndex = lastIndex;
-    } else if (this.currentIndex != lastIndex) {
-      history.go(this.currentIndex - lastIndex);
-    }
-
-    this.current = this.items[this.currentIndex];
-
-    this._enableEvents();
-    this._saveData();
-    return this;
+    });
   }
 
   goto(location) {
     if (location) {
-      this.push(location);
+      let url = this._createUrl(location);
+      let currentUrl = this._createUrl(this.current);
+      if (url.href != currentUrl.href) {
+        this.push(location);
+      }
     }
-    this._saveData();
     this._dispatchEvent();
     return this;
   }
 
   pop() {
-    this.splice(this.items.length - 1, 1);
+    this.splice(this._session.length - 1, 1);
     return this;
   }
 
   go(n) {
-    history.go(n);
-    return this;
+    if (n == 0) {
+      return Promise.resolve();
+    } else {
+      history.go(n);
+      return new Promise(function(resolve) {
+        setTimeout(resolve);
+      });
+    }
   }
 
   back() {
@@ -172,81 +205,112 @@ export default class {
   }
 
   get(index) {
-    return this.items[index];
+    item = this._session[index];
+    if (!item) {
+      return null;
+    }
+
+    let item = Object.assign({}, item); // copy
+    let stateId = this._getStateId(item.it);
+    item.state = this._data.states[stateId];
+    return item;
   }
 
-  findById(id) {
-    return this.items.find((value) => {
-      return value.id == id;
+  getAll() {
+    return this._session.map((v, i) => {
+      return this.get(i);
     });
   }
 
+  findById(id) {
+    return this.get(this.findIndexById(id));
+  }
+
   findIndexById(id) {
-    return this.items.findIndex((value) => {
+    return this._session.findIndex((value) => {
       return value.id == id;
     });
   }
 
   findByPath(path) {
-    return this.items.find((value) => {
-      return value.path == path;
-    });
+    return this.get(this.findIndexByPath(path));
   }
 
   findIndexByPath(path) {
-    return this.items.findIndex((value) => {
-      return value.path == path;
+    return this._session.findIndex((item) => {
+      return item.path == path;
     });
   }
 
   findLastByPath(path) {
-    for (let i = this.items.length - 1; i >= 0; i--) {
-      if (this.items[i].path == path) {
-        return this.items[i];
-      }
-    }
+    return this.get(this.findLastIndexByPath(path));
   }
 
   findLastIndexByPath(path) {
-    for (let i = this.items.length - 1; i >= 0; i--) {
-      if (this.items[i].path == path) {
+    for (let i = this._session.length - 1; i >= 0; i--) {
+      if (this._session[i].path == path) {
         return i;
       }
     }
   }
 
   setState(state, index) {
-    if (!index) {
-      this.current.state = state;
-    } else {
-      this.items[index].state = state;
+    let id = index ? this._session[index].id : null;
+    return this.setStateById(state, id);
+  }
+
+  setStateById(state, id) {
+    if (!id) {
+      id = this.current.id;
     }
 
+    let stateId = this._getStateId(id);
+    this._data.states[stateId].state = state;
+    if (id == this.current.id) {
+      this.current.state = state;
+    }
     this._saveData();
     return this;
   }
 
-  _parseCurrentUrl() {
-    if (this.mode == 'html5') {
-      return new Url();
+  _getStateId(id) {
+    let _id = id.split(':');
+    return _id.length == 2 ? id : _id[0] + ':' + id[1];
+  }
+
+  _createUrl(loc) {
+    if (loc.constructor == String) {
+      return new Url(loc).sortQuery();
     } else {
-      return new Url(location.hash.slice(2) || '/');
+      let url = new Url(loc.path).addQuery(loc.query).sortQuery();
+
+      if (loc.hash) {
+        url.hash = loc.hash;
+      }
+
+      return url;
     }
+  }
+
+  _setCurrentItem(index) {
+    this._last = this.current;
+    this.currentIndex = index;
+    this.current = this._session[index];
+    return this;
   }
 
   _change(method, item) {
     if (item.constructor == String) {
-      item = { path: item };
+      item = {
+        path: item
+      };
     }
+
+    let url = this._createUrl(item);
 
     if (!item.id) {
-      item.id = Math.random().toString(16).slice(2);
-    }
+      item.id = this._sessionId + ':' + Math.random().toString(16).slice(2);
 
-    let url = new Url(item.path).addQuery(item.query);
-
-    if (item.hash) {
-      url.hash = item.hash;
     }
 
     item.path = url.pathname;
@@ -263,22 +327,22 @@ export default class {
   }
 
   /*
-  struct
   {
-    current: { path, hid, state, query },
     sessions: [
       [
-        { path, hid, state, query }
+        { id, path, query, hash }, ...
       ],
+      ...
+    ],
 
-      [
-        { path, hid, state, query }
-      ]
-    ]
+    states: {
+      id: { },
+      ...
+    }
   }
   */
   _saveData() {
-    this._data.sessions[this._sessionId] = this.items;
+    this._data.sessions[this._sessionId] = this._session;
     sessionStorage.setItem('_spaHistory', JSON.stringify(this._data));
     return this;
   }
@@ -288,6 +352,26 @@ export default class {
   }
 
   _dispatchEvent() {
+    this.onLocationChange(this.current);
+  }
 
+  _disableEvent() {
+    this._eventDisabled = true;
+  }
+
+  _enableEvent() {
+    this._eventDisabled = false;
+  }
+
+  _onNavigate() {
+    if (!this._eventDisabled) {
+      let id = this._getCurrentItemId();
+      if (id == 'PLACEHOLDER') {
+        this.back();
+      } else {
+        this._setCurrentItem(this.findIndexById(id));
+        this._dispatchEvent();
+      }
+    }
   }
 }
