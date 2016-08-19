@@ -3,7 +3,9 @@ import hashbangWithHistoryApi from './hashbang-with-history-api';
 export default {
   _changeHistory(method, item, url) {
     url.addQuery('_sid', item.id);
+    this._disableEvent();
     location[method == 'push' ? 'assign' : 'replace']('#!' + url.pathname + url.search + url.hash);
+    this._enableEvent();
   },
 
   // fallback to hashbang url if browser doesn't history API

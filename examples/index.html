@@ -15,10 +15,16 @@
     <button type="button" onclick="spaHistory.reset('/a', '/b')">reset('/a', '/b')</button>
 
     <script>
+    history.pushState = null;
+
     var spaHistory = new SpaHistory({
-      onLocationChange: function(loc) {
+      onNavigate: function(loc) {
         console.log(loc);
-        console.log(this._sessions);
+        console.log(this.getAll());
+      },
+
+      onHashChange: function(hash) {
+        console.log(hash);
       }
     });
     </script>

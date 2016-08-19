@@ -3,7 +3,6 @@
 Operate the browser history like Array.
 
 - history.length -> Number
-- history.items -> [...{ id, path, query, hash, state }]
 - history.current -> { id, path, query, hash, state }
 - history.currentIndex -> Number
 - history.splice(start, deleteCount, ...insertItems) -> Promise
@@ -14,6 +13,8 @@ Operate the browser history like Array.
 - history.go(n) -> Promise
 - history.back() -> Promise
 - history.forward() -> Promise
+- history.get(index) -> { id, path, query, hash, state }
+- history.getAll() -> [{ id, path, query, hash, state }, ...]
 - history.findById(id) -> { id, path, query, hash, state }
 - history.findIndexById(id) -> Number
 - history.findByPath(path) -> { id, path, query, hash, state }
@@ -21,17 +22,18 @@ Operate the browser history like Array.
 - history.findLastByPath(path) -> { id, path, query, hash, state }
 - history.findLastIndexByPath(path) -> Number
 - history.setState(state, index) -> this
+- history.setStateById(state, id) -> this
 
 
 ```js
 let spaHistory = new SpaHistory({
-  mode: undefined, // html5, hashbang, undefined (auto fallback)
-  base: '/',
+  mode: undefined, // html5, hashbang. default: undefined (auto fallback)
+  base: '/', // default: /
   onLocationChange: function({ id, path, query, hash, state }) {
 
   },
 
-  onHashChange: function() {
+  onHashChange: function(hash) {
 
   }
 });

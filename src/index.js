@@ -4,7 +4,7 @@ import mixinHashbangWithHistoryApi from './hashbang-with-history-api.js';
 import mixinHashbangOnly from './hashbang-only.js';
 
 export default class {
-  constructor({ mode, base = '/', onLocationChange, onHashChange } = {}) {
+  constructor({ mode, base = '/', onNavigate, onHashChange } = {}) {
     this.mode = mode;
     if (!this.mode) {
       this.mode = history.pushState && location.protocol.indexOf('http') == 0 ? 'html5' : 'hashbang';
@@ -25,7 +25,7 @@ export default class {
 
     this.base = base;
     this._baseNoTrailingSlash = base.replace(/\/$/, '');
-    this.onLocationChange = onLocationChange;
+    this.onNavigate = onNavigate;
     this.onHashChange = onHashChange;
 
     // fallback HTML5 URL to hashbang URL if browser doesn't support history API, and vise versa.
@@ -50,7 +50,7 @@ export default class {
       session = this._data.sessions[sessionId];
       if (session) {
         itemIndex = session.findIndex((item) => {
-          item.id = itemId;
+          return item.id == itemId;
         });
       }
     }
@@ -61,7 +61,7 @@ export default class {
       this._session = [];
       this._data.sessions.push(this._session);
       let item = this._parseCurrentLocation();
-      this._change('replace', item);
+      item = this._change('replace', item);
       this._session.push(item);
       this._setCurrentItem(this._session.length - 1);
     } else {
@@ -72,7 +72,7 @@ export default class {
 
     this._saveData();
     this._registerEvent();
-    this._dispatchEvent();
+    this._dispatchEvent('navigate');
   }
 
   get length() {
@@ -87,6 +87,9 @@ export default class {
     for (let item of items) {
       item = this._change('push', item);
       this._session.push(item);
+      if (item.state) {
+        this.setStateById(item.state, item.id);
+      }
     }
 
     this._setCurrentItem(this._session.length - 1);
@@ -97,6 +100,9 @@ export default class {
   replace(item) {
     item = this._change('replace', item);
     this._session[this.currentIndex] = item;
+    if (item.state) {
+      this.setStateById(item.state, item.id);
+    }
     this._setCurrentItem(this.currentIndex);
     this._saveData();
     return this;
@@ -133,6 +139,9 @@ export default class {
             item = this._change('push', item);
           }
           this._session[index] = item;
+          if (item.state) {
+            this.setStateById(item.state, item.id);
+          }
         }
 
         let promise;
@@ -169,14 +178,33 @@ export default class {
   }
 
   goto(location) {
-    if (location) {
-      let url = this._createUrl(location);
-      let currentUrl = this._createUrl(this.current);
-      if (url.href != currentUrl.href) {
+    let url = this._createUrl(location);
+    let currentUrl = this._createUrl(this.current);
+
+    // different location
+    if (url.pathname + url.search != currentUrl.pathname + currentUrl.search) {
+      this.push(location);
+      this._dispatchEvent('navigate');
+    }
+    // same location
+    else {
+      // hash changed
+      if (url.hash != currentUrl.hash) {
+        location = this._format(location);
+        location.id = this._getStateId(this.current.id) + ':' + this._uniqueId();
         this.push(location);
+        this._dispatchEvent('hashChange');
+      }
+      // nothing changed, and no hash present
+      else if (!currentUrl.hash) {
+        this._dispatchEvent('navigate');
       }
     }
-    this._dispatchEvent();
+    return this;
+  }
+
+  reload() {
+    this._dispatchEvent('navigate');
     return this;
   }
 
@@ -189,9 +217,9 @@ export default class {
     if (n == 0) {
       return Promise.resolve();
     } else {
-      history.go(n);
-      return new Promise(function(resolve) {
-        setTimeout(resolve);
+      return new Promise((resolve) => {
+        history.go(n);
+        this._goResolve = resolve;
       });
     }
   }
@@ -211,7 +239,7 @@ export default class {
     }
 
     let item = Object.assign({}, item); // copy
-    let stateId = this._getStateId(item.it);
+    let stateId = this._getStateId(item.id);
     item.state = this._data.states[stateId];
     return item;
   }
@@ -265,7 +293,7 @@ export default class {
     }
 
     let stateId = this._getStateId(id);
-    this._data.states[stateId].state = state;
+    this._data.states[stateId] = state;
     if (id == this.current.id) {
       this.current.state = state;
     }
@@ -275,7 +303,45 @@ export default class {
 
   _getStateId(id) {
     let _id = id.split(':');
-    return _id.length == 2 ? id : _id[0] + ':' + id[1];
+    return _id.length == 2 ? id : _id[0] + ':' + _id[1];
+  }
+
+  _setCurrentItem(index) {
+    this.currentIndex = index;
+    this.current = this.get(index);
+  }
+
+  _change(method, item) {
+    item = this._format(item);
+    let url = this._createUrl(item);
+
+    if (!item.id) {
+      item.id = this._sessionId + ':' + this._uniqueId();
+    }
+
+    item.path = url.pathname;
+    item.query = url.query;
+    item.hash = url.hash;
+
+    this._changeHistory(method, item, url);
+
+    if (item.title) {
+      document.title = item.title;
+    }
+
+    return item;
+  }
+
+  _format(item) {
+    if (item.constructor == String) {
+      item = {
+        path: item
+      };
+    } else {
+      item = Object.assign({}, item); // copy
+    }
+
+    return item;
   }
 
   _createUrl(loc) {
@@ -292,38 +358,8 @@ export default class {
     }
   }
 
-  _setCurrentItem(index) {
-    this._last = this.current;
-    this.currentIndex = index;
-    this.current = this._session[index];
-    return this;
-  }
-
-  _change(method, item) {
-    if (item.constructor == String) {
-      item = {
-        path: item
-      };
-    }
-
-    let url = this._createUrl(item);
-
-    if (!item.id) {
-      item.id = this._sessionId + ':' + Math.random().toString(16).slice(2);
-
-    }
-
-    item.path = url.pathname;
-    item.query = url.query;
-    item.hash = url.hash;
-
-    this._changeHistory(method, item, url);
-
-    if (item.title) {
-      document.title = item.title;
-    }
-
-    return item;
+  _uniqueId() {
+    return Math.random().toString(16).slice(2);
   }
 
   /*
@@ -342,17 +378,26 @@ export default class {
   }
   */
   _saveData() {
-    this._data.sessions[this._sessionId] = this._session;
-    sessionStorage.setItem('_spaHistory', JSON.stringify(this._data));
-    return this;
+    // optimize for multiple calls in a short period
+    if (!this._saveDataTimer) {
+      this._saveDataTimer = setTimeout(() => {
+        this._saveDataTimer = null;
+        this._data.sessions[this._sessionId] = this._session;
+        sessionStorage.setItem('_spaHistory', JSON.stringify(this._data));
+      }, 100);
+    }
   }
 
   _readData() {
     return JSON.parse(sessionStorage.getItem('_spaHistory'));
   }
 
-  _dispatchEvent() {
-    this.onLocationChange(this.current);
+  _dispatchEvent(name) {
+    if (name == 'navigate') {
+      this.onNavigate(this.current);
+    } else if (name == 'hashChange') {
+      this.onHashChange && this.onHashChange(this.current.hash);
+    }
   }
 
   _disableEvent() {
@@ -364,13 +409,21 @@ export default class {
   }
 
   _onNavigate() {
+    if (this._goResolve) {
+      this._goResolve();
+      this._goResolve = null;
+    }
+
     if (!this._eventDisabled) {
       let id = this._getCurrentItemId();
       if (id == 'PLACEHOLDER') {
-        this.back();
+        this._disableEvent();
+        this.back().then(() => {
+          this._enableEvent();
+        });
       } else {
         this._setCurrentItem(this.findIndexById(id));
-        this._dispatchEvent();
+        this._dispatchEvent('navigate');
       }
     }
   }
