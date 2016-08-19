@@ -6,8 +6,8 @@ Operate the browser history like Array.
 - history.current -> { id, path, query, hash, state }
 - history.currentIndex -> Number
 - history.splice(start, deleteCount, ...insertItems) -> Promise
-- history.push(...{ path, query, hash, state }) -> this
-- history.replace({ path, query, hash, state }) -> this
+- history.push(...{ path, query, hash, state }) -> Promise
+- history.replace({ path, query, hash, state }) -> Promise
 - history.reset(...{ path, query, hash, state }) -> Promise
 - history.pop() -> Promise
 - history.go(n) -> Promise

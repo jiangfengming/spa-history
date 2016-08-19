@@ -55,24 +55,29 @@ export default class {
       }
     }
 
+    let promise;
     // new session
     if (itemIndex == -1) {
       this._sessionId = this._data.sessions.length;
       this._session = [];
       this._data.sessions.push(this._session);
       let item = this._parseCurrentLocation();
-      item = this._change('replace', item);
-      this._session.push(item);
-      this._setCurrentItem(this._session.length - 1);
+      promise = this._change('replace', item).then((item) => {
+        this._session.push(item);
+        this._setCurrentItem(this._session.length - 1);
+      });
     } else {
       this._sessionId = sessionId;
       this._session = session;
       this._setCurrentItem(itemIndex);
     }
 
-    this._saveData();
-    this._registerEvent();
-    this._dispatchEvent('navigate');
+    Promise.resolve(promise).then(() => {
+      this._saveData();
+      this._registerEvent();
+      this._hookAClick();
+      this._dispatchEvent('navigate');
+    });
   }
 
   get length() {
@@ -84,28 +89,33 @@ export default class {
       this._session = this._session.slice(0, this.currentIndex + 1);
     }
 
-    for (let item of items) {
-      item = this._change('push', item);
-      this._session.push(item);
-      if (item.state) {
-        this.setStateById(item.state, item.id);
-      }
-    }
+    let promise = Promise.resolve();
+    items.forEach((item) => {
+      promise = promise.then(() => {
+        return this._change('push', item).then((item) => {
+          this._session.push(item);
+          if (item.state) {
+            this.setStateById(item.state, item.id);
+          }
+        });
+      });
+    });
 
-    this._setCurrentItem(this._session.length - 1);
-    this._saveData();
-    return this;
+    return promise.then(() => {
+      this._setCurrentItem(this._session.length - 1);
+      this._saveData();
+    });
   }
 
   replace(item) {
-    item = this._change('replace', item);
-    this._session[this.currentIndex] = item;
-    if (item.state) {
-      this.setStateById(item.state, item.id);
-    }
-    this._setCurrentItem(this.currentIndex);
-    this._saveData();
-    return this;
+    return this._change('replace', item).then((item) => {
+      this._session[this.currentIndex] = item;
+      if (item.state) {
+        this.setStateById(item.state, item.id);
+      }
+      this._setCurrentItem(this.currentIndex);
+      this._saveData();
+    });
   }
 
   reset(...items) {
@@ -130,48 +140,62 @@ export default class {
       this._disableEvent();
       this.go(goSteps).then(() => {
         this._session.splice(start, deleteCount, ...insertItems);
-        for (; index < this._session.length; index++) {
+
+        let promise = Promise.resolve();
+
+        let fn = (index) => {
           let item = this._session[index];
+          let p;
           if (replaceFirst) {
-            item = this._change('replace', item);
             replaceFirst = false;
+            p = this._change('replace', item);
           } else {
-            item = this._change('push', item);
+            p = this._change('push', item);
           }
-          this._session[index] = item;
-          if (item.state) {
-            this.setStateById(item.state, item.id);
-          }
-        }
 
-        let promise;
-
-        if (this._session.length == 1 && originalLength > 1) {
-          this._setCurrentItem(0);
-          this._change('push', {
-            id: 'PLACEHOLDER',
-            path: this.current.path,
-            query: this.current.query,
-            hash: this.current.hash
+          promise = promise.then(() => {
+            return p.then((item) => {
+              this._session[index] = item;
+              if (item.state) {
+                this.setStateById(item.state, item.id);
+              }
+            });
           });
+        };
 
-          promise = this.back();
-        } else {
-          let lastIndex = this._session.length - 1;
-          let currentIndex = this.findIndexById(this.current.id);
-          if (currentIndex == -1) {
-            currentIndex = lastIndex;
-          } else if (currentIndex != lastIndex) {
-            promise = this.go(currentIndex - lastIndex);
-          }
-
-          this._setCurrentItem(currentIndex);
-          this._saveData();
+        for (; index < this._session.length; index++) {
+          fn(index);
         }
 
-        Promise.resolve(promise).then(() => {
-          this._enableEvent();
-          resolve();
+        promise.then(() => {
+          let p;
+          if (this._session.length == 1 && originalLength > 1) {
+            this._setCurrentItem(0);
+            p = this._change('push', {
+              id: 'PLACEHOLDER',
+              path: this.current.path,
+              query: this.current.query,
+              hash: this.current.hash
+            }).then(() => {
+              return this.back();
+            });
+          } else {
+            let lastIndex = this._session.length - 1;
+            let currentIndex = this.findIndexById(this.current.id);
+            if (currentIndex == -1) {
+              currentIndex = lastIndex;
+            } else if (currentIndex != lastIndex) {
+              p = this.go(currentIndex - lastIndex);
+            }
+
+            this._setCurrentItem(currentIndex);
+            this._saveData();
+          }
+
+          Promise.resolve(p).then(() => {
+            this._enableEvent();
+            resolve();
+          });
         });
       });
     });
@@ -183,8 +207,9 @@ export default class {
 
     // different location
     if (url.pathname + url.search != currentUrl.pathname + currentUrl.search) {
-      this.push(location);
-      this._dispatchEvent('navigate');
+      return this.push(location).then(() => {
+        this._dispatchEvent('navigate');
+      });
     }
     // same location
     else {
@@ -192,15 +217,17 @@ export default class {
       if (url.hash != currentUrl.hash) {
         location = this._format(location);
         location.id = this._getStateId(this.current.id) + ':' + this._uniqueId();
-        this.push(location);
-        this._dispatchEvent('hashChange');
+        return this.push(location).then(() => {
+          this._dispatchEvent('hashChange');
+        });
       }
       // nothing changed, and no hash present
       else if (!currentUrl.hash) {
         this._dispatchEvent('navigate');
       }
+
+      return Promise.resolve();
     }
-    return this;
   }
 
   reload() {
@@ -209,27 +236,19 @@ export default class {
   }
 
   pop() {
-    this.splice(this._session.length - 1, 1);
-    return this;
+    return this.splice(this._session.length - 1, 1);
   }
 
   go(n) {
-    if (n == 0) {
-      return Promise.resolve();
-    } else {
-      return new Promise((resolve) => {
-        history.go(n);
-        this._goResolve = resolve;
-      });
-    }
+    return this._go(n);
   }
 
   back() {
-    return this.go(-1);
+    return this._go(-1);
   }
 
   forward() {
-    return this.go(1);
+    return this._go(1);
   }
 
   get(index) {
@@ -323,13 +342,13 @@ export default class {
     item.query = url.query;
     item.hash = url.hash;
 
-    this._changeHistory(method, item, url);
+    return this._changeHistory(method, item, url).then(() => {
+      if (item.title) {
+        document.title = item.title;
+      }
 
-    if (item.title) {
-      document.title = item.title;
-    }
-
-    return item;
+      return item;
+    });
   }
 
   _format(item) {
@@ -400,31 +419,40 @@ export default class {
     }
   }
 
-  _disableEvent() {
-    this._eventDisabled = true;
-  }
-
-  _enableEvent() {
-    this._eventDisabled = false;
-  }
-
   _onNavigate() {
-    if (this._goResolve) {
-      this._goResolve();
-      this._goResolve = null;
+    let id = this._getCurrentItemId();
+    if (id == 'PLACEHOLDER') {
+      this._disableEvent();
+      this.back().then(() => {
+        this._enableEvent();
+      });
+    } else {
+      this._setCurrentItem(this.findIndexById(id));
+      this._dispatchEvent('navigate');
     }
+  }
 
-    if (!this._eventDisabled) {
-      let id = this._getCurrentItemId();
-      if (id == 'PLACEHOLDER') {
-        this._disableEvent();
-        this.back().then(() => {
-          this._enableEvent();
-        });
-      } else {
-        this._setCurrentItem(this.findIndexById(id));
-        this._dispatchEvent('navigate');
+  _hookAClick() {
+    document.body.addEventListener('click', (e) => {
+      let a = e.target.closest('a');
+
+      if (!a || a.getAttribute('spa-history-skip') != null) {
+        return;
       }
-    }
+
+      let url = new Url(a.href);
+      let base = new Url(base);
+      if (url.href.indexOf(base.href) != 0) {
+        return;
+      }
+
+      var target = a.getAttribute('target');
+      if (target && (target == '_blank' || target == '_parent' && window.parent != window || target == '_top' && window.top != window || !(target in { _self: 1, _blank: 1, _parent: 1, _top: 1 }) && target != window.name)) {
+        return;
+      }
+
+      e.preventDefault();
+      this.goto(url.href);
+    });
   }
 }

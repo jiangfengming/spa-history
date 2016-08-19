@@ -1,9 +1,13 @@
 import Url from 'browser-url';
+import mixinHtml5 from './html5';
 
 export default {
   _changeHistory(method, item, url) {
     history[method + 'State']({ id: item.id }, '', '#!' + url.pathname + url.search + url.hash);
   },
+
+  _go: mixinHtml5._go,
+  _onLocationChange: mixinHtml5._onLocationChange,
 
   // no need to fallback to hashbang URL if history API is available
   _convertLocation() {},
@@ -28,9 +32,7 @@ export default {
     };
   },
 
-  _registerEvent() {
-    window.addEventListener('popstate', () => {
-      this._onNavigate();
-    });
-  }
+  _registerEvent: mixinHtml5._registerEvent,
+  _enableEvent: mixinHtml5._enableEvent,
+  _disableEvent: mixinHtml5._disableEvent
 };

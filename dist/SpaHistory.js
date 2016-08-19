@@ -95,6 +95,10 @@ var _browserUrl = __webpack_require__(0);
 
 var _browserUrl2 = _interopRequireDefault(_browserUrl);
 
+var _html = __webpack_require__(2);
+
+var _html2 = _interopRequireDefault(_html);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 exports.default = {
@@ -102,6 +106,9 @@ exports.default = {
     history[method + 'State']({ id: item.id }, '', '#!' + url.pathname + url.search + url.hash);
   },
 
+
+  _go: _html2.default._go,
+  _onLocationChange: _html2.default._onLocationChange,
 
   // no need to fallback to hashbang URL if history API is available
   _convertLocation: function _convertLocation() {},
@@ -123,73 +130,16 @@ exports.default = {
       hash: url.hash
     };
   },
-  _registerEvent: function _registerEvent() {
-    var _this = this;
 
-    window.addEventListener('popstate', function () {
-      _this._onNavigate();
-    });
-  }
+
+  _registerEvent: _html2.default._registerEvent,
+  _enableEvent: _html2.default._enableEvent,
+  _disableEvent: _html2.default._disableEvent
 };
 module.exports = exports['default'];
 
 /***/ },
 /* 2 */
-/***/ function(module, exports, __webpack_require__) {
-
-"use strict";
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _hashbangWithHistoryApi = __webpack_require__(1);
-
-var _hashbangWithHistoryApi2 = _interopRequireDefault(_hashbangWithHistoryApi);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-exports.default = {
-  _changeHistory: function _changeHistory(method, item, url) {
-    url.addQuery('_sid', item.id);
-    this._disableEvent();
-    location[method == 'push' ? 'assign' : 'replace']('#!' + url.pathname + url.search + url.hash);
-    this._enableEvent();
-  },
-
-
-  // fallback to hashbang url if browser doesn't history API
-  _convertLocation: function _convertLocation() {
-    if (this.base && location.pathname != this.base && location.protocol.indexOf('http') == 0) {
-      var url = location.pathname.replace(this._baseNoTrailingSlash, '');
-      url = this.base + '#!' + url + location.search + location.hash;
-      location.replace(url);
-      // stop executing
-      throw 1;
-    }
-  },
-  _getCurrentItemId: function _getCurrentItemId() {
-    var item = _hashbangWithHistoryApi2.default._parseCurrentLocation.call(this);
-    return item.query._sid;
-  },
-  _parseCurrentLocation: function _parseCurrentLocation() {
-    var item = _hashbangWithHistoryApi2.default._parseCurrentLocation.call(this);
-    delete item.query._sid;
-    return item;
-  },
-  _registerEvent: function _registerEvent() {
-    var _this = this;
-
-    window.addEventListener('hashchange', function () {
-      _this._onNavigate();
-    });
-  }
-};
-module.exports = exports['default'];
-
-/***/ },
-/* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -208,6 +158,31 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 exports.default = {
   _changeHistory: function _changeHistory(method, item, url) {
     history[method + 'State']({ id: item.id }, '', this._baseNoTrailingSlash + url.pathname + url.search + url.hash);
+    return Promise.resolve();
+  },
+  _go: function _go(n) {
+    if (!n) {
+      return Promise.resolve();
+    }
+
+    history.go(n);
+    return this._onLocationChange();
+  },
+  _onLocationChange: function _onLocationChange() {
+    var _this = this;
+
+    return new Promise(function (resolve) {
+      var eventDisabled = _this._eventDisabled;
+      _this._disableEvent();
+      var fn = function fn() {
+        window.removeEventListener('popstate', fn);
+        if (!eventDisabled) {
+          _this._enableEvent();
+        }
+        resolve();
+      };
+      window.addEventListener('popstate', fn);
+    });
   },
 
 
@@ -231,11 +206,122 @@ exports.default = {
     };
   },
   _registerEvent: function _registerEvent() {
+    var _this2 = this;
+
+    this._navigateEvent = function () {
+      _this2._onNavigate();
+    };
+    this._eventDisabled = true;
+    this._enableEvent();
+  },
+  _enableEvent: function _enableEvent() {
+    if (this._eventDisabled) {
+      window.addEventListener('popstate', this._navigateEvent);
+      this._eventDisabled = false;
+    }
+  },
+  _disableEvent: function _disableEvent() {
+    if (!this._eventDisabled) {
+      window.removeEventListener('popstate', this._navigateEvent);
+      this._eventDisabled = true;
+    }
+  }
+};
+module.exports = exports['default'];
+
+/***/ },
+/* 3 */
+/***/ function(module, exports, __webpack_require__) {
+
+"use strict";
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _browserUrl = __webpack_require__(0);
+
+var _browserUrl2 = _interopRequireDefault(_browserUrl);
+
+var _hashbangWithHistoryApi = __webpack_require__(1);
+
+var _hashbangWithHistoryApi2 = _interopRequireDefault(_hashbangWithHistoryApi);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = {
+  _changeHistory: function _changeHistory(method, item, url) {
+    url = new _browserUrl2.default(url);
+    url.addQuery('_sid', item.id);
+    location[method == 'push' ? 'assign' : 'replace']('#!' + url.pathname + url.search + url.hash);
+    return this._onLocationChange();
+  },
+  _go: function _go(n) {
+    if (!n) {
+      return Promise.resolve();
+    }
+
+    history.go(n);
+    return this._onLocationChange();
+  },
+  _onLocationChange: function _onLocationChange() {
     var _this = this;
 
-    window.addEventListener('popstate', function () {
-      _this._onNavigate();
+    return new Promise(function (resolve) {
+      var eventDisabled = _this._eventDisabled;
+      _this._disableEvent();
+      var fn = function fn() {
+        window.removeEventListener('hashchange', fn);
+        if (!eventDisabled) {
+          _this._enableEvent();
+        }
+        resolve();
+      };
+      window.addEventListener('hashchange', fn);
     });
+  },
+
+
+  // fallback to hashbang url if browser doesn't history API
+  _convertLocation: function _convertLocation() {
+    if (this.base && location.pathname != this.base && location.protocol.indexOf('http') == 0) {
+      var url = location.pathname.replace(this._baseNoTrailingSlash, '');
+      url = this.base + '#!' + url + location.search + location.hash;
+      location.replace(url);
+      // stop executing
+      throw 1;
+    }
+  },
+  _getCurrentItemId: function _getCurrentItemId() {
+    var item = _hashbangWithHistoryApi2.default._parseCurrentLocation.call(this);
+    return item.query._sid;
+  },
+  _parseCurrentLocation: function _parseCurrentLocation() {
+    var item = _hashbangWithHistoryApi2.default._parseCurrentLocation.call(this);
+    delete item.query._sid;
+    return item;
+  },
+  _registerEvent: function _registerEvent() {
+    var _this2 = this;
+
+    this._navigateEvent = function () {
+      _this2._onNavigate();
+    };
+    this._eventDisabled = true;
+    this._enableEvent();
+  },
+  _enableEvent: function _enableEvent() {
+    if (this._eventDisabled) {
+      window.addEventListener('hashchange', this._navigateEvent);
+      this._eventDisabled = false;
+    }
+  },
+  _disableEvent: function _disableEvent() {
+    if (!this._eventDisabled) {
+      window.removeEventListener('hashchange', this._navigateEvent);
+      this._eventDisabled = true;
+    }
   }
 };
 module.exports = exports['default'];
@@ -257,7 +343,7 @@ var _browserUrl = __webpack_require__(0);
 
 var _browserUrl2 = _interopRequireDefault(_browserUrl);
 
-var _html = __webpack_require__(3);
+var _html = __webpack_require__(2);
 
 var _html2 = _interopRequireDefault(_html);
 
@@ -265,7 +351,7 @@ var _hashbangWithHistoryApi = __webpack_require__(1);
 
 var _hashbangWithHistoryApi2 = _interopRequireDefault(_hashbangWithHistoryApi);
 
-var _hashbangOnly = __webpack_require__(2);
+var _hashbangOnly = __webpack_require__(3);
 
 var _hashbangOnly2 = _interopRequireDefault(_hashbangOnly);
 
@@ -275,6 +361,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var _class = function () {
   function _class() {
+    var _this = this;
+
     var _ref = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
     var mode = _ref.mode;
@@ -336,81 +424,75 @@ var _class = function () {
       }
     }
 
+    var promise = void 0;
     // new session
     if (itemIndex == -1) {
       this._sessionId = this._data.sessions.length;
       this._session = [];
       this._data.sessions.push(this._session);
       var item = this._parseCurrentLocation();
-      item = this._change('replace', item);
-      this._session.push(item);
-      this._setCurrentItem(this._session.length - 1);
+      promise = this._change('replace', item).then(function (item) {
+        _this._session.push(item);
+        _this._setCurrentItem(_this._session.length - 1);
+      });
     } else {
       this._sessionId = sessionId;
       this._session = session;
       this._setCurrentItem(itemIndex);
     }
 
-    this._saveData();
-    this._registerEvent();
-    this._dispatchEvent('navigate');
+    Promise.resolve(promise).then(function () {
+      _this._saveData();
+      _this._registerEvent();
+      _this._hookAClick();
+      _this._dispatchEvent('navigate');
+    });
   }
 
   _createClass(_class, [{
     key: 'push',
     value: function push() {
+      var _this2 = this;
+
       if (this.currentIndex != this._session.length - 1) {
         this._session = this._session.slice(0, this.currentIndex + 1);
       }
+
+      var promise = Promise.resolve();
 
       for (var _len = arguments.length, items = Array(_len), _key = 0; _key < _len; _key++) {
         items[_key] = arguments[_key];
       }
 
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
+      items.forEach(function (item) {
+        promise = promise.then(function () {
+          return _this2._change('push', item).then(function (item) {
+            _this2._session.push(item);
+            if (item.state) {
+              _this2.setStateById(item.state, item.id);
+            }
+          });
+        });
+      });
 
-      try {
-        for (var _iterator = items[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var item = _step.value;
-
-          item = this._change('push', item);
-          this._session.push(item);
-          if (item.state) {
-            this.setStateById(item.state, item.id);
-          }
-        }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator.return) {
-            _iterator.return();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
-        }
-      }
-
-      this._setCurrentItem(this._session.length - 1);
-      this._saveData();
-      return this;
+      return promise.then(function () {
+        _this2._setCurrentItem(_this2._session.length - 1);
+        _this2._saveData();
+      });
     }
   }, {
     key: 'replace',
     value: function replace(item) {
-      item = this._change('replace', item);
-      this._session[this.currentIndex] = item;
-      if (item.state) {
-        this.setStateById(item.state, item.id);
-      }
-      this._setCurrentItem(this.currentIndex);
-      this._saveData();
-      return this;
+      var _this3 = this;
+
+      return this._change('replace', item).then(function (item) {
+        _this3._session[_this3.currentIndex] = item;
+        if (item.state) {
+          _this3.setStateById(item.state, item.id);
+        }
+        _this3._setCurrentItem(_this3.currentIndex);
+        _this3._saveData();
+      });
     }
   }, {
     key: 'reset',
@@ -428,70 +510,84 @@ var _class = function () {
         insertItems[_key3 - 2] = arguments[_key3];
       }
 
-      var _this = this;
+      var _this4 = this;
 
       return new Promise(function (resolve) {
-        var originalLength = _this._session.length;
+        var originalLength = _this4._session.length;
         var goSteps = void 0,
             index = void 0;
         var replaceFirst = false;
 
         if (start < 2) {
-          goSteps = 0 - _this.currentIndex;
+          goSteps = 0 - _this4.currentIndex;
           index = 0;
           replaceFirst = true;
         } else {
-          goSteps = start - _this.currentIndex - 2;
+          goSteps = start - _this4.currentIndex - 2;
           index = start - 2;
         }
 
-        _this._disableEvent();
-        _this.go(goSteps).then(function () {
+        _this4._disableEvent();
+        _this4.go(goSteps).then(function () {
           var _session;
 
-          (_session = _this._session).splice.apply(_session, [start, deleteCount].concat(insertItems));
-          for (; index < _this._session.length; index++) {
-            var item = _this._session[index];
+          (_session = _this4._session).splice.apply(_session, [start, deleteCount].concat(insertItems));
+
+          var promise = Promise.resolve();
+
+          var fn = function fn(index) {
+            var item = _this4._session[index];
+            var p = void 0;
             if (replaceFirst) {
-              item = _this._change('replace', item);
               replaceFirst = false;
+              p = _this4._change('replace', item);
             } else {
-              item = _this._change('push', item);
+              p = _this4._change('push', item);
             }
-            _this._session[index] = item;
-            if (item.state) {
-              _this.setStateById(item.state, item.id);
-            }
-          }
 
-          var promise = void 0;
-
-          if (_this._session.length == 1 && originalLength > 1) {
-            _this._setCurrentItem(0);
-            _this._change('push', {
-              id: 'PLACEHOLDER',
-              path: _this.current.path,
-              query: _this.current.query,
-              hash: _this.current.hash
+            promise = promise.then(function () {
+              return p.then(function (item) {
+                _this4._session[index] = item;
+                if (item.state) {
+                  _this4.setStateById(item.state, item.id);
+                }
+              });
             });
+          };
 
-            promise = _this.back();
-          } else {
-            var lastIndex = _this._session.length - 1;
-            var currentIndex = _this.findIndexById(_this.current.id);
-            if (currentIndex == -1) {
-              currentIndex = lastIndex;
-            } else if (currentIndex != lastIndex) {
-              promise = _this.go(currentIndex - lastIndex);
-            }
-
-            _this._setCurrentItem(currentIndex);
-            _this._saveData();
+          for (; index < _this4._session.length; index++) {
+            fn(index);
           }
 
-          Promise.resolve(promise).then(function () {
-            _this._enableEvent();
-            resolve();
+          promise.then(function () {
+            var p = void 0;
+            if (_this4._session.length == 1 && originalLength > 1) {
+              _this4._setCurrentItem(0);
+              p = _this4._change('push', {
+                id: 'PLACEHOLDER',
+                path: _this4.current.path,
+                query: _this4.current.query,
+                hash: _this4.current.hash
+              }).then(function () {
+                return _this4.back();
+              });
+            } else {
+              var lastIndex = _this4._session.length - 1;
+              var currentIndex = _this4.findIndexById(_this4.current.id);
+              if (currentIndex == -1) {
+                currentIndex = lastIndex;
+              } else if (currentIndex != lastIndex) {
+                p = _this4.go(currentIndex - lastIndex);
+              }
+
+              _this4._setCurrentItem(currentIndex);
+              _this4._saveData();
+            }
+
+            Promise.resolve(p).then(function () {
+              _this4._enableEvent();
+              resolve();
+            });
           });
         });
       });
@@ -499,13 +595,16 @@ var _class = function () {
   }, {
     key: 'goto',
     value: function goto(location) {
+      var _this5 = this;
+
       var url = this._createUrl(location);
       var currentUrl = this._createUrl(this.current);
 
       // different location
       if (url.pathname + url.search != currentUrl.pathname + currentUrl.search) {
-        this.push(location);
-        this._dispatchEvent('navigate');
+        return this.push(location).then(function () {
+          _this5._dispatchEvent('navigate');
+        });
       }
       // same location
       else {
@@ -513,15 +612,17 @@ var _class = function () {
           if (url.hash != currentUrl.hash) {
             location = this._format(location);
             location.id = this._getStateId(this.current.id) + ':' + this._uniqueId();
-            this.push(location);
-            this._dispatchEvent('hashChange');
+            return this.push(location).then(function () {
+              _this5._dispatchEvent('hashChange');
+            });
           }
           // nothing changed, and no hash present
           else if (!currentUrl.hash) {
               this._dispatchEvent('navigate');
             }
+
+          return Promise.resolve();
         }
-      return this;
     }
   }, {
     key: 'reload',
@@ -532,32 +633,22 @@ var _class = function () {
   }, {
     key: 'pop',
     value: function pop() {
-      this.splice(this._session.length - 1, 1);
-      return this;
+      return this.splice(this._session.length - 1, 1);
     }
   }, {
     key: 'go',
     value: function go(n) {
-      var _this2 = this;
-
-      if (n == 0) {
-        return Promise.resolve();
-      } else {
-        return new Promise(function (resolve) {
-          history.go(n);
-          _this2._goResolve = resolve;
-        });
-      }
+      return this._go(n);
     }
   }, {
     key: 'back',
     value: function back() {
-      return this.go(-1);
+      return this._go(-1);
     }
   }, {
     key: 'forward',
     value: function forward() {
-      return this.go(1);
+      return this._go(1);
     }
   }, {
     key: 'get',
@@ -575,10 +666,10 @@ var _class = function () {
   }, {
     key: 'getAll',
     value: function getAll() {
-      var _this3 = this;
+      var _this6 = this;
 
       return this._session.map(function (v, i) {
-        return _this3.get(i);
+        return _this6.get(i);
       });
     }
   }, {
@@ -666,13 +757,13 @@ var _class = function () {
       item.query = url.query;
       item.hash = url.hash;
 
-      this._changeHistory(method, item, url);
+      return this._changeHistory(method, item, url).then(function () {
+        if (item.title) {
+          document.title = item.title;
+        }
 
-      if (item.title) {
-        document.title = item.title;
-      }
-
-      return item;
+        return item;
+      });
     }
   }, {
     key: '_format',
@@ -726,14 +817,14 @@ var _class = function () {
   }, {
     key: '_saveData',
     value: function _saveData() {
-      var _this4 = this;
+      var _this7 = this;
 
       // optimize for multiple calls in a short period
       if (!this._saveDataTimer) {
         this._saveDataTimer = setTimeout(function () {
-          _this4._saveDataTimer = null;
-          _this4._data.sessions[_this4._sessionId] = _this4._session;
-          sessionStorage.setItem('_spaHistory', JSON.stringify(_this4._data));
+          _this7._saveDataTimer = null;
+          _this7._data.sessions[_this7._sessionId] = _this7._session;
+          sessionStorage.setItem('_spaHistory', JSON.stringify(_this7._data));
         }, 100);
       }
     }
@@ -752,37 +843,47 @@ var _class = function () {
       }
     }
   }, {
-    key: '_disableEvent',
-    value: function _disableEvent() {
-      this._eventDisabled = true;
-    }
-  }, {
-    key: '_enableEvent',
-    value: function _enableEvent() {
-      this._eventDisabled = false;
-    }
-  }, {
     key: '_onNavigate',
     value: function _onNavigate() {
-      var _this5 = this;
+      var _this8 = this;
 
-      if (this._goResolve) {
-        this._goResolve();
-        this._goResolve = null;
+      var id = this._getCurrentItemId();
+      if (id == 'PLACEHOLDER') {
+        this._disableEvent();
+        this.back().then(function () {
+          _this8._enableEvent();
+        });
+      } else {
+        this._setCurrentItem(this.findIndexById(id));
+        this._dispatchEvent('navigate');
       }
+    }
+  }, {
+    key: '_hookAClick',
+    value: function _hookAClick() {
+      var _this9 = this;
 
-      if (!this._eventDisabled) {
-        var id = this._getCurrentItemId();
-        if (id == 'PLACEHOLDER') {
-          this._disableEvent();
-          this.back().then(function () {
-            _this5._enableEvent();
-          });
-        } else {
-          this._setCurrentItem(this.findIndexById(id));
-          this._dispatchEvent('navigate');
+      document.body.addEventListener('click', function (e) {
+        var a = e.target.closest('a');
+
+        if (!a || a.getAttribute('spa-history-skip') != null) {
+          return;
         }
-      }
+
+        var url = new _browserUrl2.default(a.href);
+        var base = new _browserUrl2.default(base);
+        if (url.href.indexOf(base.href) != 0) {
+          return;
+        }
+
+        var target = a.getAttribute('target');
+        if (target && (target == '_blank' || target == '_parent' && window.parent != window || target == '_top' && window.top != window || !(target in { _self: 1, _blank: 1, _parent: 1, _top: 1 }) && target != window.name)) {
+          return;
+        }
+
+        e.preventDefault();
+        _this9.goto(url.href);
+      });
     }
   }, {
     key: 'length',
