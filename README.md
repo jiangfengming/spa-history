@@ -21,15 +21,16 @@ Operate the browser history like Array.
 - history.findIndexByPath(path) -> Number
 - history.findLastByPath(path) -> { id, path, query, hash, state }
 - history.findLastIndexByPath(path) -> Number
-- history.setState(state, index) -> this
-- history.setStateById(state, id) -> this
+- history.setState(state, index = currentIndex) -> this
+- history.setStateById(state, id = currentId) -> this
 
 
 ```js
 let spaHistory = new SpaHistory({
   mode: undefined, // html5, hashbang. default: undefined (auto fallback)
   base: '/', // default: /
-  onLocationChange: function({ id, path, query, hash, state }) {
+
+  onNavigate: function({ id, path, query, hash, state }) {
 
   },
 
@@ -38,3 +39,7 @@ let spaHistory = new SpaHistory({
   }
 });
 ```
+
+
+## License
+MIT

@@ -85,8 +85,8 @@ export default class {
   }
 
   push(...items) {
-    if (this.currentIndex != this._session.length - 1) {
-      this._session = this._session.slice(0, this.currentIndex + 1);
+    if (this._cursor != this._session.length - 1) {
+      this._session = this._session.slice(0, this._cursor + 1);
     }
 
     let promise = Promise.resolve();
@@ -109,11 +109,11 @@ export default class {
 
   replace(item) {
     return this._change('replace', item).then((item) => {
-      this._session[this.currentIndex] = item;
+      this._session[this._cursor] = item;
       if (item.state) {
         this.setStateById(item.state, item.id);
       }
-      this._setCurrentItem(this.currentIndex);
+      this._setCurrentItem(this._cursor);
       this._saveData();
     });
   }
@@ -129,11 +129,11 @@ export default class {
       let replaceFirst = false;
 
       if (start < 2) {
-        goSteps = 0 - this.currentIndex;
+        goSteps = 0 - this._cursor;
         index = 0;
         replaceFirst = true;
       } else {
-        goSteps = start - this.currentIndex - 2;
+        goSteps = start - this._cursor - 2;
         index = start - 2;
       }
 
@@ -302,7 +302,7 @@ export default class {
   }
 
   setState(state, index) {
-    let id = index ? this._session[index].id : null;
+    let id = index && this._session[index] ? this._session[index].id : null;
     return this.setStateById(state, id);
   }
 
@@ -327,7 +327,15 @@ export default class {
 
   _setCurrentItem(index) {
     this.currentIndex = index;
-    this.current = this.get(index);
+
+    if (index != -1) {
+      this._cursor = index;
+      this.current = this.get(index);
+    } else {
+      this._cursor = 0;
+      this.current = this._parseCurrentLocation();
+      this.current.id = this._getCurrentItemId();
+    }
   }
 
   _change(method, item) {
@@ -441,7 +449,7 @@ export default class {
       }
 
       let url = new Url(a.href);
-      let base = new Url(base);
+      let base = new Url(this.base);
       if (url.href.indexOf(base.href) != 0) {
         return;
       }
