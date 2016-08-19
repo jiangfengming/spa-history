@@ -454,8 +454,8 @@ var _class = function () {
     value: function push() {
       var _this2 = this;
 
-      if (this.currentIndex != this._session.length - 1) {
-        this._session = this._session.slice(0, this.currentIndex + 1);
+      if (this._cursor != this._session.length - 1) {
+        this._session = this._session.slice(0, this._cursor + 1);
       }
 
       var promise = Promise.resolve();
@@ -486,11 +486,11 @@ var _class = function () {
       var _this3 = this;
 
       return this._change('replace', item).then(function (item) {
-        _this3._session[_this3.currentIndex] = item;
+        _this3._session[_this3._cursor] = item;
         if (item.state) {
           _this3.setStateById(item.state, item.id);
         }
-        _this3._setCurrentItem(_this3.currentIndex);
+        _this3._setCurrentItem(_this3._cursor);
         _this3._saveData();
       });
     }
@@ -519,11 +519,11 @@ var _class = function () {
         var replaceFirst = false;
 
         if (start < 2) {
-          goSteps = 0 - _this4.currentIndex;
+          goSteps = 0 - _this4._cursor;
           index = 0;
           replaceFirst = true;
         } else {
-          goSteps = start - _this4.currentIndex - 2;
+          goSteps = start - _this4._cursor - 2;
           index = start - 2;
         }
 
@@ -713,7 +713,7 @@ var _class = function () {
   }, {
     key: 'setState',
     value: function setState(state, index) {
-      var id = index ? this._session[index].id : null;
+      var id = index && this._session[index] ? this._session[index].id : null;
       return this.setStateById(state, id);
     }
   }, {
@@ -741,7 +741,15 @@ var _class = function () {
     key: '_setCurrentItem',
     value: function _setCurrentItem(index) {
       this.currentIndex = index;
-      this.current = this.get(index);
+
+      if (index != -1) {
+        this._cursor = index;
+        this.current = this.get(index);
+      } else {
+        this._cursor = 0;
+        this.current = this._parseCurrentLocation();
+        this.current.id = this._getCurrentItemId();
+      }
     }
   }, {
     key: '_change',
@@ -871,7 +879,7 @@ var _class = function () {
         }
 
         var url = new _browserUrl2.default(a.href);
-        var base = new _browserUrl2.default(base);
+        var base = new _browserUrl2.default(_this9.base);
         if (url.href.indexOf(base.href) != 0) {
           return;
         }
