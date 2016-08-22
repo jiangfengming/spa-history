@@ -889,7 +889,7 @@ var _class = function () {
   }, {
     key: 'setState',
     value: function setState(state, index) {
-      var id = index && this._session[index] ? this._session[index].id : null;
+      var id = index != undefined && this._session[index] ? this._session[index].id : null;
       return this.setStateById(state, id);
     }
   }, {
