@@ -302,7 +302,7 @@ export default class {
   }
 
   setState(state, index) {
-    let id = index && this._session[index] ? this._session[index].id : null;
+    let id = index != undefined && this._session[index] ? this._session[index].id : null;
     return this.setStateById(state, id);
   }
 
