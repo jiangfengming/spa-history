@@ -16,7 +16,7 @@ export default {
   },
 
   _onLocationChange() {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       let eventDisabled = this._eventDisabled;
       this._disableEvent();
       let fn = () => {

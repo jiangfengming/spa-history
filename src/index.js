@@ -49,7 +49,7 @@ export default class {
       sessionId = Number(itemId.split(':')[0]);
       session = this._data.sessions[sessionId];
       if (session) {
-        itemIndex = session.findIndex((item) => {
+        itemIndex = session.findIndex(item => {
           return item.id == itemId;
         });
       }
@@ -62,7 +62,7 @@ export default class {
       this._session = [];
       this._data.sessions.push(this._session);
       let item = this._parseCurrentLocation();
-      promise = this._change('replace', item).then((item) => {
+      promise = this._change('replace', item).then(item => {
         this._session.push(item);
         this._setCurrentItem(this._session.length - 1);
       });
@@ -90,9 +90,9 @@ export default class {
     }
 
     let promise = Promise.resolve();
-    items.forEach((item) => {
+    items.forEach(item => {
       promise = promise.then(() => {
-        return this._change('push', item).then((item) => {
+        return this._change('push', item).then(item => {
           this._session.push(item);
           if (item.state) {
             this.setStateById(item.state, item.id);
@@ -108,7 +108,7 @@ export default class {
   }
 
   replace(item) {
-    return this._change('replace', item).then((item) => {
+    return this._change('replace', item).then(item => {
       this._session[this._cursor] = item;
       if (item.state) {
         this.setStateById(item.state, item.id);
@@ -123,7 +123,7 @@ export default class {
   }
 
   splice(start, deleteCount, ...insertItems) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       let originalLength = this._session.length;
       let goSteps, index;
       let replaceFirst = false;
@@ -143,7 +143,7 @@ export default class {
 
         let promise = Promise.resolve();
 
-        let fn = (index) => {
+        let fn = index => {
           let item = this._session[index];
           let p;
           if (replaceFirst) {
@@ -154,7 +154,7 @@ export default class {
           }
 
           promise = promise.then(() => {
-            return p.then((item) => {
+            return p.then(item => {
               this._session[index] = item;
               if (item.state) {
                 this.setStateById(item.state, item.id);
@@ -274,7 +274,7 @@ export default class {
   }
 
   findIndexById(id) {
-    return this._session.findIndex((value) => {
+    return this._session.findIndex(value => {
       return value.id == id;
     });
   }
@@ -284,7 +284,7 @@ export default class {
   }
 
   findIndexByPath(path) {
-    return this._session.findIndex((item) => {
+    return this._session.findIndex(item => {
       return item.path == path;
     });
   }
@@ -441,7 +441,7 @@ export default class {
   }
 
   _hookAClick() {
-    document.body.addEventListener('click', (e) => {
+    document.body.addEventListener('click', e => {
       let a = e.target.closest('a');
 
       if (!a || a.getAttribute('spa-history-skip') != null) {
