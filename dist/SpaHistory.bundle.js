@@ -284,7 +284,6 @@ exports.default = {
 
 
   _go: _html2.default._go,
-  _onLocationChange: _html2.default._onLocationChange,
 
   // no need to fallback to hashbang URL if history API is available
   _convertLocation: function _convertLocation() {},
@@ -342,19 +341,10 @@ exports.default = {
     }
 
     history.go(n);
-    return this._onLocationChange();
-  },
-  _onLocationChange: function _onLocationChange() {
-    var _this = this;
 
     return new Promise(function (resolve) {
-      var eventDisabled = _this._eventDisabled;
-      _this._disableEvent();
       var fn = function fn() {
         window.removeEventListener('popstate', fn);
-        if (!eventDisabled) {
-          _this._enableEvent();
-        }
         resolve();
       };
       window.addEventListener('popstate', fn);
@@ -382,10 +372,10 @@ exports.default = {
     };
   },
   _registerEvent: function _registerEvent() {
-    var _this2 = this;
+    var _this = this;
 
     this._navigateEvent = function () {
-      _this2._onNavigate();
+      _this._onNavigate();
     };
     this._eventDisabled = true;
     this._enableEvent();
@@ -428,21 +418,11 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 exports.default = {
   _changeHistory: function _changeHistory(method, item, url) {
+    var _this = this;
+
     url = new _browserUrl2.default(url);
     url.addQuery('_sid', item.id);
     location[method == 'push' ? 'assign' : 'replace']('#!' + url.pathname + url.search + url.hash);
-    return this._onLocationChange();
-  },
-  _go: function _go(n) {
-    if (!n) {
-      return Promise.resolve();
-    }
-
-    history.go(n);
-    return this._onLocationChange();
-  },
-  _onLocationChange: function _onLocationChange() {
-    var _this = this;
 
     return new Promise(function (resolve) {
       var eventDisabled = _this._eventDisabled;
@@ -452,6 +432,21 @@ exports.default = {
         if (!eventDisabled) {
           _this._enableEvent();
         }
+        resolve();
+      };
+      window.addEventListener('hashchange', fn);
+    });
+  },
+  _go: function _go(n) {
+    if (!n) {
+      return Promise.resolve();
+    }
+
+    history.go(n);
+
+    return new Promise(function (resolve) {
+      var fn = function fn() {
+        window.removeEventListener('hashchange', fn);
         resolve();
       };
       window.addEventListener('hashchange', fn);

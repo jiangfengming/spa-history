@@ -6,19 +6,7 @@ export default {
     url = new Url(url);
     url.addQuery('_sid', item.id);
     location[method == 'push' ? 'assign' : 'replace']('#!' + url.pathname + url.search + url.hash);
-    return this._onLocationChange();
-  },
 
-  _go(n) {
-    if (!n) {
-      return Promise.resolve();
-    }
-
-    history.go(n);
-    return this._onLocationChange();
-  },
-
-  _onLocationChange() {
     return new Promise(resolve => {
       let eventDisabled = this._eventDisabled;
       this._disableEvent();
@@ -27,6 +15,22 @@ export default {
         if (!eventDisabled) {
           this._enableEvent();
         }
+        resolve();
+      };
+      window.addEventListener('hashchange', fn);
+    });
+  },
+
+  _go(n) {
+    if (!n) {
+      return Promise.resolve();
+    }
+
+    history.go(n);
+
+    return new Promise(resolve => {
+      let fn = () => {
+        window.removeEventListener('hashchange', fn);
         resolve();
       };
       window.addEventListener('hashchange', fn);

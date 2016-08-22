@@ -12,18 +12,10 @@ export default {
     }
 
     history.go(n);
-    return this._onLocationChange();
-  },
 
-  _onLocationChange() {
     return new Promise(resolve => {
-      let eventDisabled = this._eventDisabled;
-      this._disableEvent();
       let fn = () => {
         window.removeEventListener('popstate', fn);
-        if (!eventDisabled) {
-          this._enableEvent();
-        }
         resolve();
       };
       window.addEventListener('popstate', fn);

@@ -14,7 +14,7 @@ Operate the browser history like Array.
 - history.go(n) -> Promise
 - history.back() -> Promise
 - history.forward() -> Promise
-- history.reload() -> this
+- history.reload() -> history
 - history.get(index) -> { id, path, query, hash, state }
 - history.getAll() -> [{ id, path, query, hash, state }, ...]
 - history.findById(id) -> { id, path, query, hash, state }
@@ -23,8 +23,8 @@ Operate the browser history like Array.
 - history.findIndexByPath(path) -> Number
 - history.findLastByPath(path) -> { id, path, query, hash, state }
 - history.findLastIndexByPath(path) -> Number
-- history.setState(state, index = currentIndex) -> this
-- history.setStateById(state, id = currentId) -> this
+- history.setState(state, index = currentIndex) -> history
+- history.setStateById(state, id = currentId) -> history
 
 
 ```js

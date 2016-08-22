@@ -7,7 +7,6 @@ export default {
   },
 
   _go: mixinHtml5._go,
-  _onLocationChange: mixinHtml5._onLocationChange,
 
   // no need to fallback to hashbang URL if history API is available
   _convertLocation() {},
