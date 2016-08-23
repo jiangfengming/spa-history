@@ -301,23 +301,41 @@ export default class {
     }
   }
 
-  setState(state, index) {
-    let id = index != undefined && this._session[index] ? this._session[index].id : null;
-    return this.setStateById(state, id);
+  setState(state, index, merge) {
+    if (index == undefined) {
+      return this.setStateById(state, null, merge);
+    } else if (this._session[index]) {
+      return this.setStateById(state, this._session[index].id, merge);
+    } else {
+      return false;
+    }
   }
 
-  setStateById(state, id) {
+  setStateById(state, id, merge) {
     if (!id) {
       id = this.current.id;
     }
 
     let stateId = this._getStateId(id);
+
+    if (merge) {
+      state = Object.assign({}, this._data.states[stateId], state);
+    }
+
     this._data.states[stateId] = state;
     if (id == this.current.id) {
       this.current.state = state;
     }
     this._saveData();
     return this;
+  }
+
+  mergeState(state, index) {
+    return this.setState(state, index, true);
+  }
+
+  mergeStateById(state, id) {
+    return this.setStateById(state, id, true);
   }
 
   _getStateId(id) {

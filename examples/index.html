@@ -8,12 +8,18 @@
   </head>
 
   <body>
+    <button type="button" onclick="spaHistory.back()">back</button>
+    <button type="button" onclick="spaHistory.forward()">forward</button>
+    <button type="button" onclick="spaHistory.reload()">reload</button>
     <button type="button" onclick="spaHistory.goto('/foo')">goto page foo</button>
     <button type="button" onclick="spaHistory.goto({ path: '/bar' })">goto page bar</button>
     <button type="button" onclick="spaHistory.goto('/foo#a')">goto('/foo#a')</button>
     <button type="button" onclick="spaHistory.reset('/a')">reset('/a')</button>
     <button type="button" onclick="spaHistory.reset('/a', '/b')">reset('/a', '/b')</button>
-
+    <button type="button" onclick="spaHistory.setState({ foo: 1 })">setState({ foo: 1 })</button>
+    <button type="button" onclick="spaHistory.setState({ bar: 2 }, 0)">setState({ bar: 2 }, 0)</button>
+    <button type="button" onclick="spaHistory.mergeState({ foo: 3 })">mergeState({ foo: 3 })</button>
+    <button type="button" onclick="spaHistory.mergeState({ bar: 4 }, 0)">mergeState({ bar: 4 }, 0)</button>
     <a href="/foobar">/foobar</a>
 
     <script>
@@ -21,12 +27,12 @@
 
     var spaHistory = new SpaHistory({
       onNavigate: function(loc) {
-        console.log(loc);
-        console.log(this.getAll());
+        console.log('location:', loc);
+        console.log('all:', this.getAll());
       },
 
       onHashChange: function(hash) {
-        console.log(hash);
+        console.log('Hash Changed:', hash);
       }
     });
     </script>

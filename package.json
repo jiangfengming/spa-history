@@ -1,6 +1,6 @@
 {
   "name": "spa-history",
-  "version": "0.1.0-beta.2",
+  "version": "0.1.0-beta.3",
   "description": "Operate the browser history like Array.",
   "main": "dist/SpaHistory.js",
   "scripts": {

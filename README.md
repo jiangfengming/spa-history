@@ -2,10 +2,27 @@
 
 Operate the browser history like Array.
 
+## Usage
+```js
+let spaHistory = new SpaHistory({
+  mode: undefined, // html5, hashbang. default: undefined (auto fallback)
+  base: '/', // default: /
+
+  onNavigate: function({ id, path, query, hash, state }) {
+
+  },
+
+  onHashChange: function(hash) {
+
+  }
+});
+```
+
+## APIs
 - history.length -> Number
 - history.current -> { id, path, query, hash, state }
 - history.currentIndex -> Number
-- history.goto({ path, query, hash, state }) -> promise
+- history.goto({ path, query, hash, state }) -> Promise
 - history.splice(start, deleteCount, ...insertItems) -> Promise
 - history.push(...{ path, query, hash, state }) -> Promise
 - history.replace({ path, query, hash, state }) -> Promise
@@ -23,25 +40,20 @@ Operate the browser history like Array.
 - history.findIndexByPath(path) -> Number
 - history.findLastByPath(path) -> { id, path, query, hash, state }
 - history.findLastIndexByPath(path) -> Number
-- history.setState(state, index = currentIndex) -> history
-- history.setStateById(state, id = currentId) -> history
+- history.setState(state, index = currentIndex, merge = false) -> history
+- history.setStateById(state, id = currentId, merge = false) -> history
+- history.mergeState(state, index = currentIndex) == history.setState(state, index, true)
+- history.mergeStateById(state, id = currentId) == history.setStateById(state, id, true)
 
-
-```js
-let spaHistory = new SpaHistory({
-  mode: undefined, // html5, hashbang. default: undefined (auto fallback)
-  base: '/', // default: /
-
-  onNavigate: function({ id, path, query, hash, state }) {
-
-  },
-
-  onHashChange: function(hash) {
-
-  }
-});
+## Build
+build dev
 ```
-
+npm run build-dev
+```
+build dist
+```
+npm run build-dist
+```
 
 ## License
 MIT
