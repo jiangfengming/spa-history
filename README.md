@@ -1,18 +1,20 @@
 # spa-history
 
-Operate the browser history like Array.
+A rewritable and stateful browser history.
+
+Note: can only be used within a single-page application.
 
 ## Usage
 ```js
 let spaHistory = new SpaHistory({
   mode: undefined, // html5, hashbang. default: undefined (auto fallback)
-  base: '/', // default: /
+  base: '/path/to/app/', // default: /
 
-  onNavigate: function({ id, path, query, hash, state }) {
+  onNavigate({ id, path, query, hash, state }) {
 
   },
 
-  onHashChange: function(hash) {
+  onHashChange(hash) {
 
   }
 });
@@ -24,9 +26,9 @@ let spaHistory = new SpaHistory({
 - history.currentIndex -> Number
 - history.goto({ path, query, hash, state }) -> Promise
 - history.splice(start, deleteCount, ...insertItems) -> Promise
-- history.push(...{ path, query, hash, state }) -> Promise
+- history.push({ path, query, hash, state }, ...) -> Promise
 - history.replace({ path, query, hash, state }) -> Promise
-- history.reset(...{ path, query, hash, state }) -> Promise
+- history.reset({ path, query, hash, state }, ...) -> Promise
 - history.pop() -> Promise
 - history.go(n) -> Promise
 - history.back() -> Promise

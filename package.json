@@ -1,7 +1,7 @@
 {
   "name": "spa-history",
-  "version": "0.1.0-beta.3",
-  "description": "Operate the browser history like Array.",
+  "version": "0.1.0-beta.4",
+  "description": "A rewritable and stateful browser history.",
   "main": "dist/SpaHistory.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fenivana/managed-history.git"
+    "url": "git+https://github.com/fenivana/spa-history.git"
   },
   "keywords": [
     "history"
@@ -18,14 +18,15 @@
   "author": "Jiang Fengming",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/fenivana/managed-history/issues"
+    "url": "https://github.com/fenivana/spa-history/issues"
   },
-  "homepage": "https://github.com/fenivana/managed-history#readme",
+  "homepage": "https://github.com/fenivana/spa-history#readme",
   "devDependencies": {
     "babel-core": "^6.13.2",
     "babel-loader": "^6.2.5",
     "babel-plugin-add-module-exports": "^0.2.1",
     "babel-preset-es2015": "^6.13.2",
+    "eslint": "^3.3.1",
     "webpack": "^2.1.0-beta.21",
     "webpack-dev-server": "^2.1.0-beta.0"
   },
