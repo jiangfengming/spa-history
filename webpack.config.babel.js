@@ -27,6 +27,7 @@ export default function(options = {}) {
     },
 
     devServer: {
+      noInfo: true,
       host: '0.0.0.0',
       port: 8010,
       contentBase: './examples',

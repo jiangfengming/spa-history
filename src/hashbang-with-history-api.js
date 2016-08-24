@@ -4,6 +4,7 @@ import mixinHtml5 from './html5';
 export default {
   _changeHistory(method, item, url) {
     history[method + 'State']({ id: item.id }, '', '#!' + url.pathname + url.search + url.hash);
+    return Promise.resolve();
   },
 
   _go: mixinHtml5._go,

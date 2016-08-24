@@ -1,7 +1,7 @@
 import Url from 'browser-url';
-import mixinHtml5 from './html5.js';
-import mixinHashbangWithHistoryApi from './hashbang-with-history-api.js';
-import mixinHashbangOnly from './hashbang-only.js';
+import mixinHtml5 from './html5';
+import mixinHashbangWithHistoryApi from './hashbang-with-history-api';
+import mixinHashbangOnly from './hashbang-only';
 
 export default class {
   constructor({ mode, base = '/', onNavigate, onHashChange } = {}) {

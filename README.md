@@ -52,6 +52,8 @@ build dev
 ```
 npm run build-dev
 ```
+Open http://localhost:8010/
+
 build dist
 ```
 npm run build-dist

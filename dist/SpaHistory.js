@@ -104,6 +104,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 exports.default = {
   _changeHistory: function _changeHistory(method, item, url) {
     history[method + 'State']({ id: item.id }, '', '#!' + url.pathname + url.search + url.hash);
+    return Promise.resolve();
   },
 
 
