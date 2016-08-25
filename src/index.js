@@ -4,7 +4,7 @@ import mixinHashbangWithHistoryApi from './hashbang-with-history-api';
 import mixinHashbangOnly from './hashbang-only';
 
 export default class {
-  constructor({ mode, base = '/', onNavigate, onHashChange } = {}) {
+  constructor({ mode, base = '/', beforeNavigate, onNavigate, onHashChange } = {}) {
     this.mode = mode;
     if (!this.mode) {
       this.mode = history.pushState && location.protocol.indexOf('http') == 0 ? 'html5' : 'hashbang';
@@ -442,6 +442,12 @@ export default class {
       this.onNavigate(this.current);
     } else if (name == 'hashChange') {
       this.onHashChange && this.onHashChange(this.current.hash);
+    } else if (name == 'beforeNavigate') {
+      if (this.beforeNavigate) {
+        return this.beforeNavigate();
+      } else {
+        return true;
+      }
     }
   }
 
@@ -453,8 +459,16 @@ export default class {
         this._enableEvent();
       });
     } else {
+      let lastStateId = this._getStateId(this.current.id);
+
       this._setCurrentItem(this.findIndexById(id));
-      this._dispatchEvent('navigate');
+      let currentStateId = this._getStateId(this.current.id);
+      if (lastStateId == currentStateId) {
+        this._dispatchEvent('hashChange');
+      } else {
+        this._dispatchEvent('beforeNavigate');
+        this._dispatchEvent('navigate');
+      }
     }
   }
 
