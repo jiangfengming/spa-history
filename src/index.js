@@ -25,6 +25,7 @@ export default class {
 
     this.base = base;
     this._baseNoTrailingSlash = base.replace(/\/$/, '');
+    this.beforeNavigate = beforeNavigate;
     this.onNavigate = onNavigate;
     this.onHashChange = onHashChange;
 
@@ -76,7 +77,7 @@ export default class {
       this._saveData();
       this._registerEvent();
       this._hookAClick();
-      this._dispatchEvent('navigate');
+      this._dispatchEvent('onNavigate', this.current);
     });
   }
 
@@ -207,31 +208,45 @@ export default class {
 
     // different location
     if (url.pathname + url.search != currentUrl.pathname + currentUrl.search) {
-      return this.push(location).then(() => {
-        this._dispatchEvent('navigate');
+      return this._dispatchEvent('beforeNavigate', url, false).then((bool) => {
+        if (bool) {
+          return this.push(location).then(() => {
+            return this._dispatchEvent('onNavigate', this.current, false);
+          });
+        }
       });
     }
     // same location
     else {
-      // hash changed
-      if (url.hash != currentUrl.hash) {
-        location = this._format(location);
-        location.id = this._getStateId(this.current.id) + ':' + this._uniqueId();
-        return this.push(location).then(() => {
-          this._dispatchEvent('hashChange');
+      if (url.hash) {
+        // nothing changed
+        if (url.hash == currentUrl.hash) {
+          return Promise.resolve(false);
+        }
+        // hash changed
+        else {
+          location = this._format(location);
+          location.id = this._getStateId(this.current.id) + ':' + this._uniqueId();
+          return this.push(location).then(() => {
+            return this._dispatchEvent('onHashChange', this.current.hash);
+          });
+        }
+      }
+      // nothing changed, and no hash. reload
+      else {
+        return this._dispatchEvent('beforeNavigate', url, true).then((bool) => {
+          if (bool) {
+            return this.push(location).then(() => {
+              return this._dispatchEvent('onNavigate', this.current, true);
+            });
+          }
         });
       }
-      // nothing changed, and no hash present
-      else if (!currentUrl.hash) {
-        this._dispatchEvent('navigate');
-      }
-
-      return Promise.resolve();
     }
   }
 
   reload() {
-    this._dispatchEvent('navigate');
+    this._dispatchEvent('onNavigate', this.current);
     return this;
   }
 
@@ -437,18 +452,8 @@ export default class {
     return JSON.parse(sessionStorage.getItem('_spaHistory'));
   }
 
-  _dispatchEvent(name) {
-    if (name == 'navigate') {
-      this.onNavigate(this.current);
-    } else if (name == 'hashChange') {
-      this.onHashChange && this.onHashChange(this.current.hash);
-    } else if (name == 'beforeNavigate') {
-      if (this.beforeNavigate) {
-        return this.beforeNavigate();
-      } else {
-        return true;
-      }
-    }
+  _dispatchEvent(name, ...args) {
+    return Promise.resolve(this[name] ? this[name](...args) : true);
   }
 
   _onNavigate() {
@@ -464,10 +469,10 @@ export default class {
       this._setCurrentItem(this.findIndexById(id));
       let currentStateId = this._getStateId(this.current.id);
       if (lastStateId == currentStateId) {
-        this._dispatchEvent('hashChange');
+        this._dispatchEvent('onHashChange', this.current.hash);
       } else {
         this._dispatchEvent('beforeNavigate');
-        this._dispatchEvent('navigate');
+        this._dispatchEvent('onNavigate', this.current);
       }
     }
   }
