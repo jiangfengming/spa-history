@@ -1,6 +1,6 @@
 {
   "name": "spa-history",
-  "version": "0.1.0-beta.6",
+  "version": "0.1.0-beta.7",
   "description": "A rewritable and stateful browser history.",
   "main": "dist/SpaHistory.js",
   "scripts": {
