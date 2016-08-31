@@ -438,14 +438,8 @@ export default class {
   }
   */
   _saveData() {
-    // optimize for multiple calls in a short period
-    if (!this._saveDataTimer) {
-      this._saveDataTimer = setTimeout(() => {
-        this._saveDataTimer = null;
-        this._data.sessions[this._sessionId] = this._session;
-        sessionStorage.setItem('_spaHistory', JSON.stringify(this._data));
-      }, 100);
-    }
+    this._data.sessions[this._sessionId] = this._session;
+    sessionStorage.setItem('_spaHistory', JSON.stringify(this._data));
   }
 
   _readData() {

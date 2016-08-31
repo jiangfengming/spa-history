@@ -1017,16 +1017,8 @@ var _class = function () {
   }, {
     key: '_saveData',
     value: function _saveData() {
-      var _this7 = this;
-
-      // optimize for multiple calls in a short period
-      if (!this._saveDataTimer) {
-        this._saveDataTimer = setTimeout(function () {
-          _this7._saveDataTimer = null;
-          _this7._data.sessions[_this7._sessionId] = _this7._session;
-          sessionStorage.setItem('_spaHistory', JSON.stringify(_this7._data));
-        }, 100);
-      }
+      this._data.sessions[this._sessionId] = this._session;
+      sessionStorage.setItem('_spaHistory', JSON.stringify(this._data));
     }
   }, {
     key: '_readData',
@@ -1045,13 +1037,13 @@ var _class = function () {
   }, {
     key: '_onNavigate',
     value: function _onNavigate() {
-      var _this8 = this;
+      var _this7 = this;
 
       var id = this._getCurrentItemId();
       if (id == 'PLACEHOLDER') {
         this._disableEvent();
         this.back().then(function () {
-          _this8._enableEvent();
+          _this7._enableEvent();
         });
       } else {
         this._setCurrentItem(this.findIndexById(id));
@@ -1061,7 +1053,7 @@ var _class = function () {
   }, {
     key: '_hookAClick',
     value: function _hookAClick() {
-      var _this9 = this;
+      var _this8 = this;
 
       document.body.addEventListener('click', function (e) {
         var a = e.target.closest('a');
@@ -1071,7 +1063,7 @@ var _class = function () {
         }
 
         var url = new _browserUrl2.default(a.href);
-        var base = new _browserUrl2.default(_this9.base);
+        var base = new _browserUrl2.default(_this8.base);
         if (url.href.indexOf(base.href) != 0) {
           return;
         }
@@ -1082,7 +1074,7 @@ var _class = function () {
         }
 
         e.preventDefault();
-        _this9.goto(url.href);
+        _this8.goto(url.href);
       });
     }
   }, {
