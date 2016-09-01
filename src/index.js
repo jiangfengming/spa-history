@@ -236,9 +236,7 @@ export default class {
       else {
         return this._dispatchEvent('beforeNavigate', url, true).then((bool) => {
           if (bool) {
-            return this.push(location).then(() => {
-              return this._dispatchEvent('onNavigate', this.current, true);
-            });
+            return this._dispatchEvent('onNavigate', this.current, true);
           }
         });
       }
