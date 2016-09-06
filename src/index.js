@@ -77,7 +77,7 @@ export default class {
       this._saveData();
       this._registerEvent();
       this._hookAClick();
-      this._dispatchEvent('onNavigate', this.current);
+      this._dispatchEvent('onNavigate', this.current, false);
     });
   }
 
@@ -126,20 +126,20 @@ export default class {
   splice(start, deleteCount, ...insertItems) {
     return new Promise(resolve => {
       let originalLength = this._session.length;
-      let goSteps, index;
+      let steps, index;
       let replaceFirst = false;
 
       if (start < 2) {
-        goSteps = 0 - this._cursor;
+        steps = 0 - this._cursor;
         index = 0;
         replaceFirst = true;
       } else {
-        goSteps = start - this._cursor - 2;
+        steps = start - this._cursor - 2;
         index = start - 2;
       }
 
       this._disableEvent();
-      this.go(goSteps).then(() => {
+      this.go(steps).then(() => {
         this._session.splice(start, deleteCount, ...insertItems);
 
         let promise = Promise.resolve();
@@ -219,7 +219,7 @@ export default class {
     // same location
     else {
       if (url.hash) {
-        // nothing changed
+        // hash not changed
         if (url.hash == currentUrl.hash) {
           return Promise.resolve(false);
         }
@@ -244,8 +244,7 @@ export default class {
   }
 
   reload() {
-    this._dispatchEvent('onNavigate', this.current);
-    return this;
+    return this._dispatchEvent('onNavigate', this.current, true);
   }
 
   pop() {
@@ -449,22 +448,33 @@ export default class {
   }
 
   _onNavigate() {
-    let id = this._getCurrentItemId();
-    if (id == 'PLACEHOLDER') {
+    let toId = this._getCurrentItemId();
+    if (toId == 'PLACEHOLDER') {
       this._disableEvent();
       this.back().then(() => {
         this._enableEvent();
       });
     } else {
       let lastStateId = this._getStateId(this.current.id);
-
-      this._setCurrentItem(this.findIndexById(id));
-      let currentStateId = this._getStateId(this.current.id);
-      if (lastStateId == currentStateId) {
+      let toStateId = this._getStateId(toId);
+      let toIndex = this.findIndexById(toId);
+      if (lastStateId == toStateId) {
+        this._setCurrentItem(toIndex);
         this._dispatchEvent('onHashChange', this.current.hash);
       } else {
-        this._dispatchEvent('beforeNavigate');
-        this._dispatchEvent('onNavigate', this.current);
+        this._disableEvent();
+        let steps = toIndex - this.currentIndex;
+        this.go(-steps).then(() => {
+          this._dispatchEvent('beforeNavigate').then((bool) => {
+            if (bool) {
+              return this.go(steps).then(() => {
+                this._enableEvent();
+                this._setCurrentItem(toIndex);
+                return this._dispatchEvent('onNavigate', this.current, false);
+              });
+            }
+          });
+        });
       }
     }
   }

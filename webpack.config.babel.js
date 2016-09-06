@@ -3,7 +3,7 @@ export default function(options = {}) {
     entry: './src/index.js',
 
     output: {
-      path: './dist',
+      path: __dirname + '/dist',
       publicPath: '/dist/',
       filename: options.module ? 'SpaHistory.js' : 'SpaHistory.bundle.js',
       library: 'SpaHistory',
@@ -11,19 +11,7 @@ export default function(options = {}) {
     },
 
     module: {
-      loaders: [
-        {
-          test: /\.js$/,
-          exclude: /node_modules/,
-          loader: 'babel-loader',
-          query: {
-            presets: [['es2015', { modules: false }]],
-            plugins: [
-              'add-module-exports'
-            ]
-          }
-        }
-      ]
+      loaders: []
     },
 
     devServer: {
@@ -41,7 +29,19 @@ export default function(options = {}) {
 
   if (options.debug) {
     conf.debug = true;
-    conf.devtool = 'cheap-module-eval-source-map';
+    conf.devtool = 'source-map';
+  } else {
+    conf.module.loaders.push({
+      test: /\.js$/,
+      exclude: /node_modules/,
+      loader: 'babel-loader',
+      query: {
+        presets: [['es2015', { modules: false }]],
+        plugins: [
+          'add-module-exports'
+        ]
+      }
+    });
   }
 
   return conf;
