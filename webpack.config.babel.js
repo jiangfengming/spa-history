@@ -11,7 +11,17 @@ export default function(options = {}) {
     },
 
     module: {
-      loaders: []
+      loaders: [{
+        test: /\.js$/,
+        exclude: /node_modules/,
+        loader: 'babel-loader',
+        query: {
+          presets: [['es2015', { modules: false }]],
+          plugins: [
+            'add-module-exports'
+          ]
+        }
+      }]
     },
 
     devServer: {
@@ -29,18 +39,6 @@ export default function(options = {}) {
   if (options.debug) {
     conf.debug = true;
     conf.devtool = 'source-map';
-  } else {
-    conf.module.loaders.push({
-      test: /\.js$/,
-      exclude: /node_modules/,
-      loader: 'babel-loader',
-      query: {
-        presets: [['es2015', { modules: false }]],
-        plugins: [
-          'add-module-exports'
-        ]
-      }
-    });
   }
 
   return conf;
