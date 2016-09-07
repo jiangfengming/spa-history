@@ -2,9 +2,9 @@ import Url from 'browser-url';
 import mixinHashbangWithHistoryApi from './hashbang-with-history-api';
 
 export default {
-  _changeHistory(method, item, url) {
+  _changeHistory(method, id, url) {
     url = new Url(url);
-    url.addQuery('_sid', item.id);
+    url.addQuery('_sid', id);
     location[method == 'push' ? 'assign' : 'replace']('#!' + url.pathname + url.search + url.hash);
 
     return new Promise(resolve => {

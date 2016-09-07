@@ -1,8 +1,8 @@
 import Url from 'browser-url';
 
 export default {
-  _changeHistory(method, item, url) {
-    history[method + 'State']({ id: item.id }, '', this._baseNoTrailingSlash + url.pathname + url.search + url.hash);
+  _changeHistory(method, id, url) {
+    history[method + 'State']({ id }, '', this._baseNoTrailingSlash + url.pathname + url.search + url.hash);
     return Promise.resolve();
   },
 

@@ -10,7 +10,11 @@ let spaHistory = new SpaHistory({
   mode: undefined, // html5, hashbang. default: undefined (auto fallback)
   base: '/path/to/app/', // default: /
 
-  onNavigate({ id, path, query, hash, state }) {
+  onNavigate({ id, path, query, hash, state }, isReload) {
+
+  },
+
+  beforeNavigate(toLocation, isReload) {
 
   },
 

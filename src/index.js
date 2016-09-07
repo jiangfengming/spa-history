@@ -203,14 +203,14 @@ export default class {
   }
 
   goto(location) {
-    let url = this._createUrl(location);
-    let currentUrl = this._createUrl(this.current);
+    let to = this._format(location);
+    let current = this._format(this.current);
 
     // different location
-    if (url.pathname + url.search != currentUrl.pathname + currentUrl.search) {
-      return this._dispatchEvent('beforeNavigate', url, false).then((bool) => {
-        if (bool) {
-          return this.push(location).then(() => {
+    if (to.url.pathname + to.url.search != current.url.pathname + current.url.search) {
+      return this._dispatchEvent('beforeNavigate', to.element, false).then((bool) => {
+        if (bool != false) {
+          return this.push(to.element).then(() => {
             return this._dispatchEvent('onNavigate', this.current, false);
           });
         }
@@ -218,25 +218,32 @@ export default class {
     }
     // same location
     else {
-      if (url.hash) {
+      if (to.url.hash) {
         // hash not changed
-        if (url.hash == currentUrl.hash) {
+        if (to.url.hash == current.url.hash) {
           return Promise.resolve(false);
         }
         // hash changed
         else {
-          location = this._format(location);
-          location.id = this._getStateId(this.current.id) + ':' + this._uniqueId();
-          return this.push(location).then(() => {
+          to.element.id = this._getStateId(this.current.id) + ':' + this._uniqueId();
+          return this.push(to.element).then(() => {
             return this._dispatchEvent('onHashChange', this.current.hash);
           });
         }
       }
       // nothing changed, and no hash. reload
       else {
-        return this._dispatchEvent('beforeNavigate', url, true).then((bool) => {
-          if (bool) {
-            return this._dispatchEvent('onNavigate', this.current, true);
+        return this._dispatchEvent('beforeNavigate', to.element, true).then((bool) => {
+          if (bool != false) {
+            // current location has hash
+            if (current.url.hash) {
+              to.element.id = this._getStateId(this.current.id) + ':' + this._uniqueId();
+              return this.push(to.element).then(() => {
+                return this._dispatchEvent('onNavigate', this.current, true);
+              });
+            } else {
+              return this._dispatchEvent('onNavigate', this.current, true);
+            }
           }
         });
       }
@@ -368,51 +375,40 @@ export default class {
     }
   }
 
-  _change(method, item) {
-    item = this._format(item);
-    let url = this._createUrl(item);
-
-    if (!item.id) {
-      item.id = this._sessionId + ':' + this._uniqueId();
-    }
-
-    item.path = url.pathname;
-    item.query = url.query;
-    item.hash = url.hash;
-
-    return this._changeHistory(method, item, url).then(() => {
-      if (item.title) {
-        document.title = item.title;
+  _change(method, element, url) {
+    return this._changeHistory(method, element.id, url).then(() => {
+      if (element.title) {
+        document.title = element.title;
       }
-
-      return item;
     });
   }
 
-  _format(item) {
-    if (item.constructor == String) {
-      item = {
-        path: item
-      };
+  _format(location) {
+    let url;
+    if (location.constructor == String) {
+      url = new Url(location).sortQuery();
     } else {
-      item = Object.assign({}, item); // copy
-    }
-
-    return item;
-  }
-
-  _createUrl(loc) {
-    if (loc.constructor == String) {
-      return new Url(loc).sortQuery();
-    } else {
-      let url = new Url(loc.path).addQuery(loc.query).sortQuery();
-
-      if (loc.hash) {
-        url.hash = loc.hash;
+      url = new Url(location.path).addQuery(location.query).sortQuery();
+      if (location.hash) {
+        url.hash = location.hash;
       }
-
-      return url;
     }
+
+    let element = {
+      path: url.pathname,
+      query: url.query,
+      hash: url.hash
+    };
+
+    if (location.constructor != String) {
+      element = Object.assign({}, location, element);
+    }
+
+    if (!element.id) {
+      element.id = this._sessionId + ':' + this._uniqueId();
+    }
+
+    return { url, element };
   }
 
   _uniqueId() {
@@ -458,6 +454,7 @@ export default class {
       let lastStateId = this._getStateId(this.current.id);
       let toStateId = this._getStateId(toId);
       let toIndex = this.findIndexById(toId);
+      let toUrl = this.get(toIndex);
       if (lastStateId == toStateId) {
         this._setCurrentItem(toIndex);
         this._dispatchEvent('onHashChange', this.current.hash);
@@ -465,8 +462,8 @@ export default class {
         this._disableEvent();
         let steps = toIndex - this.currentIndex;
         this.go(-steps).then(() => {
-          this._dispatchEvent('beforeNavigate').then((bool) => {
-            if (bool) {
+          this._dispatchEvent('beforeNavigate', toUrl, false).then((bool) => {
+            if (bool != false) {
               return this.go(steps).then(() => {
                 this._enableEvent();
                 this._setCurrentItem(toIndex);
