@@ -12,8 +12,9 @@
     <button type="button" onclick="spaHistory.forward()">forward</button>
     <button type="button" onclick="spaHistory.reload()">reload</button>
     <button type="button" onclick="spaHistory.goto('/foo')">goto page foo</button>
-    <button type="button" onclick="spaHistory.goto({ path: '/bar' })">goto page bar</button>
     <button type="button" onclick="spaHistory.goto('/foo#a')">goto('/foo#a')</button>
+    <button type="button" onclick="spaHistory.goto('/foo#b')">goto('/foo#b')</button>
+    <button type="button" onclick="spaHistory.goto({ path: '/bar' })">goto page bar</button>
     <button type="button" onclick="spaHistory.reset('/a')">reset('/a')</button>
     <button type="button" onclick="spaHistory.reset('/a', '/b')">reset('/a', '/b')</button>
     <button type="button" onclick="spaHistory.setState({ foo: 1 })">setState({ foo: 1 })</button>
