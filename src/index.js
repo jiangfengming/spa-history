@@ -23,8 +23,14 @@ export default class {
       this[method] = mixin[method];
     }
 
-    this.base = base;
-    this._baseNoTrailingSlash = base.replace(/\/$/, '');
+    if (base.slice(-1) != '/') {
+      this.base = base + '/';
+      this._baseNoTrailingSlash = base;
+    } else {
+      this.base = base;
+      this._baseNoTrailingSlash = base.replace(/\/$/, '');
+    }
+
     this.beforeNavigate = beforeNavigate;
     this.onNavigate = onNavigate;
     this.onHashChange = onHashChange;
@@ -43,7 +49,7 @@ export default class {
       };
     }
 
-    let itemId = this._getCurrentItemId();
+    let itemId = this._getCurrentId();
     let sessionId, session;
     let itemIndex = -1;
     if (itemId) {
@@ -56,29 +62,25 @@ export default class {
       }
     }
 
-    let promise;
     // new session
     if (itemIndex == -1) {
       this._sessionId = this._data.sessions.length;
       this._session = [];
       this._data.sessions.push(this._session);
-      let item = this._parseCurrentLocation();
-      promise = this._change('replace', item).then(item => {
-        this._session.push(item);
-        this._setCurrentItem(this._session.length - 1);
-      });
+      let url = this._parseCurrentLocation();
+      this._setSession(url);
+      this._setCurrentItem(this._session.length - 1);
+      this._change('replace', url);
     } else {
       this._sessionId = sessionId;
       this._session = session;
       this._setCurrentItem(itemIndex);
     }
 
-    Promise.resolve(promise).then(() => {
-      this._saveData();
-      this._registerEvent();
-      this._hookAClick();
-      this._dispatchEvent('onNavigate', this.current, false);
-    });
+    this._saveData();
+    this._registerEvent();
+    this._hookAClick();
+    this._dispatchEvent('onNavigate', this.current, false);
   }
 
   get length() {
@@ -92,13 +94,10 @@ export default class {
 
     let promise = Promise.resolve();
     items.forEach(item => {
+      let url = this._format(item);
+      this._setSession(url);
       promise = promise.then(() => {
-        return this._change('push', item).then(item => {
-          this._session.push(item);
-          if (item.state) {
-            this.setStateById(item.state, item.id);
-          }
-        });
+        return this._change('push', url);
       });
     });
 
@@ -109,14 +108,11 @@ export default class {
   }
 
   replace(item) {
-    return this._change('replace', item).then(item => {
-      this._session[this._cursor] = item;
-      if (item.state) {
-        this.setStateById(item.state, item.id);
-      }
-      this._setCurrentItem(this._cursor);
-      this._saveData();
-    });
+    let url = this._format(item);
+    this._setSession(url, this._cursor);
+    this._setCurrentItem(this._cursor);
+    this._saveData();
+    return this._change('replace', url);
   }
 
   reset(...items) {
@@ -203,14 +199,14 @@ export default class {
   }
 
   goto(location) {
-    let to = this._format(location);
-    let current = this._format(this.current);
+    let to = this._url(location);
+    let current = this._url(this.current);
 
     // different location
-    if (to.url.pathname + to.url.search != current.url.pathname + current.url.search) {
-      return this._dispatchEvent('beforeNavigate', to.element, false).then((bool) => {
+    if (to.pathname + to.search != current.pathname + current.search) {
+      return this._dispatchEvent('beforeNavigate', this._item(to), false).then((bool) => {
         if (bool != false) {
-          return this.push(to.element).then(() => {
+          return this.push(to).then(() => {
             return this._dispatchEvent('onNavigate', this.current, false);
           });
         }
@@ -218,27 +214,27 @@ export default class {
     }
     // same location
     else {
-      if (to.url.hash) {
+      if (to.hash) {
         // hash not changed
-        if (to.url.hash == current.url.hash) {
+        if (to.hash == this.current.hash) {
           return Promise.resolve(false);
         }
         // hash changed
         else {
-          to.element.id = this._getStateId(this.current.id) + ':' + this._uniqueId();
-          return this.push(to.element).then(() => {
+          to.id = this._getStateId(this.current.id) + ':' + this._uniqueId();
+          return this.push(to).then(() => {
             return this._dispatchEvent('onHashChange', this.current.hash);
           });
         }
       }
       // nothing changed, and no hash. reload
       else {
-        return this._dispatchEvent('beforeNavigate', to.element, true).then((bool) => {
+        return this._dispatchEvent('beforeNavigate', this._item(to), true).then((bool) => {
           if (bool != false) {
             // current location has hash
-            if (current.url.hash) {
-              to.element.id = this._getStateId(this.current.id) + ':' + this._uniqueId();
-              return this.push(to.element).then(() => {
+            if (this.current.hash) {
+              to.id = this._getStateId(this.current.id) + ':' + this._uniqueId();
+              return this.push(to).then(() => {
                 return this._dispatchEvent('onNavigate', this.current, true);
               });
             } else {
@@ -371,48 +367,68 @@ export default class {
     } else {
       this._cursor = 0;
       this.current = this._parseCurrentLocation();
-      this.current.id = this._getCurrentItemId();
+      this.current.id = this._getCurrentId();
     }
   }
 
-  _change(method, element, url) {
-    return this._changeHistory(method, element.id, url).then(() => {
-      if (element.title) {
-        document.title = element.title;
+  _change(method, url) {
+    return this._changeHistory(method, url).then(() => {
+      if (url.title) {
+        document.title = url.title;
       }
     });
   }
 
-  _format(location) {
-    let url;
-    if (location.constructor == String) {
-      url = new Url(location).sortQuery();
-    } else {
-      url = new Url(location.path).addQuery(location.query).sortQuery();
-      if (location.hash) {
-        url.hash = location.hash;
-      }
+  _url(item) {
+    // already formatted
+    if (item.pathname) {
+      return item;
     }
 
-    let element = {
+    if (item.constructor == String) {
+      return new Url(item).sortQuery();
+    }
+
+    let url = new Url(item.path).addQuery(item.query).sortQuery();
+    if (url.hash) {
+      url.hash = item.hash;
+    }
+
+    url.title = item.title;
+    url.state = item.state;
+    url.id = item.id || this._sessionId + ':' + this._uniqueId();
+    return url;
+  }
+
+  _item(url, noState) {
+    let item = {
+      id: url.id,
       path: url.pathname,
       query: url.query,
       hash: url.hash
     };
 
-    if (location.constructor != String) {
-      element = Object.assign({}, location, element);
+    if (!noState) {
+      item.state = url.state;
     }
 
-    if (!element.id) {
-      element.id = this._sessionId + ':' + this._uniqueId();
-    }
-
-    return { url, element };
+    return item;
   }
 
   _uniqueId() {
-    return Math.random().toString(16).slice(2);
+    return Math.random().toString(16).slice(2, 8);
+  }
+
+  _setSession(url, index) {
+    if (!index) {
+      index = this._session.length;
+    }
+
+    let item = this._item(url, true);
+    this._session[index] = item;
+    if (url.state != undefined) {
+      this.setStateById(url.state, url.id);
+    }
   }
 
   /*
@@ -444,7 +460,7 @@ export default class {
   }
 
   _onNavigate() {
-    let toId = this._getCurrentItemId();
+    let toId = this._getCurrentId();
     if (toId == 'PLACEHOLDER') {
       this._disableEvent();
       this.back().then(() => {

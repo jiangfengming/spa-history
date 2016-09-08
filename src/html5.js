@@ -1,8 +1,8 @@
 import Url from 'browser-url';
 
 export default {
-  _changeHistory(method, id, url) {
-    history[method + 'State']({ id }, '', this._baseNoTrailingSlash + url.pathname + url.search + url.hash);
+  _changeHistory(method, url) {
+    history[method + 'State']({ id: url.id }, '', this._baseNoTrailingSlash + url.pathname + url.search + url.hash);
     return Promise.resolve();
   },
 
@@ -31,17 +31,14 @@ export default {
     }
   },
 
-  _getCurrentItemId() {
+  _getCurrentId() {
     return history.state ? history.state.id : null;
   },
 
   _parseCurrentLocation() {
     let url = new Url().sortQuery();
-    return {
-      path: url.pathname.replace(this._baseNoTrailingSlash, ''),
-      query: url.query,
-      hash: url.hash
-    };
+    url.pathname = url.pathname.replace(this._baseNoTrailingSlash, '');
+    return url;
   },
 
   _registerEvent() {

@@ -2,8 +2,8 @@ import Url from 'browser-url';
 import mixinHtml5 from './html5';
 
 export default {
-  _changeHistory(method, id, url) {
-    history[method + 'State']({ id }, '', '#!' + url.pathname + url.search + url.hash);
+  _changeHistory(method, url) {
+    history[method + 'State']({ id: url.id }, '', '#!' + url.pathname + url.search + url.hash);
     return Promise.resolve();
   },
 
@@ -12,7 +12,7 @@ export default {
   // no need to fallback to hashbang URL if history API is available
   _convertLocation() {},
 
-  _getCurrentItemId() {
+  _getCurrentId() {
     return history.state ? history.state.id : null;
   },
 
@@ -24,12 +24,7 @@ export default {
       url = '/';
     }
 
-    url = new Url(url).sortQuery();
-    return {
-      path: url.pathname,
-      query: url.query,
-      hash: url.hash
-    };
+    return new Url(url).sortQuery();
   },
 
   _registerEvent: mixinHtml5._registerEvent,

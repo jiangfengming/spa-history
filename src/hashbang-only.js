@@ -1,11 +1,10 @@
-import Url from 'browser-url';
 import mixinHashbangWithHistoryApi from './hashbang-with-history-api';
 
 export default {
-  _changeHistory(method, id, url) {
-    url = new Url(url);
-    url.addQuery('_sid', id);
+  _changeHistory(method, url) {
+    url.addQuery('_sid', url.id);
     location[method == 'push' ? 'assign' : 'replace']('#!' + url.pathname + url.search + url.hash);
+    url.removeQuery('_sid');
 
     return new Promise(resolve => {
       let eventDisabled = this._eventDisabled;
@@ -48,15 +47,15 @@ export default {
     }
   },
 
-  _getCurrentItemId() {
-    let item = mixinHashbangWithHistoryApi._parseCurrentLocation.call(this);
-    return item.query._sid;
+  _getCurrentId() {
+    let url = mixinHashbangWithHistoryApi._parseCurrentLocation.call(this);
+    return url.query._sid;
   },
 
   _parseCurrentLocation() {
-    let item = mixinHashbangWithHistoryApi._parseCurrentLocation.call(this);
-    delete item.query._sid;
-    return item;
+    let url = mixinHashbangWithHistoryApi._parseCurrentLocation.call(this);
+    url.removeQuery('_sid');
+    return url;
   },
 
   _registerEvent() {
