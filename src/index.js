@@ -94,7 +94,7 @@ export default class {
 
     let promise = Promise.resolve();
     items.forEach(item => {
-      let url = this._format(item);
+      let url = this._url(item);
       this._setSession(url);
       promise = promise.then(() => {
         return this._change('push', url);
@@ -108,7 +108,7 @@ export default class {
   }
 
   replace(item) {
-    let url = this._format(item);
+    let url = this._url(item);
     this._setSession(url, this._cursor);
     this._setCurrentItem(this._cursor);
     this._saveData();
@@ -122,14 +122,14 @@ export default class {
   splice(start, deleteCount, ...insertItems) {
     return new Promise(resolve => {
       let originalLength = this._session.length;
-      let steps, index;
-      let replaceFirst = false;
+      let steps, index, replaceFirst;
 
       if (start < 2) {
+        replaceFirst = true;
         steps = 0 - this._cursor;
         index = 0;
-        replaceFirst = true;
       } else {
+        replaceFirst = false;
         steps = start - this._cursor - 2;
         index = start - 2;
       }
@@ -141,22 +141,15 @@ export default class {
         let promise = Promise.resolve();
 
         let fn = index => {
-          let item = this._session[index];
-          let p;
-          if (replaceFirst) {
-            replaceFirst = false;
-            p = this._change('replace', item);
-          } else {
-            p = this._change('push', item);
-          }
-
+          let url = this._url(this._session[index]);
+          this._setSession(url, index);
           promise = promise.then(() => {
-            return p.then(item => {
-              this._session[index] = item;
-              if (item.state) {
-                this.setStateById(item.state, item.id);
-              }
-            });
+            if (replaceFirst) {
+              replaceFirst = false;
+              return this._change('replace', url);
+            } else {
+              return this._change('push', url);
+            }
           });
         };
 
@@ -168,12 +161,12 @@ export default class {
           let p;
           if (this._session.length == 1 && originalLength > 1) {
             this._setCurrentItem(0);
-            p = this._change('push', {
+            p = this._change('push', this._url({
               id: 'PLACEHOLDER',
               path: this.current.path,
               query: this.current.query,
               hash: this.current.hash
-            }).then(() => {
+            })).then(() => {
               return this.back();
             });
           } else {
@@ -366,7 +359,7 @@ export default class {
       this.current = this.get(index);
     } else {
       this._cursor = 0;
-      this.current = this._parseCurrentLocation();
+      this.current = this._item(this._parseCurrentLocation());
       this.current.id = this._getCurrentId();
     }
   }
@@ -390,29 +383,24 @@ export default class {
     }
 
     let url = new Url(item.path).addQuery(item.query).sortQuery();
-    if (url.hash) {
+    if (item.hash) {
       url.hash = item.hash;
     }
 
     url.title = item.title;
     url.state = item.state;
-    url.id = item.id || this._sessionId + ':' + this._uniqueId();
+    url.id = item.id;
     return url;
   }
 
-  _item(url, noState) {
-    let item = {
+  _item(url) {
+    return {
       id: url.id,
       path: url.pathname,
       query: url.query,
-      hash: url.hash
+      hash: url.hash,
+      state: url.state
     };
-
-    if (!noState) {
-      item.state = url.state;
-    }
-
-    return item;
   }
 
   _uniqueId() {
@@ -420,12 +408,21 @@ export default class {
   }
 
   _setSession(url, index) {
-    if (!index) {
+    if (index == undefined) {
       index = this._session.length;
     }
 
-    let item = this._item(url, true);
-    this._session[index] = item;
+    if (!url.id) {
+      url.id = this._sessionId + ':' + this._uniqueId();
+    }
+
+    this._session[index] = {
+      id: url.id,
+      path: url.pathname,
+      query: url.query,
+      hash: url.hash
+    };
+
     if (url.state != undefined) {
       this.setStateById(url.state, url.id);
     }
@@ -470,7 +467,7 @@ export default class {
       let lastStateId = this._getStateId(this.current.id);
       let toStateId = this._getStateId(toId);
       let toIndex = this.findIndexById(toId);
-      let toUrl = this.get(toIndex);
+      let to = this.get(toIndex);
       if (lastStateId == toStateId) {
         this._setCurrentItem(toIndex);
         this._dispatchEvent('onHashChange', this.current.hash);
@@ -478,7 +475,7 @@ export default class {
         this._disableEvent();
         let steps = toIndex - this.currentIndex;
         this.go(-steps).then(() => {
-          this._dispatchEvent('beforeNavigate', toUrl, false).then((bool) => {
+          this._dispatchEvent('beforeNavigate', to, false).then((bool) => {
             if (bool != false) {
               return this.go(steps).then(() => {
                 this._enableEvent();

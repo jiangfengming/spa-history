@@ -1,6 +1,11 @@
 import Url from 'browser-url';
 
 export default {
+  url(item) {
+    let url = this._url(item);
+    return this._baseNoTrailingSlash + url.pathname + url.search + url.hash;
+  },
+
   _changeHistory(method, url) {
     history[method + 'State']({ id: url.id }, '', this._baseNoTrailingSlash + url.pathname + url.search + url.hash);
     return Promise.resolve();

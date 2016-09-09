@@ -1,6 +1,8 @@
 import mixinHashbangWithHistoryApi from './hashbang-with-history-api';
 
 export default {
+  url: mixinHashbangWithHistoryApi.url,
+
   _changeHistory(method, url) {
     url.addQuery('_sid', url.id);
     location[method == 'push' ? 'assign' : 'replace']('#!' + url.pathname + url.search + url.hash);

@@ -2,6 +2,11 @@ import Url from 'browser-url';
 import mixinHtml5 from './html5';
 
 export default {
+  url(item) {
+    let url = this._url(item);
+    return '#!' + url.pathname + url.search + url.hash;
+  },
+
   _changeHistory(method, url) {
     history[method + 'State']({ id: url.id }, '', '#!' + url.pathname + url.search + url.hash);
     return Promise.resolve();
