@@ -8,29 +8,88 @@
   </head>
 
   <body>
-    <button type="button" onclick="spaHistory.back()">back</button>
-    <button type="button" onclick="spaHistory.forward()">forward</button>
-    <button type="button" onclick="spaHistory.reload()">reload</button>
-    <button type="button" onclick="spaHistory.goto('/foo')">goto page foo</button>
-    <button type="button" onclick="spaHistory.goto('/foo#a')">goto('/foo#a')</button>
-    <button type="button" onclick="spaHistory.goto('/foo#b')">goto('/foo#b')</button>
-    <button type="button" onclick="spaHistory.goto({ path: '/bar' })">goto page bar</button>
-    <button type="button" onclick="spaHistory.reset('/a')">reset('/a')</button>
-    <button type="button" onclick="spaHistory.reset('/a', '/b')">reset('/a', '/b')</button>
-    <button type="button" onclick="spaHistory.setState({ foo: 1 })">setState({ foo: 1 })</button>
-    <button type="button" onclick="spaHistory.setState({ bar: 2 }, 0)">setState({ bar: 2 }, 0)</button>
-    <button type="button" onclick="spaHistory.mergeState({ foo: 3 })">mergeState({ foo: 3 })</button>
-    <button type="button" onclick="spaHistory.mergeState({ bar: 4 }, 0)">mergeState({ bar: 4 }, 0)</button>
-    <a href="/foobar">/foobar</a>
+    <div id="main"></div>
 
     <script>
     //history.pushState = null;
 
+    var elMain = document.getElementById('main');
+
+    var views = {
+      '/': function() {
+        elMain.innerHTML =
+          '<h1>Home</h1>' +
+          '<a href="/product">product page</a>';
+      },
+
+      '/product': function() {
+        elMain.innerHTML =
+          '<h1>Product Page</h1>' +
+          '<a href="">current</a> <a href="#foo">#foo</a> <a href="#bar">#bar</a> <br>' +
+          '<a href="/buy">Buy</a>';
+      },
+
+      '/buy': function() {
+        elMain.innerHTML =
+          '<h1>Order Form</h1>' +
+          '<form id="order">' +
+            'Name: <input type="text" id="name"> <button>Submit</button>' +
+          '</form>';
+
+        var elForm = document.getElementById('order');
+        var elName = document.getElementById('name');
+
+        if (spaHistory.current.state && spaHistory.current.state.name) {
+          elName.value = spaHistory.current.state.name;
+        }
+
+        elForm.onsubmit = function(e) {
+          e.preventDefault();
+          spaHistory.beforeNavigate = null;
+          window.onbeforeunload = null;
+
+          spaHistory.splice(spaHistory.currentIndex - 1, 2).then(function() {
+            spaHistory.goto('complete');
+          });
+        };
+
+        window.onbeforeunload = function(e) {
+          spaHistory.setState({ name: elName.value });
+          e.returnValue = 'Are you sure you want to leave?';
+        };
+
+        spaHistory.beforeNavigate = function(location, isReload) {
+          spaHistory.setState({ name: elName.value });
+          var bool = confirm('Are you sure you want to leave?');
+          if (bool) {
+            spaHistory.beforeNavigate = null;
+            window.onbeforeunload = null;
+          }
+          return bool;
+        };
+
+        this.destory = function() {
+          spaHistory.beforeNavigate = null;
+        }
+      },
+
+      '/complete': function() {
+        elMain.innerHTML = '<h1>Complete</h1>';
+      }
+    };
+
+    var currentView = null;
     var spaHistory = new SpaHistory({
       // mode: 'hashbang',
-      onNavigate: function(loc) {
-        console.log('location:', loc);
-        console.log('all:', this.getAll());
+
+      onNavigate: function(location, isReload) {
+        console.log('onNavigate:', location, isReload);
+        console.log('states:', this.getAll());
+        if (currentView && currentView.destroy) {
+          currentView.destroy();
+        }
+        elMain.innerHTML = '';
+        currentView = new views[location.path]();
       },
 
       onHashChange: function(hash) {

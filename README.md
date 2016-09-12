@@ -33,6 +33,7 @@ let spaHistory = new SpaHistory({
 - history.push({ path, query, hash, state }, ...) -> Promise
 - history.replace({ path, query, hash, state }) -> Promise
 - history.reset({ path, query, hash, state }, ...) -> Promise
+- history.url({ path, query, hash }) -> URL string
 - history.pop() -> Promise
 - history.go(n) -> Promise
 - history.back() -> Promise

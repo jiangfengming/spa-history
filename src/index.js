@@ -62,6 +62,7 @@ export default class {
       }
     }
 
+    let promise;
     // new session
     if (itemIndex == -1) {
       this._sessionId = this._data.sessions.length;
@@ -70,17 +71,19 @@ export default class {
       let url = this._parseCurrentLocation();
       this._setSession(url);
       this._setCurrentItem(this._session.length - 1);
-      this._change('replace', url);
+      promise = this._change('replace', url);
     } else {
       this._sessionId = sessionId;
       this._session = session;
       this._setCurrentItem(itemIndex);
     }
 
-    this._saveData();
-    this._registerEvent();
-    this._hookAClick();
-    this._dispatchEvent('onNavigate', this.current, false);
+    Promise.resolve(promise).then(() => {
+      this._saveData();
+      this._registerEvent();
+      this._hookAClick();
+      this._dispatchEvent('onNavigate', this.current, false);
+    });
   }
 
   get length() {
@@ -452,8 +455,17 @@ export default class {
     return JSON.parse(sessionStorage.getItem('_spaHistory'));
   }
 
+  // Invoking 'confirm()' during microtask execution is deprecated and will be removed in M53, around September 2016. See https://www.chromestatus.com/features/5647113010544640 for more details.
   _dispatchEvent(name, ...args) {
-    return Promise.resolve(this[name] ? this[name](...args) : true);
+    if (this[name]) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(this[name](...args));
+        });
+      });
+    } else {
+      return Promise.resolve(true);
+    }
   }
 
   _onNavigate() {
@@ -482,6 +494,8 @@ export default class {
                 this._setCurrentItem(toIndex);
                 return this._dispatchEvent('onNavigate', this.current, false);
               });
+            } else {
+              this._enableEvent();
             }
           });
         });
