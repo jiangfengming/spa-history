@@ -11,7 +11,10 @@
     <div id="main"></div>
 
     <script>
-    //history.pushState = null;
+    if (location.pathname.indexOf('hashbang') != -1) {
+      sessionStorage.setItem('spaHistoryMode', 'hashbang');
+      location.replace('/');
+    }
 
     var elMain = document.getElementById('main');
 
@@ -19,14 +22,16 @@
       '/': function() {
         elMain.innerHTML =
           '<h1>Home</h1>' +
-          '<a href="/product">product page</a>';
+          '<a href="' + spaHistory.url('/product') + '">product page</a>';
       },
 
       '/product': function() {
         elMain.innerHTML =
           '<h1>Product Page</h1>' +
-          '<a href="">current</a> <a href="#foo">#foo</a> <a href="#bar">#bar</a> <br>' +
-          '<a href="/buy">Buy</a>';
+          '<a href="' + spaHistory.url('/product') + '">current</a> ' +
+          '<a href="' + spaHistory.url('/product#foo') + '">#foo</a> ' +
+          '<a href="' + spaHistory.url('/product#bar') + '">#bar</a> <br>' +
+          '<a href="' + spaHistory.url('/buy') + '">Buy</a>';
       },
 
       '/buy': function() {
@@ -80,7 +85,7 @@
 
     var currentView = null;
     var spaHistory = new SpaHistory({
-      // mode: 'hashbang',
+      mode: sessionStorage.getItem('spaHistoryMode'),
 
       onNavigate: function(location, isReload) {
         console.log('onNavigate:', location, isReload);

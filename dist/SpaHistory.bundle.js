@@ -278,8 +278,12 @@ var _html2 = _interopRequireDefault(_html);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 exports.default = {
-  _changeHistory: function _changeHistory(method, item, url) {
-    history[method + 'State']({ id: item.id }, '', '#!' + url.pathname + url.search + url.hash);
+  url: function url(item) {
+    var url = this._url(item);
+    return '#!' + url.pathname + url.search + url.hash;
+  },
+  _changeHistory: function _changeHistory(method, url) {
+    history[method + 'State']({ id: url.id }, '', '#!' + url.pathname + url.search + url.hash);
     return Promise.resolve();
   },
 
@@ -288,7 +292,7 @@ exports.default = {
 
   // no need to fallback to hashbang URL if history API is available
   _convertLocation: function _convertLocation() {},
-  _getCurrentItemId: function _getCurrentItemId() {
+  _getCurrentId: function _getCurrentId() {
     return history.state ? history.state.id : null;
   },
   _parseCurrentLocation: function _parseCurrentLocation() {
@@ -299,12 +303,7 @@ exports.default = {
       url = '/';
     }
 
-    url = new _browserUrl2.default(url).sortQuery();
-    return {
-      path: url.pathname,
-      query: url.query,
-      hash: url.hash
-    };
+    return new _browserUrl2.default(url).sortQuery();
   },
 
 
@@ -332,8 +331,12 @@ var _browserUrl2 = _interopRequireDefault(_browserUrl);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 exports.default = {
-  _changeHistory: function _changeHistory(method, item, url) {
-    history[method + 'State']({ id: item.id }, '', this._baseNoTrailingSlash + url.pathname + url.search + url.hash);
+  url: function url(item) {
+    var url = this._url(item);
+    return this._baseNoTrailingSlash + url.pathname + url.search + url.hash;
+  },
+  _changeHistory: function _changeHistory(method, url) {
+    history[method + 'State']({ id: url.id }, '', this._baseNoTrailingSlash + url.pathname + url.search + url.hash);
     return Promise.resolve();
   },
   _go: function _go(n) {
@@ -361,16 +364,13 @@ exports.default = {
       history.replaceState(null, '', url);
     }
   },
-  _getCurrentItemId: function _getCurrentItemId() {
+  _getCurrentId: function _getCurrentId() {
     return history.state ? history.state.id : null;
   },
   _parseCurrentLocation: function _parseCurrentLocation() {
     var url = new _browserUrl2.default().sortQuery();
-    return {
-      path: url.pathname.replace(this._baseNoTrailingSlash, ''),
-      query: url.query,
-      hash: url.hash
-    };
+    url.pathname = url.pathname.replace(this._baseNoTrailingSlash, '');
+    return url;
   },
   _registerEvent: function _registerEvent() {
     var _this = this;
@@ -407,10 +407,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _browserUrl = __webpack_require__(0);
-
-var _browserUrl2 = _interopRequireDefault(_browserUrl);
-
 var _hashbangWithHistoryApi = __webpack_require__(1);
 
 var _hashbangWithHistoryApi2 = _interopRequireDefault(_hashbangWithHistoryApi);
@@ -418,12 +414,14 @@ var _hashbangWithHistoryApi2 = _interopRequireDefault(_hashbangWithHistoryApi);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 exports.default = {
-  _changeHistory: function _changeHistory(method, item, url) {
+  url: _hashbangWithHistoryApi2.default.url,
+
+  _changeHistory: function _changeHistory(method, url) {
     var _this = this;
 
-    url = new _browserUrl2.default(url);
-    url.addQuery('_sid', item.id);
+    url.addQuery('_sid', url.id);
     location[method == 'push' ? 'assign' : 'replace']('#!' + url.pathname + url.search + url.hash);
+    url.removeQuery('_sid');
 
     return new Promise(function (resolve) {
       var eventDisabled = _this._eventDisabled;
@@ -465,14 +463,14 @@ exports.default = {
       throw 1;
     }
   },
-  _getCurrentItemId: function _getCurrentItemId() {
-    var item = _hashbangWithHistoryApi2.default._parseCurrentLocation.call(this);
-    return item.query._sid;
+  _getCurrentId: function _getCurrentId() {
+    var url = _hashbangWithHistoryApi2.default._parseCurrentLocation.call(this);
+    return url.query._sid;
   },
   _parseCurrentLocation: function _parseCurrentLocation() {
-    var item = _hashbangWithHistoryApi2.default._parseCurrentLocation.call(this);
-    delete item.query._sid;
-    return item;
+    var url = _hashbangWithHistoryApi2.default._parseCurrentLocation.call(this);
+    url.removeQuery('_sid');
+    return url;
   },
   _registerEvent: function _registerEvent() {
     var _this2 = this;
@@ -540,6 +538,7 @@ var _class = function () {
     var mode = _ref.mode;
     var _ref$base = _ref.base;
     var base = _ref$base === undefined ? '/' : _ref$base;
+    var beforeNavigate = _ref.beforeNavigate;
     var onNavigate = _ref.onNavigate;
     var onHashChange = _ref.onHashChange;
 
@@ -563,8 +562,15 @@ var _class = function () {
       this[method] = mixin[method];
     }
 
-    this.base = base;
-    this._baseNoTrailingSlash = base.replace(/\/$/, '');
+    if (base.slice(-1) != '/') {
+      this.base = base + '/';
+      this._baseNoTrailingSlash = base;
+    } else {
+      this.base = base;
+      this._baseNoTrailingSlash = base.replace(/\/$/, '');
+    }
+
+    this.beforeNavigate = beforeNavigate;
     this.onNavigate = onNavigate;
     this.onHashChange = onHashChange;
 
@@ -582,7 +588,7 @@ var _class = function () {
       };
     }
 
-    var itemId = this._getCurrentItemId();
+    var itemId = this._getCurrentId();
     var sessionId = void 0,
         session = void 0;
     var itemIndex = -1;
@@ -602,11 +608,10 @@ var _class = function () {
       this._sessionId = this._data.sessions.length;
       this._session = [];
       this._data.sessions.push(this._session);
-      var item = this._parseCurrentLocation();
-      promise = this._change('replace', item).then(function (item) {
-        _this._session.push(item);
-        _this._setCurrentItem(_this._session.length - 1);
-      });
+      var url = this._parseCurrentLocation();
+      this._setSession(url);
+      this._setCurrentItem(this._session.length - 1);
+      promise = this._change('replace', url);
     } else {
       this._sessionId = sessionId;
       this._session = session;
@@ -617,7 +622,7 @@ var _class = function () {
       _this._saveData();
       _this._registerEvent();
       _this._hookAClick();
-      _this._dispatchEvent('navigate');
+      _this._dispatchEvent('onNavigate', _this.current, false);
     });
   }
 
@@ -637,13 +642,10 @@ var _class = function () {
       }
 
       items.forEach(function (item) {
+        var url = _this2._url(item);
+        _this2._setSession(url);
         promise = promise.then(function () {
-          return _this2._change('push', item).then(function (item) {
-            _this2._session.push(item);
-            if (item.state) {
-              _this2.setStateById(item.state, item.id);
-            }
-          });
+          return _this2._change('push', url);
         });
       });
 
@@ -655,16 +657,11 @@ var _class = function () {
   }, {
     key: 'replace',
     value: function replace(item) {
-      var _this3 = this;
-
-      return this._change('replace', item).then(function (item) {
-        _this3._session[_this3._cursor] = item;
-        if (item.state) {
-          _this3.setStateById(item.state, item.id);
-        }
-        _this3._setCurrentItem(_this3._cursor);
-        _this3._saveData();
-      });
+      var url = this._url(item);
+      this._setSession(url, this._cursor);
+      this._setCurrentItem(this._cursor);
+      this._saveData();
+      return this._change('replace', url);
     }
   }, {
     key: 'reset',
@@ -682,82 +679,76 @@ var _class = function () {
         insertItems[_key3 - 2] = arguments[_key3];
       }
 
-      var _this4 = this;
+      var _this3 = this;
 
       return new Promise(function (resolve) {
-        var originalLength = _this4._session.length;
-        var goSteps = void 0,
-            index = void 0;
-        var replaceFirst = false;
+        var originalLength = _this3._session.length;
+        var steps = void 0,
+            index = void 0,
+            replaceFirst = void 0;
 
         if (start < 2) {
-          goSteps = 0 - _this4._cursor;
-          index = 0;
           replaceFirst = true;
+          steps = 0 - _this3._cursor;
+          index = 0;
         } else {
-          goSteps = start - _this4._cursor - 2;
+          replaceFirst = false;
+          steps = start - _this3._cursor - 2;
           index = start - 2;
         }
 
-        _this4._disableEvent();
-        _this4.go(goSteps).then(function () {
+        _this3._disableEvent();
+        _this3.go(steps).then(function () {
           var _session;
 
-          (_session = _this4._session).splice.apply(_session, [start, deleteCount].concat(insertItems));
+          (_session = _this3._session).splice.apply(_session, [start, deleteCount].concat(insertItems));
 
           var promise = Promise.resolve();
 
           var fn = function fn(index) {
-            var item = _this4._session[index];
-            var p = void 0;
-            if (replaceFirst) {
-              replaceFirst = false;
-              p = _this4._change('replace', item);
-            } else {
-              p = _this4._change('push', item);
-            }
-
+            var url = _this3._url(_this3._session[index]);
+            _this3._setSession(url, index);
             promise = promise.then(function () {
-              return p.then(function (item) {
-                _this4._session[index] = item;
-                if (item.state) {
-                  _this4.setStateById(item.state, item.id);
-                }
-              });
+              if (replaceFirst) {
+                replaceFirst = false;
+                return _this3._change('replace', url);
+              } else {
+                return _this3._change('push', url);
+              }
             });
           };
 
-          for (; index < _this4._session.length; index++) {
+          for (; index < _this3._session.length; index++) {
             fn(index);
           }
 
           promise.then(function () {
             var p = void 0;
-            if (_this4._session.length == 1 && originalLength > 1) {
-              _this4._setCurrentItem(0);
-              p = _this4._change('push', {
+            if (_this3._session.length == 1 && originalLength > 1) {
+              _this3._setCurrentItem(0);
+              p = _this3._change('push', _this3._url({
                 id: 'PLACEHOLDER',
-                path: _this4.current.path,
-                query: _this4.current.query,
-                hash: _this4.current.hash
-              }).then(function () {
-                return _this4.back();
+                path: _this3.current.path,
+                query: _this3.current.query,
+                hash: _this3.current.hash
+              })).then(function () {
+                return _this3.back();
               });
             } else {
-              var lastIndex = _this4._session.length - 1;
-              var currentIndex = _this4.findIndexById(_this4.current.id);
+              var lastIndex = _this3._session.length - 1;
+              var currentIndex = _this3.findIndexById(_this3.current.id);
               if (currentIndex == -1) {
                 currentIndex = lastIndex;
               } else if (currentIndex != lastIndex) {
-                p = _this4.go(currentIndex - lastIndex);
+                p = _this3.go(currentIndex - lastIndex);
               }
 
-              _this4._setCurrentItem(currentIndex);
-              _this4._saveData();
+              _this3._setCurrentItem(currentIndex);
+              _this3._saveData();
             }
 
             Promise.resolve(p).then(function () {
-              _this4._enableEvent();
+              _this3._enableEvent();
               resolve();
             });
           });
@@ -767,40 +758,58 @@ var _class = function () {
   }, {
     key: 'goto',
     value: function goto(location) {
-      var _this5 = this;
+      var _this4 = this;
 
-      var url = this._createUrl(location);
-      var currentUrl = this._createUrl(this.current);
+      var to = this._url(location);
+      var current = this._url(this.current);
 
       // different location
-      if (url.pathname + url.search != currentUrl.pathname + currentUrl.search) {
-        return this.push(location).then(function () {
-          _this5._dispatchEvent('navigate');
+      if (to.pathname + to.search != current.pathname + current.search) {
+        return this._dispatchEvent('beforeNavigate', this._item(to), false).then(function (bool) {
+          if (bool != false) {
+            return _this4.push(to).then(function () {
+              return _this4._dispatchEvent('onNavigate', _this4.current, false);
+            });
+          }
         });
       }
       // same location
       else {
-          // hash changed
-          if (url.hash != currentUrl.hash) {
-            location = this._format(location);
-            location.id = this._getStateId(this.current.id) + ':' + this._uniqueId();
-            return this.push(location).then(function () {
-              _this5._dispatchEvent('hashChange');
-            });
-          }
-          // nothing changed, and no hash present
-          else if (!currentUrl.hash) {
-              this._dispatchEvent('navigate');
+          if (to.hash) {
+            // hash not changed
+            if (to.hash == this.current.hash) {
+              return Promise.resolve(false);
             }
-
-          return Promise.resolve();
+            // hash changed
+            else {
+                to.id = this._getStateId(this.current.id) + ':' + this._uniqueId();
+                return this.push(to).then(function () {
+                  return _this4._dispatchEvent('onHashChange', _this4.current.hash);
+                });
+              }
+          }
+          // nothing changed, and no hash. reload
+          else {
+              return this._dispatchEvent('beforeNavigate', this._item(to), true).then(function (bool) {
+                if (bool != false) {
+                  // current location has hash
+                  if (_this4.current.hash) {
+                    to.id = _this4._getStateId(_this4.current.id) + ':' + _this4._uniqueId();
+                    return _this4.push(to).then(function () {
+                      return _this4._dispatchEvent('onNavigate', _this4.current, true);
+                    });
+                  } else {
+                    return _this4._dispatchEvent('onNavigate', _this4.current, true);
+                  }
+                }
+              });
+            }
         }
     }
   }, {
     key: 'reload',
     value: function reload() {
-      this._dispatchEvent('navigate');
-      return this;
+      return this._dispatchEvent('onNavigate', this.current, true);
     }
   }, {
     key: 'pop',
@@ -838,10 +847,10 @@ var _class = function () {
   }, {
     key: 'getAll',
     value: function getAll() {
-      var _this6 = this;
+      var _this5 = this;
 
       return this._session.map(function (v, i) {
-        return _this6.get(i);
+        return _this5.get(i);
       });
     }
   }, {
@@ -911,7 +920,7 @@ var _class = function () {
         this.current.state = state;
       }
       this._saveData();
-      return this;
+      return true;
     }
   }, {
     key: 'mergeState',
@@ -939,64 +948,78 @@ var _class = function () {
         this.current = this.get(index);
       } else {
         this._cursor = 0;
-        this.current = this._parseCurrentLocation();
-        this.current.id = this._getCurrentItemId();
+        this.current = this._item(this._parseCurrentLocation());
+        this.current.id = this._getCurrentId();
       }
     }
   }, {
     key: '_change',
-    value: function _change(method, item) {
-      item = this._format(item);
-      var url = this._createUrl(item);
-
-      if (!item.id) {
-        item.id = this._sessionId + ':' + this._uniqueId();
-      }
-
-      item.path = url.pathname;
-      item.query = url.query;
-      item.hash = url.hash;
-
-      return this._changeHistory(method, item, url).then(function () {
-        if (item.title) {
-          document.title = item.title;
+    value: function _change(method, url) {
+      return this._changeHistory(method, url).then(function () {
+        if (url.title) {
+          document.title = url.title;
         }
-
-        return item;
       });
     }
   }, {
-    key: '_format',
-    value: function _format(item) {
-      if (item.constructor == String) {
-        item = {
-          path: item
-        };
-      } else {
-        item = Object.assign({}, item); // copy
+    key: '_url',
+    value: function _url(item) {
+      // already formatted
+      if (item.pathname) {
+        return item;
       }
 
-      return item;
+      if (item.constructor == String) {
+        return new _browserUrl2.default(item).sortQuery();
+      }
+
+      var url = new _browserUrl2.default(item.path).addQuery(item.query).sortQuery();
+      if (item.hash) {
+        url.hash = item.hash;
+      }
+
+      url.title = item.title;
+      url.state = item.state;
+      url.id = item.id;
+      return url;
     }
   }, {
-    key: '_createUrl',
-    value: function _createUrl(loc) {
-      if (loc.constructor == String) {
-        return new _browserUrl2.default(loc).sortQuery();
-      } else {
-        var url = new _browserUrl2.default(loc.path).addQuery(loc.query).sortQuery();
-
-        if (loc.hash) {
-          url.hash = loc.hash;
-        }
-
-        return url;
-      }
+    key: '_item',
+    value: function _item(url) {
+      return {
+        id: url.id,
+        path: url.pathname,
+        query: url.query,
+        hash: url.hash,
+        state: url.state
+      };
     }
   }, {
     key: '_uniqueId',
     value: function _uniqueId() {
-      return Math.random().toString(16).slice(2);
+      return Math.random().toString(16).slice(2, 8);
+    }
+  }, {
+    key: '_setSession',
+    value: function _setSession(url, index) {
+      if (index == undefined) {
+        index = this._session.length;
+      }
+
+      if (!url.id) {
+        url.id = this._sessionId + ':' + this._uniqueId();
+      }
+
+      this._session[index] = {
+        id: url.id,
+        path: url.pathname,
+        query: url.query,
+        hash: url.hash
+      };
+
+      if (url.state != undefined) {
+        this.setStateById(url.state, url.id);
+      }
     }
 
     /*
@@ -1025,13 +1048,26 @@ var _class = function () {
     value: function _readData() {
       return JSON.parse(sessionStorage.getItem('_spaHistory'));
     }
+
+    // Invoking 'confirm()' during microtask execution is deprecated and will be removed in M53, around September 2016. See https://www.chromestatus.com/features/5647113010544640 for more details.
+
   }, {
     key: '_dispatchEvent',
     value: function _dispatchEvent(name) {
-      if (name == 'navigate') {
-        this.onNavigate(this.current);
-      } else if (name == 'hashChange') {
-        this.onHashChange && this.onHashChange(this.current.hash);
+      var _this6 = this;
+
+      for (var _len4 = arguments.length, args = Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
+        args[_key4 - 1] = arguments[_key4];
+      }
+
+      if (this[name]) {
+        return new Promise(function (resolve) {
+          setTimeout(function () {
+            resolve(_this6[name].apply(_this6, args));
+          });
+        });
+      } else {
+        return Promise.resolve(true);
       }
     }
   }, {
@@ -1039,15 +1075,41 @@ var _class = function () {
     value: function _onNavigate() {
       var _this7 = this;
 
-      var id = this._getCurrentItemId();
-      if (id == 'PLACEHOLDER') {
+      var toId = this._getCurrentId();
+      if (toId == 'PLACEHOLDER') {
         this._disableEvent();
         this.back().then(function () {
           _this7._enableEvent();
         });
       } else {
-        this._setCurrentItem(this.findIndexById(id));
-        this._dispatchEvent('navigate');
+        (function () {
+          var lastStateId = _this7._getStateId(_this7.current.id);
+          var toStateId = _this7._getStateId(toId);
+          var toIndex = _this7.findIndexById(toId);
+          var to = _this7.get(toIndex);
+          if (lastStateId == toStateId) {
+            _this7._setCurrentItem(toIndex);
+            _this7._dispatchEvent('onHashChange', _this7.current.hash);
+          } else {
+            (function () {
+              _this7._disableEvent();
+              var steps = toIndex - _this7.currentIndex;
+              _this7.go(-steps).then(function () {
+                _this7._dispatchEvent('beforeNavigate', to, false).then(function (bool) {
+                  if (bool != false) {
+                    return _this7.go(steps).then(function () {
+                      _this7._enableEvent();
+                      _this7._setCurrentItem(toIndex);
+                      return _this7._dispatchEvent('onNavigate', _this7.current, false);
+                    });
+                  } else {
+                    _this7._enableEvent();
+                  }
+                });
+              });
+            })();
+          }
+        })();
       }
     }
   }, {
