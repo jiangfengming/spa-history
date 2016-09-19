@@ -33,12 +33,12 @@ let spaHistory = new SpaHistory({
 - history.push({ path, query, hash, state }, ...) -> Promise
 - history.replace({ path, query, hash, state }) -> Promise
 - history.reset({ path, query, hash, state }, ...) -> Promise
-- history.url({ path, query, hash }) -> URL string
+- history.url({ path, query, hash }) -> String. URL
 - history.pop() -> Promise
 - history.go(n) -> Promise
 - history.back() -> Promise
 - history.forward() -> Promise
-- history.reload() -> history
+- history.reload() -> Promise
 - history.get(index) -> { id, path, query, hash, state }
 - history.getAll() -> [{ id, path, query, hash, state }, ...]
 - history.findById(id) -> { id, path, query, hash, state }
@@ -47,8 +47,8 @@ let spaHistory = new SpaHistory({
 - history.findIndexByPath(path) -> Number
 - history.findLastByPath(path) -> { id, path, query, hash, state }
 - history.findLastIndexByPath(path) -> Number
-- history.setState(state, index = currentIndex, merge = false) -> history
-- history.setStateById(state, id = currentId, merge = false) -> history
+- history.setState(state, index = currentIndex, merge = false) -> Boolean
+- history.setStateById(state, id = currentId, merge = false) -> Boolean
 - history.mergeState(state, index = currentIndex) == history.setState(state, index, true)
 - history.mergeStateById(state, id = currentId) == history.setStateById(state, id, true)
 

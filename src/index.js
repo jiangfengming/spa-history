@@ -338,7 +338,7 @@ export default class {
       this.current.state = state;
     }
     this._saveData();
-    return this;
+    return true;
   }
 
   mergeState(state, index) {
