@@ -1,8 +1,8 @@
 import Url from 'browser-url';
 
 export default {
-  url(item) {
-    let url = this._url(item);
+  url(location) {
+    let url = this._locationToUrl(location);
     return this._baseNoTrailingSlash + url.pathname + url.search + url.hash;
   },
 
@@ -40,8 +40,8 @@ export default {
     return history.state ? history.state.id : null;
   },
 
-  _parseCurrentLocation() {
-    let url = new Url().sortQuery();
+  _parseUrl(url) {
+    url = new Url(url).sortQuery();
     url.pathname = url.pathname.replace(this._baseNoTrailingSlash, '');
     return url;
   },

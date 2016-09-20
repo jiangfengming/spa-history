@@ -2,8 +2,8 @@ import Url from 'browser-url';
 import mixinHtml5 from './html5';
 
 export default {
-  url(item) {
-    let url = this._url(item);
+  url(location) {
+    let url = this._locationToUrl(location);
     return '#!' + url.pathname + url.search + url.hash;
   },
 
@@ -21,10 +21,10 @@ export default {
     return history.state ? history.state.id : null;
   },
 
-  _parseCurrentLocation() {
-    let url;
-    if (location.hash.indexOf('#!') == 0) {
-      url = location.hash.slice(2);
+  _parseUrl(url) {
+    url = new Url(url);
+    if (url.hash.indexOf('#!') == 0) {
+      url = url.hash.slice(2);
     } else {
       url = '/';
     }

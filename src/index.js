@@ -49,33 +49,33 @@ export default class {
       };
     }
 
-    let itemId = this._getCurrentId();
+    let locationId = this._getCurrentId();
     let sessionId, session;
-    let itemIndex = -1;
-    if (itemId) {
-      sessionId = Number(itemId.split(':')[0]);
+    let locationIndex = -1;
+    if (locationId) {
+      sessionId = Number(locationId.split(':')[0]);
       session = this._data.sessions[sessionId];
       if (session) {
-        itemIndex = session.findIndex(item => {
-          return item.id == itemId;
+        locationIndex = session.findIndex(location => {
+          return location.id == locationId;
         });
       }
     }
 
     let promise;
     // new session
-    if (itemIndex == -1) {
+    if (locationIndex == -1) {
       this._sessionId = this._data.sessions.length;
       this._session = [];
       this._data.sessions.push(this._session);
-      let url = this._parseCurrentLocation();
+      let url = this._parseUrl();
       this._setSession(url);
       this._setCurrentItem(this._session.length - 1);
       promise = this._change('replace', url);
     } else {
       this._sessionId = sessionId;
       this._session = session;
-      this._setCurrentItem(itemIndex);
+      this._setCurrentItem(locationIndex);
     }
 
     Promise.resolve(promise).then(() => {
@@ -90,14 +90,14 @@ export default class {
     return this._session.length;
   }
 
-  push(...items) {
+  push(...locations) {
     if (this._cursor != this._session.length - 1) {
       this._session = this._session.slice(0, this._cursor + 1);
     }
 
     let promise = Promise.resolve();
-    items.forEach(item => {
-      let url = this._url(item);
+    locations.forEach(location => {
+      let url = this._locationToUrl(location);
       this._setSession(url);
       promise = promise.then(() => {
         return this._change('push', url);
@@ -110,19 +110,19 @@ export default class {
     });
   }
 
-  replace(item) {
-    let url = this._url(item);
+  replace(location) {
+    let url = this._locationToUrl(location);
     this._setSession(url, this._cursor);
     this._setCurrentItem(this._cursor);
     this._saveData();
     return this._change('replace', url);
   }
 
-  reset(...items) {
-    return this.splice(0, this._session.length, ...items);
+  reset(...locations) {
+    return this.splice(0, this._session.length, ...locations);
   }
 
-  splice(start, deleteCount, ...insertItems) {
+  splice(start, deleteCount, ...insertLocations) {
     return new Promise(resolve => {
       let originalLength = this._session.length;
       let steps, index, replaceFirst;
@@ -139,12 +139,12 @@ export default class {
 
       this._disableEvent();
       this.go(steps).then(() => {
-        this._session.splice(start, deleteCount, ...insertItems);
+        this._session.splice(start, deleteCount, ...insertLocations);
 
         let promise = Promise.resolve();
 
         let fn = index => {
-          let url = this._url(this._session[index]);
+          let url = this._locationToUrl(this._session[index]);
           this._setSession(url, index);
           promise = promise.then(() => {
             if (replaceFirst) {
@@ -164,7 +164,7 @@ export default class {
           let p;
           if (this._session.length == 1 && originalLength > 1) {
             this._setCurrentItem(0);
-            p = this._change('push', this._url({
+            p = this._change('push', this._locationToUrl({
               id: 'PLACEHOLDER',
               path: this.current.path,
               query: this.current.query,
@@ -195,12 +195,12 @@ export default class {
   }
 
   goto(location) {
-    let to = this._url(location);
-    let current = this._url(this.current);
+    let to = this._locationToUrl(location);
+    let current = this._locationToUrl(this.current);
 
     // different location
     if (to.pathname + to.search != current.pathname + current.search) {
-      return this._dispatchEvent('beforeNavigate', this._item(to), false).then((bool) => {
+      return this._dispatchEvent('beforeNavigate', this._urlToLocation(to), false).then((bool) => {
         if (bool != false) {
           return this.push(to).then(() => {
             return this._dispatchEvent('onNavigate', this.current, false);
@@ -225,7 +225,7 @@ export default class {
       }
       // nothing changed, and no hash. reload
       else {
-        return this._dispatchEvent('beforeNavigate', this._item(to), true).then((bool) => {
+        return this._dispatchEvent('beforeNavigate', this._urlToLocation(to), true).then((bool) => {
           if (bool != false) {
             // current location has hash
             if (this.current.hash) {
@@ -263,15 +263,15 @@ export default class {
   }
 
   get(index) {
-    item = this._session[index];
-    if (!item) {
+    let location = this._session[index];
+    if (!location) {
       return null;
     }
 
-    let item = Object.assign({}, item); // copy
-    let stateId = this._getStateId(item.id);
-    item.state = this._data.states[stateId];
-    return item;
+    location = Object.assign({}, location); // copy
+    let stateId = this._getStateId(location.id);
+    location.state = this._data.states[stateId];
+    return location;
   }
 
   getAll() {
@@ -295,8 +295,8 @@ export default class {
   }
 
   findIndexByPath(path) {
-    return this._session.findIndex(item => {
-      return item.path == path;
+    return this._session.findIndex(location => {
+      return location.path == path;
     });
   }
 
@@ -362,7 +362,7 @@ export default class {
       this.current = this.get(index);
     } else {
       this._cursor = 0;
-      this.current = this._item(this._parseCurrentLocation());
+      this.current = this._urlToLocation(this._parseUrl());
       this.current.id = this._getCurrentId();
     }
   }
@@ -375,28 +375,28 @@ export default class {
     });
   }
 
-  _url(item) {
+  _locationToUrl(location) {
     // already formatted
-    if (item.pathname) {
-      return item;
+    if (location.pathname) {
+      return location;
     }
 
-    if (item.constructor == String) {
-      return new Url(item).sortQuery();
+    if (location.constructor == String) {
+      return new Url(location).sortQuery();
     }
 
-    let url = new Url(item.path).addQuery(item.query).sortQuery();
-    if (item.hash) {
-      url.hash = item.hash;
+    let url = new Url(location.path).addQuery(location.query).sortQuery();
+    if (location.hash) {
+      url.hash = location.hash;
     }
 
-    url.title = item.title;
-    url.state = item.state;
-    url.id = item.id;
+    url.title = location.title;
+    url.state = location.state;
+    url.id = location.id;
     return url;
   }
 
-  _item(url) {
+  _urlToLocation(url) {
     return {
       id: url.id,
       path: url.pathname,
@@ -523,6 +523,7 @@ export default class {
       }
 
       e.preventDefault();
+      url = this._parseUrl(url.href);
       this.goto(url.href);
     });
   }

@@ -50,12 +50,12 @@ export default {
   },
 
   _getCurrentId() {
-    let url = mixinHashbangWithHistoryApi._parseCurrentLocation.call(this);
+    let url = mixinHashbangWithHistoryApi._parseUrl.call(this);
     return url.query._sid;
   },
 
-  _parseCurrentLocation() {
-    let url = mixinHashbangWithHistoryApi._parseCurrentLocation.call(this);
+  _parseUrl() {
+    let url = mixinHashbangWithHistoryApi._parseUrl.call(this);
     url.removeQuery('_sid');
     return url;
   },

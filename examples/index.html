@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=default,es6"></script>
     <script src="../dist/SpaHistory.bundle.js"></script>
     <title>SPA History</title>
   </head>
@@ -14,6 +15,7 @@
     if (location.pathname.indexOf('hashbang') != -1) {
       sessionStorage.setItem('spaHistoryMode', 'hashbang');
       location.replace('/');
+      throw 1;
     }
 
     var elMain = document.getElementById('main');
