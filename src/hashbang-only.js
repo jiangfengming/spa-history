@@ -4,11 +4,7 @@ export default {
   url: mixinHashbangWithHistoryApi.url,
 
   _changeHistory(method, url) {
-    url.addQuery('_sid', url.id);
-    location[method == 'push' ? 'assign' : 'replace']('#!' + url.pathname + url.search + url.hash);
-    url.removeQuery('_sid');
-
-    return new Promise(resolve => {
+    let promise = new Promise(resolve => {
       let eventDisabled = this._eventDisabled;
       this._disableEvent();
       let fn = () => {
@@ -20,6 +16,12 @@ export default {
       };
       window.addEventListener('hashchange', fn);
     });
+
+    url.addQuery('_sid', url.id);
+    location[method == 'push' ? 'assign' : 'replace']('#!' + url.pathname + url.search + url.hash);
+    url.removeQuery('_sid');
+
+    return promise;
   },
 
   _go(n) {
