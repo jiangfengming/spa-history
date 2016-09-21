@@ -27,15 +27,15 @@ export default {
       return Promise.resolve();
     }
 
-    history.go(n);
-
-    return new Promise(resolve => {
+    let promise = new Promise(resolve => {
       let fn = () => {
         window.removeEventListener('hashchange', fn);
         resolve();
       };
       window.addEventListener('hashchange', fn);
     });
+    history.go(n);
+    return promise;
   },
 
   // fallback to hashbang url if browser doesn't history API

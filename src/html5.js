@@ -16,15 +16,15 @@ export default {
       return Promise.resolve();
     }
 
-    history.go(n);
-
-    return new Promise(resolve => {
+    let promise = new Promise(resolve => {
       let fn = () => {
         window.removeEventListener('popstate', fn);
         resolve();
       };
       window.addEventListener('popstate', fn);
     });
+    history.go(n);
+    return promise;
   },
 
   // convert hashbang URL to HTML5 URL
