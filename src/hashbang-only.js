@@ -54,8 +54,8 @@ export default {
     return url.query._sid;
   },
 
-  _parseUrl() {
-    let url = mixinHashbangWithHistoryApi._parseUrl.call(this);
+  _parseUrl(url) {
+    url = mixinHashbangWithHistoryApi._parseUrl.call(this, url);
     url.removeQuery('_sid');
     return url;
   },

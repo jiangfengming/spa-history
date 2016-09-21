@@ -14,8 +14,15 @@
     <script>
     if (location.pathname.indexOf('hashbang') != -1) {
       sessionStorage.setItem('spaHistoryMode', 'hashbang');
+      if (location.pathname.indexOf('hashbang-only') != -1) {
+        sessionStorage.setItem('noHistoryApi', '1');
+      }
       location.replace('/');
       throw 1;
+    }
+
+    if (sessionStorage.getItem('noHistoryApi')) {
+      history.pushState = null;
     }
 
     var elMain = document.getElementById('main');
@@ -55,8 +62,8 @@
           spaHistory.beforeNavigate = null;
           window.onbeforeunload = null;
 
-          spaHistory.splice(spaHistory.currentIndex - 1, 2).then(function() {
-            spaHistory.goto('complete');
+          spaHistory.reset('/', '/product', '/complete').then(function() {
+            spaHistory.reload();
           });
         };
 
@@ -90,7 +97,7 @@
       mode: sessionStorage.getItem('spaHistoryMode'),
 
       onNavigate: function(location, isReload) {
-        console.log('onNavigate:', location, isReload);
+        console.log('onNavigate:', spaHistory.currentIndex, location, isReload);
         console.log('states:', this.getAll());
         if (currentView && currentView.destroy) {
           currentView.destroy();
@@ -100,6 +107,7 @@
       },
 
       onHashChange: function(hash) {
+        console.log(spaHistory.currentIndex);
         console.log('Hash Changed:', hash);
       }
     });

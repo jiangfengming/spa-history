@@ -53,7 +53,7 @@ export default class {
     let sessionId, session;
     let locationIndex = -1;
     if (locationId) {
-      sessionId = Number(locationId.split(':')[0]);
+      sessionId = Number(locationId.split('-')[0]);
       session = this._data.sessions[sessionId];
       if (session) {
         locationIndex = session.findIndex(location => {
@@ -134,7 +134,7 @@ export default class {
       } else {
         replaceFirst = false;
         steps = start - this._cursor - 2;
-        index = start - 2;
+        index = start - 1;
       }
 
       this._disableEvent();
@@ -217,7 +217,7 @@ export default class {
         }
         // hash changed
         else {
-          to.id = this._getStateId(this.current.id) + ':' + this._uniqueId();
+          to.id = this._getStateId(this.current.id) + '-' + this._uniqueId();
           return this.push(to).then(() => {
             return this._dispatchEvent('onHashChange', this.current.hash);
           });
@@ -229,7 +229,7 @@ export default class {
           if (bool != false) {
             // current location has hash
             if (this.current.hash) {
-              to.id = this._getStateId(this.current.id) + ':' + this._uniqueId();
+              to.id = this._getStateId(this.current.id) + '-' + this._uniqueId();
               return this.push(to).then(() => {
                 return this._dispatchEvent('onNavigate', this.current, true);
               });
@@ -350,8 +350,8 @@ export default class {
   }
 
   _getStateId(id) {
-    let _id = id.split(':');
-    return _id.length == 2 ? id : _id[0] + ':' + _id[1];
+    let _id = id.split('-');
+    return _id.length == 2 ? id : _id[0] + '-' + _id[1];
   }
 
   _setCurrentItem(index) {
@@ -416,7 +416,7 @@ export default class {
     }
 
     if (!url.id) {
-      url.id = this._sessionId + ':' + this._uniqueId();
+      url.id = this._sessionId + '-' + this._uniqueId();
     }
 
     this._session[index] = {
