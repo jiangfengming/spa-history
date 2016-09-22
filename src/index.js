@@ -219,7 +219,7 @@ export default class {
         else {
           to.id = this._getStateId(this.current.id) + '-' + this._uniqueId();
           return this.push(to).then(() => {
-            return this._dispatchEvent('onHashChange', this.current.hash);
+            return this._dispatchEvent('onHashChange', to.hash, current.hash);
           });
         }
       }
@@ -480,9 +480,10 @@ export default class {
       let toStateId = this._getStateId(toId);
       let toIndex = this.findIndexById(toId);
       let to = this.get(toIndex);
+      let current = this.current;
       if (lastStateId == toStateId) {
         this._setCurrentItem(toIndex);
-        this._dispatchEvent('onHashChange', this.current.hash);
+        this._dispatchEvent('onHashChange', to.hash, current.hash);
       } else {
         this._disableEvent();
         let steps = toIndex - this.currentIndex;

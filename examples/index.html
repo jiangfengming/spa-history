@@ -31,21 +31,25 @@
       '/': function() {
         elMain.innerHTML =
           '<h1>Home</h1>' +
-          '<a href="' + spaHistory.url('/product') + '">product page</a>';
+          '<p>Open console to see logs.</p>' +
+          '<a href="' + spaHistory.url('/product') + '">/product</a>';
       },
 
       '/product': function() {
         elMain.innerHTML =
           '<h1>Product Page</h1>' +
-          '<a href="' + spaHistory.url('/product') + '">current</a> ' +
-          '<a href="' + spaHistory.url('/product#foo') + '">#foo</a> ' +
-          '<a href="' + spaHistory.url('/product#bar') + '">#bar</a> <br>' +
-          '<a href="' + spaHistory.url('/buy') + '">Buy</a>';
+          '<p>Clicking hash links will emit the <code>onHashChange</code> event.</p>' +
+          '<a href="' + spaHistory.url('/product') + '">/product</a> ' +
+          '<a href="' + spaHistory.url('/product#foo') + '">/product#foo</a> ' +
+          '<a href="' + spaHistory.url('/product#bar') + '">/product#bar</a> <br>' +
+          '<a href="' + spaHistory.url('/buy') + '">/buy</a>';
       },
 
       '/buy': function() {
         elMain.innerHTML =
           '<h1>Order Form</h1>' +
+          '<p>Try reloading, going back and forth, the input value will be preserved.</p>' +
+          '<p>Clicking back will emit the <code>beforeNavigate</code> event.</p>' +
           '<form id="order">' +
             'Name: <input type="text" id="name"> <button>Submit</button>' +
           '</form>';
@@ -88,7 +92,8 @@
       },
 
       '/complete': function() {
-        elMain.innerHTML = '<h1>Complete</h1>';
+        elMain.innerHTML = '<h1>Complete</h1>' +
+          "<p>The history has been rewritten with <code>['/', '/product', '/complete']</code>, try going back to see.</p>";
       }
     };
 
@@ -97,7 +102,11 @@
       mode: sessionStorage.getItem('spaHistoryMode'),
 
       onNavigate: function(location, isReload) {
-        console.log('onNavigate:', spaHistory.currentIndex, location, isReload);
+        console.log('------------');
+        console.log('onNavigate');
+        console.log('currentIndex:', spaHistory.currentIndex);
+        console.log('location:', location);
+        console.log('isReload:', isReload);
         console.log('states:', this.getAll());
         if (currentView && currentView.destroy) {
           currentView.destroy();
@@ -106,9 +115,14 @@
         currentView = new views[location.path]();
       },
 
-      onHashChange: function(hash) {
-        console.log(spaHistory.currentIndex);
-        console.log('Hash Changed:', hash);
+      onHashChange: function(newHash, oldHash) {
+        console.log('------------');
+        console.log('onHashChange');
+        console.log('currentIndex:', spaHistory.currentIndex);
+        console.log('newHash:', newHash);
+        console.log('oldHash:', oldHash);
+        console.log('location:', spaHistory.current);
+        console.log('states:', this.getAll());
       }
     });
     </script>

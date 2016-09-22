@@ -18,7 +18,7 @@ let spaHistory = new SpaHistory({
 
   },
 
-  onHashChange(hash) {
+  onHashChange(newHash, oldHash) {
 
   }
 });
@@ -52,12 +52,32 @@ let spaHistory = new SpaHistory({
 - history.mergeState(state, index = currentIndex) == history.setState(state, index, true)
 - history.mergeStateById(state, id = currentId) == history.setStateById(state, id, true)
 
+
+## Dependencies
+- Object.assign
+- Element#closest
+- Array#findIndex
+
+You can use <a href="http://babeljs.io/docs/usage/polyfill/">babel-polyfill</a> and <a href="https://github.com/WebReflection/dom4">dom4</a> to meet the requirements.
+
+Or use the <a href="https://polyfill.io/">polyfill.io</a> service: https://cdn.polyfill.io/v2/polyfill.min.js?features=default,es6
+
 ## Build
 build dev
 ```
 npm run build-dev
 ```
-Open http://localhost:8010/
+
+### Examples:
+- auto mode: http://localhost:8010/
+- hashbang: http://localhost:8010/hashbang
+- hashbang only (disable history state API): http://localhost:8010/hashbang-only
+
+### Auto location conversion
+Location will be auto converted to browser supported mode.
+
+e.g., If you open http://127.0.0.1:8010/product in IE9, the location will be replaced with http://127.0.0.1:8010/#!/product with state ID appended,
+and vice versa, if you open http://127.0.0.1:8010/#!/product in Chrome, the location will be replaced with http://127.0.0.1:8010/product
 
 build dist
 ```
