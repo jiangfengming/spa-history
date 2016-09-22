@@ -102,8 +102,8 @@ var _html2 = _interopRequireDefault(_html);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 exports.default = {
-  url: function url(item) {
-    var url = this._url(item);
+  url: function url(location) {
+    var url = this._locationToUrl(location);
     return '#!' + url.pathname + url.search + url.hash;
   },
   _changeHistory: function _changeHistory(method, url) {
@@ -119,10 +119,10 @@ exports.default = {
   _getCurrentId: function _getCurrentId() {
     return history.state ? history.state.id : null;
   },
-  _parseCurrentLocation: function _parseCurrentLocation() {
-    var url = void 0;
-    if (location.hash.indexOf('#!') == 0) {
-      url = location.hash.slice(2);
+  _parseUrl: function _parseUrl(url) {
+    url = new _browserUrl2.default(url);
+    if (url.hash.indexOf('#!') == 0) {
+      url = url.hash.slice(2);
     } else {
       url = '/';
     }
@@ -155,8 +155,8 @@ var _browserUrl2 = _interopRequireDefault(_browserUrl);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 exports.default = {
-  url: function url(item) {
-    var url = this._url(item);
+  url: function url(location) {
+    var url = this._locationToUrl(location);
     return this._baseNoTrailingSlash + url.pathname + url.search + url.hash;
   },
   _changeHistory: function _changeHistory(method, url) {
@@ -168,15 +168,15 @@ exports.default = {
       return Promise.resolve();
     }
 
-    history.go(n);
-
-    return new Promise(function (resolve) {
+    var promise = new Promise(function (resolve) {
       var fn = function fn() {
         window.removeEventListener('popstate', fn);
         resolve();
       };
       window.addEventListener('popstate', fn);
     });
+    history.go(n);
+    return promise;
   },
 
 
@@ -191,8 +191,8 @@ exports.default = {
   _getCurrentId: function _getCurrentId() {
     return history.state ? history.state.id : null;
   },
-  _parseCurrentLocation: function _parseCurrentLocation() {
-    var url = new _browserUrl2.default().sortQuery();
+  _parseUrl: function _parseUrl(url) {
+    url = new _browserUrl2.default(url).sortQuery();
     url.pathname = url.pathname.replace(this._baseNoTrailingSlash, '');
     return url;
   },
@@ -243,11 +243,7 @@ exports.default = {
   _changeHistory: function _changeHistory(method, url) {
     var _this = this;
 
-    url.addQuery('_sid', url.id);
-    location[method == 'push' ? 'assign' : 'replace']('#!' + url.pathname + url.search + url.hash);
-    url.removeQuery('_sid');
-
-    return new Promise(function (resolve) {
+    var promise = new Promise(function (resolve) {
       var eventDisabled = _this._eventDisabled;
       _this._disableEvent();
       var fn = function fn() {
@@ -259,21 +255,27 @@ exports.default = {
       };
       window.addEventListener('hashchange', fn);
     });
+
+    url.addQuery('_sid', url.id);
+    location[method == 'push' ? 'assign' : 'replace']('#!' + url.pathname + url.search + url.hash);
+    url.removeQuery('_sid');
+
+    return promise;
   },
   _go: function _go(n) {
     if (!n) {
       return Promise.resolve();
     }
 
-    history.go(n);
-
-    return new Promise(function (resolve) {
+    var promise = new Promise(function (resolve) {
       var fn = function fn() {
         window.removeEventListener('hashchange', fn);
         resolve();
       };
       window.addEventListener('hashchange', fn);
     });
+    history.go(n);
+    return promise;
   },
 
 
@@ -288,11 +290,11 @@ exports.default = {
     }
   },
   _getCurrentId: function _getCurrentId() {
-    var url = _hashbangWithHistoryApi2.default._parseCurrentLocation.call(this);
+    var url = _hashbangWithHistoryApi2.default._parseUrl.call(this);
     return url.query._sid;
   },
-  _parseCurrentLocation: function _parseCurrentLocation() {
-    var url = _hashbangWithHistoryApi2.default._parseCurrentLocation.call(this);
+  _parseUrl: function _parseUrl(url) {
+    url = _hashbangWithHistoryApi2.default._parseUrl.call(this, url);
     url.removeQuery('_sid');
     return url;
   },
@@ -412,34 +414,34 @@ var _class = function () {
       };
     }
 
-    var itemId = this._getCurrentId();
+    var locationId = this._getCurrentId();
     var sessionId = void 0,
         session = void 0;
-    var itemIndex = -1;
-    if (itemId) {
-      sessionId = Number(itemId.split(':')[0]);
+    var locationIndex = -1;
+    if (locationId) {
+      sessionId = Number(locationId.split('-')[0]);
       session = this._data.sessions[sessionId];
       if (session) {
-        itemIndex = session.findIndex(function (item) {
-          return item.id == itemId;
+        locationIndex = session.findIndex(function (location) {
+          return location.id == locationId;
         });
       }
     }
 
     var promise = void 0;
     // new session
-    if (itemIndex == -1) {
+    if (locationIndex == -1) {
       this._sessionId = this._data.sessions.length;
       this._session = [];
       this._data.sessions.push(this._session);
-      var url = this._parseCurrentLocation();
+      var url = this._parseUrl();
       this._setSession(url);
       this._setCurrentItem(this._session.length - 1);
       promise = this._change('replace', url);
     } else {
       this._sessionId = sessionId;
       this._session = session;
-      this._setCurrentItem(itemIndex);
+      this._setCurrentItem(locationIndex);
     }
 
     Promise.resolve(promise).then(function () {
@@ -461,12 +463,12 @@ var _class = function () {
 
       var promise = Promise.resolve();
 
-      for (var _len = arguments.length, items = Array(_len), _key = 0; _key < _len; _key++) {
-        items[_key] = arguments[_key];
+      for (var _len = arguments.length, locations = Array(_len), _key = 0; _key < _len; _key++) {
+        locations[_key] = arguments[_key];
       }
 
-      items.forEach(function (item) {
-        var url = _this2._url(item);
+      locations.forEach(function (location) {
+        var url = _this2._locationToUrl(location);
         _this2._setSession(url);
         promise = promise.then(function () {
           return _this2._change('push', url);
@@ -480,8 +482,8 @@ var _class = function () {
     }
   }, {
     key: 'replace',
-    value: function replace(item) {
-      var url = this._url(item);
+    value: function replace(location) {
+      var url = this._locationToUrl(location);
       this._setSession(url, this._cursor);
       this._setCurrentItem(this._cursor);
       this._saveData();
@@ -490,17 +492,17 @@ var _class = function () {
   }, {
     key: 'reset',
     value: function reset() {
-      for (var _len2 = arguments.length, items = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-        items[_key2] = arguments[_key2];
+      for (var _len2 = arguments.length, locations = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        locations[_key2] = arguments[_key2];
       }
 
-      return this.splice.apply(this, [0, this._session.length].concat(items));
+      return this.splice.apply(this, [0, this._session.length].concat(locations));
     }
   }, {
     key: 'splice',
     value: function splice(start, deleteCount) {
-      for (var _len3 = arguments.length, insertItems = Array(_len3 > 2 ? _len3 - 2 : 0), _key3 = 2; _key3 < _len3; _key3++) {
-        insertItems[_key3 - 2] = arguments[_key3];
+      for (var _len3 = arguments.length, insertLocations = Array(_len3 > 2 ? _len3 - 2 : 0), _key3 = 2; _key3 < _len3; _key3++) {
+        insertLocations[_key3 - 2] = arguments[_key3];
       }
 
       var _this3 = this;
@@ -518,19 +520,19 @@ var _class = function () {
         } else {
           replaceFirst = false;
           steps = start - _this3._cursor - 2;
-          index = start - 2;
+          index = start - 1;
         }
 
         _this3._disableEvent();
         _this3.go(steps).then(function () {
           var _session;
 
-          (_session = _this3._session).splice.apply(_session, [start, deleteCount].concat(insertItems));
+          (_session = _this3._session).splice.apply(_session, [start, deleteCount].concat(insertLocations));
 
           var promise = Promise.resolve();
 
           var fn = function fn(index) {
-            var url = _this3._url(_this3._session[index]);
+            var url = _this3._locationToUrl(_this3._session[index]);
             _this3._setSession(url, index);
             promise = promise.then(function () {
               if (replaceFirst) {
@@ -550,7 +552,7 @@ var _class = function () {
             var p = void 0;
             if (_this3._session.length == 1 && originalLength > 1) {
               _this3._setCurrentItem(0);
-              p = _this3._change('push', _this3._url({
+              p = _this3._change('push', _this3._locationToUrl({
                 id: 'PLACEHOLDER',
                 path: _this3.current.path,
                 query: _this3.current.query,
@@ -584,12 +586,12 @@ var _class = function () {
     value: function goto(location) {
       var _this4 = this;
 
-      var to = this._url(location);
-      var current = this._url(this.current);
+      var to = this._locationToUrl(location);
+      var current = this._locationToUrl(this.current);
 
       // different location
       if (to.pathname + to.search != current.pathname + current.search) {
-        return this._dispatchEvent('beforeNavigate', this._item(to), false).then(function (bool) {
+        return this._dispatchEvent('beforeNavigate', this._urlToLocation(to), false).then(function (bool) {
           if (bool != false) {
             return _this4.push(to).then(function () {
               return _this4._dispatchEvent('onNavigate', _this4.current, false);
@@ -606,19 +608,19 @@ var _class = function () {
             }
             // hash changed
             else {
-                to.id = this._getStateId(this.current.id) + ':' + this._uniqueId();
+                to.id = this._getStateId(this.current.id) + '-' + this._uniqueId();
                 return this.push(to).then(function () {
-                  return _this4._dispatchEvent('onHashChange', _this4.current.hash);
+                  return _this4._dispatchEvent('onHashChange', to.hash, current.hash);
                 });
               }
           }
           // nothing changed, and no hash. reload
           else {
-              return this._dispatchEvent('beforeNavigate', this._item(to), true).then(function (bool) {
+              return this._dispatchEvent('beforeNavigate', this._urlToLocation(to), true).then(function (bool) {
                 if (bool != false) {
                   // current location has hash
                   if (_this4.current.hash) {
-                    to.id = _this4._getStateId(_this4.current.id) + ':' + _this4._uniqueId();
+                    to.id = _this4._getStateId(_this4.current.id) + '-' + _this4._uniqueId();
                     return _this4.push(to).then(function () {
                       return _this4._dispatchEvent('onNavigate', _this4.current, true);
                     });
@@ -658,15 +660,15 @@ var _class = function () {
   }, {
     key: 'get',
     value: function get(index) {
-      item = this._session[index];
-      if (!item) {
+      var location = this._session[index];
+      if (!location) {
         return null;
       }
 
-      var item = Object.assign({}, item); // copy
-      var stateId = this._getStateId(item.id);
-      item.state = this._data.states[stateId];
-      return item;
+      location = Object.assign({}, location); // copy
+      var stateId = this._getStateId(location.id);
+      location.state = this._data.states[stateId];
+      return location;
     }
   }, {
     key: 'getAll',
@@ -697,8 +699,8 @@ var _class = function () {
   }, {
     key: 'findIndexByPath',
     value: function findIndexByPath(path) {
-      return this._session.findIndex(function (item) {
-        return item.path == path;
+      return this._session.findIndex(function (location) {
+        return location.path == path;
       });
     }
   }, {
@@ -759,8 +761,8 @@ var _class = function () {
   }, {
     key: '_getStateId',
     value: function _getStateId(id) {
-      var _id = id.split(':');
-      return _id.length == 2 ? id : _id[0] + ':' + _id[1];
+      var _id = id.split('-');
+      return _id.length == 2 ? id : _id[0] + '-' + _id[1];
     }
   }, {
     key: '_setCurrentItem',
@@ -772,7 +774,7 @@ var _class = function () {
         this.current = this.get(index);
       } else {
         this._cursor = 0;
-        this.current = this._item(this._parseCurrentLocation());
+        this.current = this._urlToLocation(this._parseUrl());
         this.current.id = this._getCurrentId();
       }
     }
@@ -786,30 +788,30 @@ var _class = function () {
       });
     }
   }, {
-    key: '_url',
-    value: function _url(item) {
+    key: '_locationToUrl',
+    value: function _locationToUrl(location) {
       // already formatted
-      if (item.pathname) {
-        return item;
+      if (location.pathname) {
+        return location;
       }
 
-      if (item.constructor == String) {
-        return new _browserUrl2.default(item).sortQuery();
+      if (location.constructor == String) {
+        return new _browserUrl2.default(location).sortQuery();
       }
 
-      var url = new _browserUrl2.default(item.path).addQuery(item.query).sortQuery();
-      if (item.hash) {
-        url.hash = item.hash;
+      var url = new _browserUrl2.default(location.path).addQuery(location.query).sortQuery();
+      if (location.hash) {
+        url.hash = location.hash;
       }
 
-      url.title = item.title;
-      url.state = item.state;
-      url.id = item.id;
+      url.title = location.title;
+      url.state = location.state;
+      url.id = location.id;
       return url;
     }
   }, {
-    key: '_item',
-    value: function _item(url) {
+    key: '_urlToLocation',
+    value: function _urlToLocation(url) {
       return {
         id: url.id,
         path: url.pathname,
@@ -831,7 +833,7 @@ var _class = function () {
       }
 
       if (!url.id) {
-        url.id = this._sessionId + ':' + this._uniqueId();
+        url.id = this._sessionId + '-' + this._uniqueId();
       }
 
       this._session[index] = {
@@ -911,9 +913,10 @@ var _class = function () {
           var toStateId = _this7._getStateId(toId);
           var toIndex = _this7.findIndexById(toId);
           var to = _this7.get(toIndex);
+          var current = _this7.current;
           if (lastStateId == toStateId) {
             _this7._setCurrentItem(toIndex);
-            _this7._dispatchEvent('onHashChange', _this7.current.hash);
+            _this7._dispatchEvent('onHashChange', to.hash, current.hash);
           } else {
             (function () {
               _this7._disableEvent();
@@ -960,6 +963,7 @@ var _class = function () {
         }
 
         e.preventDefault();
+        url = _this8._parseUrl(url.href);
         _this8.goto(url.href);
       });
     }
