@@ -1,9 +1,9 @@
 export default function(options = {}) {
-  let conf = {
+  const conf = {
     entry: './src/index.js',
 
     output: {
-      path: __dirname + '/dist',
+      path: `${__dirname}/dist`,
       publicPath: '/dist/',
       filename: options.module ? 'SpaHistory.js' : 'SpaHistory.bundle.js',
       library: 'SpaHistory',

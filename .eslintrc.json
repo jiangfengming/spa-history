@@ -4,7 +4,7 @@
     "commonjs": true,
     "es6": true
   },
-  "extends": "eslint:recommended",
+  "extends": "airbnb",
   "parserOptions": {
     "sourceType": "module"
   },
@@ -25,6 +25,9 @@
     "semi": [
       "error",
       "always"
-    ]
+    ],
+    "no-var": "error",
+    "prefer-const": "error",
+    "prefer-arrow-callback": "error"
   }
 }
