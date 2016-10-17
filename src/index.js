@@ -7,11 +7,11 @@ export default class {
   constructor({ mode, base = '/', beforeNavigate, onNavigate, onHashChange } = {}) {
     this.mode = mode;
     if (!this.mode) {
-      this.mode = history.pushState && location.protocol.indexOf('http') == 0 ? 'html5' : 'hashbang';
+      this.mode = history.pushState && location.protocol.indexOf('http') === 0 ? 'html5' : 'hashbang';
     }
 
     let mixin;
-    if (this.mode == 'html5') {
+    if (this.mode === 'html5') {
       mixin = mixinHtml5;
     } else if (history.pushState) {
       mixin = mixinHashbangWithHistoryApi;
@@ -19,7 +19,7 @@ export default class {
       mixin = mixinHashbangOnly;
     }
 
-    for (let method in mixin) {
+    for (const method in mixin) {
       this[method] = mixin[method];
     }
 
@@ -49,16 +49,14 @@ export default class {
       };
     }
 
-    let locationId = this._getCurrentId();
+    const locationId = this._getCurrentId();
     let sessionId, session;
     let locationIndex = -1;
     if (locationId) {
       sessionId = Number(locationId.split('-')[0]);
       session = this._data.sessions[sessionId];
       if (session) {
-        locationIndex = session.findIndex(location => {
-          return location.id == locationId;
-        });
+        locationIndex = session.findIndex(location => location.id == locationId);
       }
     }
 
@@ -68,7 +66,7 @@ export default class {
       this._sessionId = this._data.sessions.length;
       this._session = [];
       this._data.sessions.push(this._session);
-      let url = this._parseUrl();
+      const url = this._parseUrl();
       this._setSession(url);
       this._setCurrentItem(this._session.length - 1);
       promise = this._change('replace', url);
@@ -97,11 +95,9 @@ export default class {
 
     let promise = Promise.resolve();
     locations.forEach(location => {
-      let url = this._locationToUrl(location);
+      const url = this._locationToUrl(location);
       this._setSession(url);
-      promise = promise.then(() => {
-        return this._change('push', url);
-      });
+      promise = promise.then(() => this._change('push', url));
     });
 
     return promise.then(() => {
@@ -111,7 +107,7 @@ export default class {
   }
 
   replace(location) {
-    let url = this._locationToUrl(location);
+    const url = this._locationToUrl(location);
     this._setSession(url, this._cursor);
     this._setCurrentItem(this._cursor);
     this._saveData();
@@ -124,7 +120,7 @@ export default class {
 
   splice(start, deleteCount, ...insertLocations) {
     return new Promise(resolve => {
-      let originalLength = this._session.length;
+      const originalLength = this._session.length;
       let steps, index, replaceFirst;
 
       if (start < 2) {
@@ -143,8 +139,8 @@ export default class {
 
         let promise = Promise.resolve();
 
-        let fn = index => {
-          let url = this._locationToUrl(this._session[index]);
+        const fn = index => {
+          const url = this._locationToUrl(this._session[index]);
           this._setSession(url, index);
           promise = promise.then(() => {
             if (replaceFirst) {
@@ -169,11 +165,9 @@ export default class {
               path: this.current.path,
               query: this.current.query,
               hash: this.current.hash
-            })).then(() => {
-              return this.back();
-            });
+            })).then(() => this.back());
           } else {
-            let lastIndex = this._session.length - 1;
+            const lastIndex = this._session.length - 1;
             let currentIndex = this.findIndexById(this.current.id);
             if (currentIndex == -1) {
               currentIndex = lastIndex;
@@ -195,44 +189,29 @@ export default class {
   }
 
   goto(location) {
-    let to = this._locationToUrl(location);
-    let current = this._locationToUrl(this.current);
+    const to = this._locationToUrl(location);
+    const current = this._locationToUrl(this.current);
 
-    // different location
-    if (to.pathname + to.search != current.pathname + current.search) {
-      return this._dispatchEvent('beforeNavigate', this._urlToLocation(to), false).then((bool) => {
+    if (to.pathname + to.search != current.pathname + current.search) { // different location
+      return this._dispatchEvent('beforeNavigate', this._urlToLocation(to), false).then(bool => {
         if (bool != false) {
-          return this.push(to).then(() => {
-            return this._dispatchEvent('onNavigate', this.current, false);
-          });
+          return this.push(to).then(() => this._dispatchEvent('onNavigate', this.current, false));
         }
       });
-    }
-    // same location
-    else {
+    } else { // same location
       if (to.hash) {
-        // hash not changed
-        if (to.hash == this.current.hash) {
+        if (to.hash == this.current.hash) { // hash not changed
           return Promise.resolve(false);
-        }
-        // hash changed
-        else {
+        } else { // hash changed
           to.id = this._getStateId(this.current.id) + '-' + this._uniqueId();
-          return this.push(to).then(() => {
-            return this._dispatchEvent('onHashChange', to.hash, current.hash);
-          });
+          return this.push(to).then(() => this._dispatchEvent('onHashChange', to.hash, current.hash));
         }
-      }
-      // nothing changed, and no hash. reload
-      else {
-        return this._dispatchEvent('beforeNavigate', this._urlToLocation(to), true).then((bool) => {
+      } else { // nothing changed, and no hash. reload
+        return this._dispatchEvent('beforeNavigate', this._urlToLocation(to), true).then(bool => {
           if (bool != false) {
-            // current location has hash
-            if (this.current.hash) {
+            if (this.current.hash) { // current location has hash
               to.id = this._getStateId(this.current.id) + '-' + this._uniqueId();
-              return this.push(to).then(() => {
-                return this._dispatchEvent('onNavigate', this.current, true);
-              });
+              return this.push(to).then(() => this._dispatchEvent('onNavigate', this.current, true));
             } else {
               return this._dispatchEvent('onNavigate', this.current, true);
             }
@@ -269,15 +248,13 @@ export default class {
     }
 
     location = Object.assign({}, location); // copy
-    let stateId = this._getStateId(location.id);
+    const stateId = this._getStateId(location.id);
     location.state = this._data.states[stateId];
     return location;
   }
 
   getAll() {
-    return this._session.map((v, i) => {
-      return this.get(i);
-    });
+    return this._session.map((v, i) => this.get(i));
   }
 
   findById(id) {
@@ -285,9 +262,7 @@ export default class {
   }
 
   findIndexById(id) {
-    return this._session.findIndex(value => {
-      return value.id == id;
-    });
+    return this._session.findIndex(value => value.id == id);
   }
 
   findByPath(path) {
@@ -295,9 +270,7 @@ export default class {
   }
 
   findIndexByPath(path) {
-    return this._session.findIndex(location => {
-      return location.path == path;
-    });
+    return this._session.findIndex(location => location.path == path);
   }
 
   findLastByPath(path) {
@@ -327,7 +300,7 @@ export default class {
       id = this.current.id;
     }
 
-    let stateId = this._getStateId(id);
+    const stateId = this._getStateId(id);
 
     if (merge) {
       state = Object.assign({}, this._data.states[stateId], state);
@@ -350,7 +323,7 @@ export default class {
   }
 
   _getStateId(id) {
-    let _id = id.split('-');
+    const _id = id.split('-');
     return _id.length == 2 ? id : _id[0] + '-' + _id[1];
   }
 
@@ -385,7 +358,7 @@ export default class {
       return new Url(location).sortQuery();
     }
 
-    let url = new Url(location.path).addQuery(location.query).sortQuery();
+    const url = new Url(location.path).addQuery(location.query).sortQuery();
     if (location.hash) {
       url.hash = location.hash;
     }
@@ -458,7 +431,7 @@ export default class {
   // Invoking 'confirm()' during microtask execution is deprecated and will be removed in M53, around September 2016. See https://www.chromestatus.com/features/5647113010544640 for more details.
   _dispatchEvent(name, ...args) {
     if (this[name]) {
-      return new Promise((resolve) => {
+      return new Promise(resolve => {
         setTimeout(() => {
           resolve(this[name](...args));
         });
@@ -469,26 +442,26 @@ export default class {
   }
 
   _onNavigate() {
-    let toId = this._getCurrentId();
+    const toId = this._getCurrentId();
     if (toId == 'PLACEHOLDER') {
       this._disableEvent();
       this.back().then(() => {
         this._enableEvent();
       });
     } else {
-      let lastStateId = this._getStateId(this.current.id);
-      let toStateId = this._getStateId(toId);
-      let toIndex = this.findIndexById(toId);
-      let to = this.get(toIndex);
-      let current = this.current;
+      const lastStateId = this._getStateId(this.current.id);
+      const toStateId = this._getStateId(toId);
+      const toIndex = this.findIndexById(toId);
+      const to = this.get(toIndex);
+      const current = this.current;
       if (lastStateId == toStateId) {
         this._setCurrentItem(toIndex);
         this._dispatchEvent('onHashChange', to.hash, current.hash);
       } else {
         this._disableEvent();
-        let steps = toIndex - this.currentIndex;
+        const steps = toIndex - this.currentIndex;
         this.go(-steps).then(() => {
-          this._dispatchEvent('beforeNavigate', to, false).then((bool) => {
+          this._dispatchEvent('beforeNavigate', to, false).then(bool => {
             if (bool != false) {
               return this.go(steps).then(() => {
                 this._enableEvent();
@@ -506,19 +479,19 @@ export default class {
 
   _hookAClick() {
     document.body.addEventListener('click', e => {
-      let a = e.target.closest('a');
+      const a = e.target.closest('a');
 
       if (!a || a.getAttribute('spa-history-skip') != null) {
         return;
       }
 
       let url = new Url(a.href);
-      let base = new Url(this.base);
+      const base = new Url(this.base);
       if (url.href.indexOf(base.href) != 0) {
         return;
       }
 
-      var target = a.getAttribute('target');
+      const target = a.getAttribute('target');
       if (target && (target == '_blank' || target == '_parent' && window.parent != window || target == '_top' && window.top != window || !(target in { _self: 1, _blank: 1, _parent: 1, _top: 1 }) && target != window.name)) {
         return;
       }
