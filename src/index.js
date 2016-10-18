@@ -23,7 +23,7 @@ export default class {
       this[method] = mixin[method];
     }
 
-    if (base.slice(-1) != '/') {
+    if (base.slice(-1) !== '/') {
       this.base = base + '/';
       this._baseNoTrailingSlash = base;
     } else {
@@ -56,13 +56,13 @@ export default class {
       sessionId = Number(locationId.split('-')[0]);
       session = this._data.sessions[sessionId];
       if (session) {
-        locationIndex = session.findIndex(location => location.id == locationId);
+        locationIndex = session.findIndex(location => location.id === locationId);
       }
     }
 
     let promise;
     // new session
-    if (locationIndex == -1) {
+    if (locationIndex === -1) {
       this._sessionId = this._data.sessions.length;
       this._session = [];
       this._data.sessions.push(this._session);
@@ -89,7 +89,7 @@ export default class {
   }
 
   push(...locations) {
-    if (this._cursor != this._session.length - 1) {
+    if (this._cursor !== this._session.length - 1) {
       this._session = this._session.slice(0, this._cursor + 1);
     }
 
@@ -158,7 +158,7 @@ export default class {
 
         promise.then(() => {
           let p;
-          if (this._session.length == 1 && originalLength > 1) {
+          if (this._session.length === 1 && originalLength > 1) {
             this._setCurrentItem(0);
             p = this._change('push', this._locationToUrl({
               id: 'PLACEHOLDER',
@@ -169,9 +169,9 @@ export default class {
           } else {
             const lastIndex = this._session.length - 1;
             let currentIndex = this.findIndexById(this.current.id);
-            if (currentIndex == -1) {
+            if (currentIndex === -1) {
               currentIndex = lastIndex;
-            } else if (currentIndex != lastIndex) {
+            } else if (currentIndex !== lastIndex) {
               p = this.go(currentIndex - lastIndex);
             }
 
@@ -192,15 +192,15 @@ export default class {
     const to = this._locationToUrl(location);
     const current = this._locationToUrl(this.current);
 
-    if (to.pathname + to.search != current.pathname + current.search) { // different location
+    if (to.pathname + to.search !== current.pathname + current.search) { // different location
       return this._dispatchEvent('beforeNavigate', this._urlToLocation(to), false).then(bool => {
-        if (bool != false) {
+        if (bool !== false) {
           return this.push(to).then(() => this._dispatchEvent('onNavigate', this.current, false));
         }
       });
     } else { // same location
       if (to.hash) {
-        if (to.hash == this.current.hash) { // hash not changed
+        if (to.hash === this.current.hash) { // hash not changed
           return Promise.resolve(false);
         } else { // hash changed
           to.id = this._getStateId(this.current.id) + '-' + this._uniqueId();
@@ -208,7 +208,7 @@ export default class {
         }
       } else { // nothing changed, and no hash. reload
         return this._dispatchEvent('beforeNavigate', this._urlToLocation(to), true).then(bool => {
-          if (bool != false) {
+          if (bool !== false) {
             if (this.current.hash) { // current location has hash
               to.id = this._getStateId(this.current.id) + '-' + this._uniqueId();
               return this.push(to).then(() => this._dispatchEvent('onNavigate', this.current, true));
@@ -262,7 +262,7 @@ export default class {
   }
 
   findIndexById(id) {
-    return this._session.findIndex(value => value.id == id);
+    return this._session.findIndex(value => value.id === id);
   }
 
   findByPath(path) {
@@ -270,7 +270,7 @@ export default class {
   }
 
   findIndexByPath(path) {
-    return this._session.findIndex(location => location.path == path);
+    return this._session.findIndex(location => location.path === path);
   }
 
   findLastByPath(path) {
@@ -279,14 +279,14 @@ export default class {
 
   findLastIndexByPath(path) {
     for (let i = this._session.length - 1; i >= 0; i--) {
-      if (this._session[i].path == path) {
+      if (this._session[i].path === path) {
         return i;
       }
     }
   }
 
   setState(state, index, merge) {
-    if (index == undefined) {
+    if (index == null) {
       return this.setStateById(state, null, merge);
     } else if (this._session[index]) {
       return this.setStateById(state, this._session[index].id, merge);
@@ -307,7 +307,7 @@ export default class {
     }
 
     this._data.states[stateId] = state;
-    if (id == this.current.id) {
+    if (id === this.current.id) {
       this.current.state = state;
     }
     this._saveData();
@@ -324,13 +324,13 @@ export default class {
 
   _getStateId(id) {
     const _id = id.split('-');
-    return _id.length == 2 ? id : _id[0] + '-' + _id[1];
+    return _id.length === 2 ? id : _id[0] + '-' + _id[1];
   }
 
   _setCurrentItem(index) {
     this.currentIndex = index;
 
-    if (index != -1) {
+    if (index !== -1) {
       this._cursor = index;
       this.current = this.get(index);
     } else {
@@ -354,7 +354,7 @@ export default class {
       return location;
     }
 
-    if (location.constructor == String) {
+    if (location.constructor === String) {
       return new Url(location).sortQuery();
     }
 
@@ -384,7 +384,7 @@ export default class {
   }
 
   _setSession(url, index) {
-    if (index == undefined) {
+    if (index == null) {
       index = this._session.length;
     }
 
@@ -399,7 +399,7 @@ export default class {
       hash: url.hash
     };
 
-    if (url.state != undefined) {
+    if (url.state != null) {
       this.setStateById(url.state, url.id);
     }
   }
@@ -443,7 +443,7 @@ export default class {
 
   _onNavigate() {
     const toId = this._getCurrentId();
-    if (toId == 'PLACEHOLDER') {
+    if (toId === 'PLACEHOLDER') {
       this._disableEvent();
       this.back().then(() => {
         this._enableEvent();
@@ -454,7 +454,7 @@ export default class {
       const toIndex = this.findIndexById(toId);
       const to = this.get(toIndex);
       const current = this.current;
-      if (lastStateId == toStateId) {
+      if (lastStateId === toStateId) {
         this._setCurrentItem(toIndex);
         this._dispatchEvent('onHashChange', to.hash, current.hash);
       } else {
@@ -462,7 +462,7 @@ export default class {
         const steps = toIndex - this.currentIndex;
         this.go(-steps).then(() => {
           this._dispatchEvent('beforeNavigate', to, false).then(bool => {
-            if (bool != false) {
+            if (bool !== false) {
               return this.go(steps).then(() => {
                 this._enableEvent();
                 this._setCurrentItem(toIndex);
@@ -487,12 +487,12 @@ export default class {
 
       let url = new Url(a.href);
       const base = new Url(this.base);
-      if (url.href.indexOf(base.href) != 0) {
+      if (url.href.indexOf(base.href) !== 0) {
         return;
       }
 
       const target = a.getAttribute('target');
-      if (target && (target == '_blank' || target == '_parent' && window.parent != window || target == '_top' && window.top != window || !(target in { _self: 1, _blank: 1, _parent: 1, _top: 1 }) && target != window.name)) {
+      if (target && (target === '_blank' || target === '_parent' && window.parent !== window || target === '_top' && window.top !== window || !(target in { _self: 1, _blank: 1, _parent: 1, _top: 1 }) && target !== window.name)) {
         return;
       }
 
