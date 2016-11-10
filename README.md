@@ -62,10 +62,9 @@ You can use <a href="http://babeljs.io/docs/usage/polyfill/">babel-polyfill</a> 
 
 Or use the <a href="https://polyfill.io/">polyfill.io</a> service: https://cdn.polyfill.io/v2/polyfill.min.js?features=default,es6
 
-## Build
-build dev
+## Development
 ```
-npm run build-dev
+npm run dev
 ```
 
 ### Examples:
@@ -79,9 +78,9 @@ Location will be auto converted to browser supported mode.
 e.g., If you open http://127.0.0.1:8010/product in IE9, the location will be replaced with http://127.0.0.1:8010/#!/product with state ID appended,
 and vice versa, if you open http://127.0.0.1:8010/#!/product in Chrome, the location will be replaced with http://127.0.0.1:8010/product
 
-build dist
+## Build distribution
 ```
-npm run build-dist
+npm run build
 ```
 
 ## License

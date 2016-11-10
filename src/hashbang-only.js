@@ -4,10 +4,10 @@ export default {
   url: mixinHashbangWithHistoryApi.url,
 
   _changeHistory(method, url) {
-    let promise = new Promise(resolve => {
-      let eventDisabled = this._eventDisabled;
+    const promise = new Promise(resolve => {
+      const eventDisabled = this._eventDisabled;
       this._disableEvent();
-      let fn = () => {
+      const fn = () => {
         window.removeEventListener('hashchange', fn);
         if (!eventDisabled) {
           this._enableEvent();
@@ -18,7 +18,7 @@ export default {
     });
 
     url.addQuery('_sid', url.id);
-    location[method == 'push' ? 'assign' : 'replace']('#!' + url.pathname + url.search + url.hash);
+    location[method === 'push' ? 'assign' : 'replace']('#!' + url.pathname + url.search + url.hash);
     url.removeQuery('_sid');
 
     return promise;
@@ -29,8 +29,8 @@ export default {
       return Promise.resolve();
     }
 
-    let promise = new Promise(resolve => {
-      let fn = () => {
+    const promise = new Promise(resolve => {
+      const fn = () => {
         window.removeEventListener('hashchange', fn);
         resolve();
       };
@@ -42,22 +42,22 @@ export default {
 
   // fallback to hashbang url if browser doesn't history API
   _convertLocation() {
-    if (this.base && location.pathname != this.base && location.protocol.indexOf('http') == 0) {
+    if (this.base && location.pathname !== this.base && location.protocol.indexOf('http') === 0) {
       let url = location.pathname.replace(this._baseNoTrailingSlash, '');
       url = this.base + '#!' + url + location.search + location.hash;
       location.replace(url);
       // stop executing
-      throw 1;
+      throw new Error('redirect');
     }
   },
 
   _getCurrentId() {
-    let url = mixinHashbangWithHistoryApi._parseUrl.call(this);
+    const url = Reflect.apply(mixinHashbangWithHistoryApi._parseUrl, this);
     return url.query._sid;
   },
 
   _parseUrl(url) {
-    url = mixinHashbangWithHistoryApi._parseUrl.call(this, url);
+    url = Reflect.apply(mixinHashbangWithHistoryApi._parseUrl, this, [url]);
     url.removeQuery('_sid');
     return url;
   },

@@ -3,7 +3,7 @@ import mixinHtml5 from './html5';
 
 export default {
   url(location) {
-    let url = this._locationToUrl(location);
+    const url = this._locationToUrl(location);
     return '#!' + url.pathname + url.search + url.hash;
   },
 
@@ -14,8 +14,9 @@ export default {
 
   _go: mixinHtml5._go,
 
-  // no need to fallback to hashbang URL if history API is available
-  _convertLocation() {},
+  _convertLocation() {
+    // no need to fallback to hashbang URL if history API is available
+  },
 
   _getCurrentId() {
     return history.state ? history.state.id : null;
@@ -23,7 +24,7 @@ export default {
 
   _parseUrl(url) {
     url = new Url(url);
-    if (url.hash.indexOf('#!') == 0) {
+    if (url.hash.indexOf('#!') === 0) {
       url = url.hash.slice(2);
     } else {
       url = '/';

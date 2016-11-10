@@ -2,7 +2,7 @@ import Url from 'browser-url';
 
 export default {
   url(location) {
-    let url = this._locationToUrl(location);
+    const url = this._locationToUrl(location);
     return this._baseNoTrailingSlash + url.pathname + url.search + url.hash;
   },
 
@@ -16,8 +16,8 @@ export default {
       return Promise.resolve();
     }
 
-    let promise = new Promise(resolve => {
-      let fn = () => {
+    const promise = new Promise(resolve => {
+      const fn = () => {
         window.removeEventListener('popstate', fn);
         resolve();
       };
@@ -29,7 +29,7 @@ export default {
 
   // convert hashbang URL to HTML5 URL
   _convertLocation() {
-    if (location.hash.indexOf('#!') == 0) {
+    if (location.hash.indexOf('#!') === 0) {
       let url = this._baseNoTrailingSlash + (location.hash.slice(2) || '/');
       url = new Url(url).removeQuery('_sid').href;
       history.replaceState(null, '', url);

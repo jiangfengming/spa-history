@@ -1,5 +1,5 @@
 export default function(options = {}) {
-  let conf = {
+  const conf = {
     entry: './src/index.js',
 
     output: {
@@ -14,18 +14,11 @@ export default function(options = {}) {
       loaders: [{
         test: /\.js$/,
         exclude: /node_modules/,
-        loader: 'babel-loader',
-        query: {
-          presets: [['es2015', { modules: false }]],
-          plugins: [
-            'add-module-exports'
-          ]
-        }
+        loader: 'babel-loader'
       }]
     },
 
     devServer: {
-      noInfo: true,
       host: '0.0.0.0',
       port: 8010,
       historyApiFallback: true,
@@ -35,11 +28,6 @@ export default function(options = {}) {
 
   if (options.module) {
     conf.externals = [/^[a-z\-0-9]+$/];
-  }
-
-  if (options.debug) {
-    conf.debug = true;
-    conf.devtool = 'source-map';
   }
 
   return conf;
