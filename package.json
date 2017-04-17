@@ -4,8 +4,8 @@
   "description": "A rewritable and stateful browser history.",
   "main": "dist/SpaHistory.js",
   "scripts": {
-    "dev": "rollup src/index.js -f umd -o dist/SpaHistory.js",
-    "build": ""
+    "dev": "rollup -c rollup.bundle.config.js -w",
+    "build": "rollup -c && rollup -c rollup.bundle.config.js"
   },
   "repository": {
     "type": "git",
@@ -22,11 +22,16 @@
   "homepage": "https://github.com/fenivana/spa-history#readme",
   "devDependencies": {
     "babel-core": "6.24.1",
-    "babel-loader": "6.4.1",
-    "babel-plugin-add-module-exports": "0.2.1",
+    "babel-plugin-external-helpers": "6.22.0",
+    "babel-preset-env": "1.4.0",
+    "babel-preset-stage-2": "6.24.1",
     "eslint": "3.19.0",
     "eslint-config-enough": "0.2.6",
-    "rollup": "0.41.6"
+    "rollup": "0.41.6",
+    "rollup-plugin-babel": "2.7.1",
+    "rollup-plugin-commonjs": "8.0.2",
+    "rollup-plugin-node-resolve": "3.0.0",
+    "rollup-watch": "3.2.2"
   },
   "dependencies": {
     "browser-url": "1.3.2"
@@ -34,16 +39,16 @@
   "babel": {
     "presets": [
       [
-        "latest",
+        "env",
         {
-          "es2015": {
-            "loose": true
-          }
+          "loose": true,
+          "modules": false
         }
-      ]
+      ],
+      "stage-2"
     ],
     "plugins": [
-      "add-module-exports"
+      "external-helpers"
     ]
   },
   "eslintConfig": {

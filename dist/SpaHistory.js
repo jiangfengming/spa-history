@@ -1,157 +1,12 @@
-(function webpackUniversalModuleDefinition(root, factory) {
-	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("browser-url"));
-	else if(typeof define === 'function' && define.amd)
-		define(["browser-url"], factory);
-	else if(typeof exports === 'object')
-		exports["SpaHistory"] = factory(require("browser-url"));
-	else
-		root["SpaHistory"] = factory(root["browser-url"]);
-})(this, function(__WEBPACK_EXTERNAL_MODULE_0__) {
-return /******/ (function(modules) { // webpackBootstrap
-/******/ 	// The module cache
-/******/ 	var installedModules = {};
+(function (global, factory) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('browser-url')) :
+	typeof define === 'function' && define.amd ? define(['browser-url'], factory) :
+	(global.SpaHistory = factory(global.Url));
+}(this, (function (Url) { 'use strict';
 
-/******/ 	// The require function
-/******/ 	function __webpack_require__(moduleId) {
+Url = 'default' in Url ? Url['default'] : Url;
 
-/******/ 		// Check if module is in cache
-/******/ 		if(installedModules[moduleId])
-/******/ 			return installedModules[moduleId].exports;
-
-/******/ 		// Create a new module (and put it into the cache)
-/******/ 		var module = installedModules[moduleId] = {
-/******/ 			i: moduleId,
-/******/ 			l: false,
-/******/ 			exports: {}
-/******/ 		};
-
-/******/ 		// Execute the module function
-/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-
-/******/ 		// Flag the module as loaded
-/******/ 		module.l = true;
-
-/******/ 		// Return the exports of the module
-/******/ 		return module.exports;
-/******/ 	}
-
-
-/******/ 	// expose the modules object (__webpack_modules__)
-/******/ 	__webpack_require__.m = modules;
-
-/******/ 	// expose the module cache
-/******/ 	__webpack_require__.c = installedModules;
-
-/******/ 	// identity function for calling harmory imports with the correct context
-/******/ 	__webpack_require__.i = function(value) { return value; };
-
-/******/ 	// define getter function for harmory exports
-/******/ 	__webpack_require__.d = function(exports, name, getter) {
-/******/ 		Object.defineProperty(exports, name, {
-/******/ 			configurable: false,
-/******/ 			enumerable: true,
-/******/ 			get: getter
-/******/ 		});
-/******/ 	};
-
-/******/ 	// getDefaultExport function for compatibility with non-harmony modules
-/******/ 	__webpack_require__.n = function(module) {
-/******/ 		var getter = module && module.__esModule ?
-/******/ 			function getDefault() { return module['default']; } :
-/******/ 			function getModuleExports() { return module; };
-/******/ 		__webpack_require__.d(getter, 'a', getter);
-/******/ 		return getter;
-/******/ 	};
-
-/******/ 	// Object.prototype.hasOwnProperty.call
-/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
-
-/******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "/dist/";
-
-/******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 4);
-/******/ })
-/************************************************************************/
-/******/ ([
-/* 0 */
-/***/ function(module, exports) {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE_0__;
-
-/***/ },
-/* 1 */
-/***/ function(module, exports, __webpack_require__) {
-
-"use strict";
-'use strict';
-
-exports.__esModule = true;
-
-var _browserUrl = __webpack_require__(0);
-
-var _browserUrl2 = _interopRequireDefault(_browserUrl);
-
-var _html = __webpack_require__(2);
-
-var _html2 = _interopRequireDefault(_html);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-exports.default = {
-  url: function url(location) {
-    var url = this._locationToUrl(location);
-    return '#!' + url.pathname + url.search + url.hash;
-  },
-  _changeHistory: function _changeHistory(method, url) {
-    history[method + 'State']({ id: url.id }, '', '#!' + url.pathname + url.search + url.hash);
-    return Promise.resolve();
-  },
-
-
-  _go: _html2.default._go,
-
-  _convertLocation: function _convertLocation() {
-    // no need to fallback to hashbang URL if history API is available
-  },
-  _getCurrentId: function _getCurrentId() {
-    return history.state ? history.state.id : null;
-  },
-  _parseUrl: function _parseUrl(url) {
-    url = new _browserUrl2.default(url);
-    if (url.hash.indexOf('#!') === 0) {
-      url = url.hash.slice(2);
-    } else {
-      url = '/';
-    }
-
-    return new _browserUrl2.default(url).sortQuery();
-  },
-
-
-  _registerEvent: _html2.default._registerEvent,
-  _enableEvent: _html2.default._enableEvent,
-  _disableEvent: _html2.default._disableEvent
-};
-module.exports = exports['default'];
-
-/***/ },
-/* 2 */
-/***/ function(module, exports, __webpack_require__) {
-
-"use strict";
-'use strict';
-
-exports.__esModule = true;
-
-var _browserUrl = __webpack_require__(0);
-
-var _browserUrl2 = _interopRequireDefault(_browserUrl);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-exports.default = {
+var mixinHtml5 = {
   url: function url(location) {
     var url = this._locationToUrl(location);
     return this._baseNoTrailingSlash + url.pathname + url.search + url.hash;
@@ -181,7 +36,7 @@ exports.default = {
   _convertLocation: function _convertLocation() {
     if (location.hash.indexOf('#!') === 0) {
       var url = this._baseNoTrailingSlash + (location.hash.slice(2) || '/');
-      url = new _browserUrl2.default(url).removeQuery('_sid').href;
+      url = new Url(url).removeQuery('_sid').href;
       history.replaceState(null, '', url);
     }
   },
@@ -189,7 +44,7 @@ exports.default = {
     return history.state ? history.state.id : null;
   },
   _parseUrl: function _parseUrl(url) {
-    url = new _browserUrl2.default(url).sortQuery();
+    url = new Url(url).sortQuery();
     url.pathname = url.pathname.replace(this._baseNoTrailingSlash, '');
     return url;
   },
@@ -215,25 +70,45 @@ exports.default = {
     }
   }
 };
-module.exports = exports['default'];
 
-/***/ },
-/* 3 */
-/***/ function(module, exports, __webpack_require__) {
+var mixinHashbangWithHistoryApi = {
+  url: function url(location) {
+    var url = this._locationToUrl(location);
+    return '#!' + url.pathname + url.search + url.hash;
+  },
+  _changeHistory: function _changeHistory(method, url) {
+    history[method + 'State']({ id: url.id }, '', '#!' + url.pathname + url.search + url.hash);
+    return Promise.resolve();
+  },
 
-"use strict";
-'use strict';
 
-exports.__esModule = true;
+  _go: mixinHtml5._go,
 
-var _hashbangWithHistoryApi = __webpack_require__(1);
+  _convertLocation: function _convertLocation() {
+    // no need to fallback to hashbang URL if history API is available
+  },
+  _getCurrentId: function _getCurrentId() {
+    return history.state ? history.state.id : null;
+  },
+  _parseUrl: function _parseUrl(url) {
+    url = new Url(url);
+    if (url.hash.indexOf('#!') === 0) {
+      url = url.hash.slice(2);
+    } else {
+      url = '/';
+    }
 
-var _hashbangWithHistoryApi2 = _interopRequireDefault(_hashbangWithHistoryApi);
+    return new Url(url).sortQuery();
+  },
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-exports.default = {
-  url: _hashbangWithHistoryApi2.default.url,
+  _registerEvent: mixinHtml5._registerEvent,
+  _enableEvent: mixinHtml5._enableEvent,
+  _disableEvent: mixinHtml5._disableEvent
+};
+
+var mixinHashbangOnly = {
+  url: mixinHashbangWithHistoryApi.url,
 
   _changeHistory: function _changeHistory(method, url) {
     var _this = this;
@@ -285,11 +160,11 @@ exports.default = {
     }
   },
   _getCurrentId: function _getCurrentId() {
-    var url = Reflect.apply(_hashbangWithHistoryApi2.default._parseUrl, this);
+    var url = Reflect.apply(mixinHashbangWithHistoryApi._parseUrl, this);
     return url.query._sid;
   },
   _parseUrl: function _parseUrl(url) {
-    url = Reflect.apply(_hashbangWithHistoryApi2.default._parseUrl, this, [url]);
+    url = Reflect.apply(mixinHashbangWithHistoryApi._parseUrl, this, [url]);
     url.removeQuery('_sid');
     return url;
   },
@@ -315,38 +190,30 @@ exports.default = {
     }
   }
 };
-module.exports = exports['default'];
 
-/***/ },
-/* 4 */
-/***/ function(module, exports, __webpack_require__) {
+var classCallCheck = function (instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+};
 
-"use strict";
-'use strict';
+var createClass = function () {
+  function defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, descriptor.key, descriptor);
+    }
+  }
 
-exports.__esModule = true;
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _browserUrl = __webpack_require__(0);
-
-var _browserUrl2 = _interopRequireDefault(_browserUrl);
-
-var _html = __webpack_require__(2);
-
-var _html2 = _interopRequireDefault(_html);
-
-var _hashbangWithHistoryApi = __webpack_require__(1);
-
-var _hashbangWithHistoryApi2 = _interopRequireDefault(_hashbangWithHistoryApi);
-
-var _hashbangOnly = __webpack_require__(3);
-
-var _hashbangOnly2 = _interopRequireDefault(_hashbangOnly);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+  return function (Constructor, protoProps, staticProps) {
+    if (protoProps) defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) defineProperties(Constructor, staticProps);
+    return Constructor;
+  };
+}();
 
 var _class = function () {
   function _class() {
@@ -360,7 +227,7 @@ var _class = function () {
         onNavigate = _ref.onNavigate,
         onHashChange = _ref.onHashChange;
 
-    _classCallCheck(this, _class);
+    classCallCheck(this, _class);
 
     this.mode = mode;
     if (!this.mode) {
@@ -369,11 +236,11 @@ var _class = function () {
 
     var mixin = void 0;
     if (this.mode === 'html5') {
-      mixin = _html2.default;
+      mixin = mixinHtml5;
     } else if (history.pushState) {
-      mixin = _hashbangWithHistoryApi2.default;
+      mixin = mixinHashbangWithHistoryApi;
     } else {
-      mixin = _hashbangOnly2.default;
+      mixin = mixinHashbangOnly;
     }
 
     for (var method in mixin) {
@@ -636,7 +503,7 @@ var _class = function () {
     return this._go(1);
   };
 
-  _class.prototype.get = function get(index) {
+  _class.prototype.get = function get$$1(index) {
     var location = this._session[index];
     if (!location) {
       return null;
@@ -758,10 +625,10 @@ var _class = function () {
     }
 
     if (location.constructor === String) {
-      return new _browserUrl2.default(location).sortQuery();
+      return new Url(location).sortQuery();
     }
 
-    var url = new _browserUrl2.default(location.path).addQuery(location.query).sortQuery();
+    var url = new Url(location.path).addQuery(location.query).sortQuery();
     if (location.hash) {
       url.hash = location.hash;
     }
@@ -863,35 +730,31 @@ var _class = function () {
         _this7._enableEvent();
       });
     } else {
-      (function () {
-        var lastStateId = _this7._getStateId(_this7.current.id);
-        var toStateId = _this7._getStateId(toId);
-        var toIndex = _this7.findIndexById(toId);
-        var to = _this7.get(toIndex);
-        var current = _this7.current;
-        if (lastStateId === toStateId) {
-          _this7._setCurrentItem(toIndex);
-          _this7._dispatchEvent('onHashChange', to.hash, current.hash);
-        } else {
-          (function () {
-            _this7._disableEvent();
-            var steps = toIndex - _this7.currentIndex;
-            _this7.go(-steps).then(function () {
-              _this7._dispatchEvent('beforeNavigate', to, false).then(function (bool) {
-                if (bool !== false) {
-                  return _this7.go(steps).then(function () {
-                    _this7._enableEvent();
-                    _this7._setCurrentItem(toIndex);
-                    return _this7._dispatchEvent('onNavigate', _this7.current, false);
-                  });
-                } else {
-                  _this7._enableEvent();
-                }
+      var lastStateId = this._getStateId(this.current.id);
+      var toStateId = this._getStateId(toId);
+      var toIndex = this.findIndexById(toId);
+      var to = this.get(toIndex);
+      var current = this.current;
+      if (lastStateId === toStateId) {
+        this._setCurrentItem(toIndex);
+        this._dispatchEvent('onHashChange', to.hash, current.hash);
+      } else {
+        this._disableEvent();
+        var steps = toIndex - this.currentIndex;
+        this.go(-steps).then(function () {
+          _this7._dispatchEvent('beforeNavigate', to, false).then(function (bool) {
+            if (bool !== false) {
+              return _this7.go(steps).then(function () {
+                _this7._enableEvent();
+                _this7._setCurrentItem(toIndex);
+                return _this7._dispatchEvent('onNavigate', _this7.current, false);
               });
-            });
-          })();
-        }
-      })();
+            } else {
+              _this7._enableEvent();
+            }
+          });
+        });
+      }
     }
   };
 
@@ -905,8 +768,8 @@ var _class = function () {
         return;
       }
 
-      var url = new _browserUrl2.default(a.href);
-      var base = new _browserUrl2.default(_this8.base);
+      var url = new Url(a.href);
+      var base = new Url(_this8.base);
       if (url.href.indexOf(base.href) !== 0) {
         return;
       }
@@ -922,19 +785,15 @@ var _class = function () {
     });
   };
 
-  _createClass(_class, [{
+  createClass(_class, [{
     key: 'length',
-    get: function get() {
+    get: function get$$1() {
       return this._session.length;
     }
   }]);
-
   return _class;
 }();
 
-exports.default = _class;
-module.exports = exports['default'];
+return _class;
 
-/***/ }
-/******/ ]);
-});
+})));
