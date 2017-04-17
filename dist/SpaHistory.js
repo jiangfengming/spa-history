@@ -16,9 +16,7 @@ var mixinHtml5 = {
     return Promise.resolve();
   },
   _go: function _go(n) {
-    if (!n) {
-      return Promise.resolve();
-    }
+    if (!n) return Promise.resolve();
 
     var promise = new Promise(function (resolve) {
       var fn = function fn() {
