@@ -1,7 +1,6 @@
 import Url from 'browser-url'
 import mixinHtml5 from './html5'
 import mixinHashbangWithHistoryApi from './hashbang-with-history-api'
-import mixinHashbangOnly from './hashbang-only'
 
 export default class {
   constructor({ mode, base = '/', beforeNavigate, onNavigate, onHashChange } = {}) {
@@ -15,8 +14,6 @@ export default class {
       mixin = mixinHtml5
     } else if (history.pushState) {
       mixin = mixinHashbangWithHistoryApi
-    } else {
-      mixin = mixinHashbangOnly
     }
 
     for (const method in mixin) {
