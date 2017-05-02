@@ -1,89 +1,35 @@
-import Url from 'browser-url'
-import mixinHtml5 from './html5'
-import mixinHashbangWithHistoryApi from './hashbang-with-history-api'
+import url from 'url-x'
+import hashbangMode from './hashbang'
+import pathnameMode from './pathname'
 
 export default class {
-  constructor({ mode, base = '/', beforeNavigate, onNavigate, onHashChange } = {}) {
+  constructor({ mode = 'hashbang', base = '/', beforeNavigate, onNavigate, onHashChange } = {}) {
     this.mode = mode
-    if (!this.mode) {
-      this.mode = history.pushState && location.protocol.indexOf('http') === 0 ? 'html5' : 'hashbang'
-    }
+    const mixin = this.mode === 'hashbang' ? hashbangMode : pathnameMode
 
-    let mixin
-    if (this.mode === 'html5') {
-      mixin = mixinHtml5
-    } else if (history.pushState) {
-      mixin = mixinHashbangWithHistoryApi
-    }
-
-    for (const method in mixin) {
-      this[method] = mixin[method]
-    }
+    for (const method in mixin) this[method] = mixin[method]
 
     if (base.slice(-1) !== '/') {
       this.base = base + '/'
       this._baseNoTrailingSlash = base
     } else {
       this.base = base
-      this._baseNoTrailingSlash = base.replace(/\/$/, '')
+      this._baseNoTrailingSlash = base.slice(0, -1)
     }
 
     this.beforeNavigate = beforeNavigate
     this.onNavigate = onNavigate
     this.onHashChange = onHashChange
 
-    // fallback HTML5 URL to hashbang URL if browser doesn't support history API, and vise versa.
-    this._convertLocation()
 
-    // read data
-    this._data = this._readData()
-
-    // init data
-    if (!this._data) {
-      this._data = {
-        sessions: [],
-        states: {}
-      }
-    }
-
-    const locationId = this._getCurrentId()
-    let sessionId, session
-    let locationIndex = -1
-    if (locationId) {
-      sessionId = Number(locationId.split('-')[0])
-      session = this._data.sessions[sessionId]
-      if (session) {
-        locationIndex = session.findIndex(location => location.id === locationId)
-      }
-    }
-
-    let promise
-    // new session
-    if (locationIndex === -1) {
-      this._sessionId = this._data.sessions.length
-      this._session = []
-      this._data.sessions.push(this._session)
-      const url = this._parseUrl()
-      this._setSession(url)
-      this._setCurrentItem(this._session.length - 1)
-      promise = this._change('replace', url)
-    } else {
-      this._sessionId = sessionId
-      this._session = session
-      this._setCurrentItem(locationIndex)
-    }
-
-    Promise.resolve(promise).then(() => {
-      this._saveData()
-      this._registerEvent()
-      this._hookAClick()
-      this._dispatchEvent('onNavigate', this.current, false)
-    })
   }
 
-  get length() {
-    return this._session.length
-  }
+
+
+
+
+
+
 
   push(...locations) {
     if (this._cursor !== this._session.length - 1) {
@@ -105,84 +51,7 @@ export default class {
 
   replace(location) {
     const url = this._locationToUrl(location)
-    this._setSession(url, this._cursor)
-    this._setCurrentItem(this._cursor)
-    this._saveData()
     return this._change('replace', url)
-  }
-
-  reset(...locations) {
-    return this.splice(0, this._session.length, ...locations)
-  }
-
-  splice(start, deleteCount, ...insertLocations) {
-    return new Promise(resolve => {
-      const originalLength = this._session.length
-      let steps, index, replaceFirst
-
-      if (start < 2) {
-        replaceFirst = true
-        steps = 0 - this._cursor
-        index = 0
-      } else {
-        replaceFirst = false
-        steps = start - this._cursor - 2
-        index = start - 1
-      }
-
-      this._disableEvent()
-      this.go(steps).then(() => {
-        this._session.splice(start, deleteCount, ...insertLocations)
-
-        let promise = Promise.resolve()
-
-        const fn = index => {
-          const url = this._locationToUrl(this._session[index])
-          this._setSession(url, index)
-          promise = promise.then(() => {
-            if (replaceFirst) {
-              replaceFirst = false
-              return this._change('replace', url)
-            } else {
-              return this._change('push', url)
-            }
-          })
-        }
-
-        for (; index < this._session.length; index++) {
-          fn(index)
-        }
-
-        promise.then(() => {
-          let p
-          if (this._session.length === 1 && originalLength > 1) {
-            this._setCurrentItem(0)
-            p = this._change('push', this._locationToUrl({
-              id: 'PLACEHOLDER',
-              path: this.current.path,
-              query: this.current.query,
-              hash: this.current.hash
-            })).then(() => this.back())
-          } else {
-            const lastIndex = this._session.length - 1
-            let currentIndex = this.findIndexById(this.current.id)
-            if (currentIndex === -1) {
-              currentIndex = lastIndex
-            } else if (currentIndex !== lastIndex) {
-              p = this.go(currentIndex - lastIndex)
-            }
-
-            this._setCurrentItem(currentIndex)
-            this._saveData()
-          }
-
-          Promise.resolve(p).then(() => {
-            this._enableEvent()
-            resolve()
-          })
-        })
-      })
-    })
   }
 
   goto(location) {
@@ -238,50 +107,6 @@ export default class {
     return this._go(1)
   }
 
-  get(index) {
-    let location = this._session[index]
-    if (!location) {
-      return null
-    }
-
-    location = Object.assign({}, location) // copy
-    const stateId = this._getStateId(location.id)
-    location.state = this._data.states[stateId]
-    return location
-  }
-
-  getAll() {
-    return this._session.map((v, i) => this.get(i))
-  }
-
-  findById(id) {
-    return this.get(this.findIndexById(id))
-  }
-
-  findIndexById(id) {
-    return this._session.findIndex(value => value.id === id)
-  }
-
-  findByPath(path) {
-    return this.get(this.findIndexByPath(path))
-  }
-
-  findIndexByPath(path) {
-    return this._session.findIndex(location => location.path === path)
-  }
-
-  findLastByPath(path) {
-    return this.get(this.findLastIndexByPath(path))
-  }
-
-  findLastIndexByPath(path) {
-    for (let i = this._session.length - 1; i >= 0; i--) {
-      if (this._session[i].path === path) {
-        return i
-      }
-    }
-  }
-
   setState(state, index, merge) {
     if (index == null) {
       return this.setStateById(state, null, merge)
@@ -289,51 +114,6 @@ export default class {
       return this.setStateById(state, this._session[index].id, merge)
     } else {
       return false
-    }
-  }
-
-  setStateById(state, id, merge) {
-    if (!id) {
-      id = this.current.id
-    }
-
-    const stateId = this._getStateId(id)
-
-    if (merge) {
-      state = Object.assign({}, this._data.states[stateId], state)
-    }
-
-    this._data.states[stateId] = state
-    if (id === this.current.id) {
-      this.current.state = state
-    }
-    this._saveData()
-    return true
-  }
-
-  mergeState(state, index) {
-    return this.setState(state, index, true)
-  }
-
-  mergeStateById(state, id) {
-    return this.setStateById(state, id, true)
-  }
-
-  _getStateId(id) {
-    const _id = id.split('-')
-    return _id.length === 2 ? id : _id[0] + '-' + _id[1]
-  }
-
-  _setCurrentItem(index) {
-    this.currentIndex = index
-
-    if (index !== -1) {
-      this._cursor = index
-      this.current = this.get(index)
-    } else {
-      this._cursor = 0
-      this.current = this._urlToLocation(this._parseUrl())
-      this.current.id = this._getCurrentId()
     }
   }
 
