@@ -8,7 +8,6 @@ export default {
 
   _changeHistory(method, url) {
     history[method + 'State']({ id: url.id }, '', this._baseNoTrailingSlash + url.pathname + url.search + url.hash)
-    return Promise.resolve()
   },
 
   _go(n) {
