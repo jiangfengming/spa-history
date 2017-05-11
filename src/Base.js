@@ -1,39 +1,39 @@
-import url from 'url-x'
-import hashbangMode from './hashbang'
-import pathnameMode from './pathname'
-
 export default class {
-  constructor({ mode = 'hashbang', base = '/', beforeNavigate, onNavigate, onHashChange } = {}) {
-    this.mode = mode
-    const mixin = this.mode === 'hashbang' ? hashbangMode : pathnameMode
+  constructor({ base = '/' } = {}) {
+    this.base = base
+    this._id = 0
 
-    for (const method in mixin) this[method] = mixin[method]
+    if (!history.state || !history.state.state) history.pushState({ id: this.id++, state: {} })
 
-    if (base.slice(-1) !== '/') {
-      this.base = base + '/'
-      this._baseNoTrailingSlash = base
-    } else {
-      this.base = base
-      this._baseNoTrailingSlash = base.slice(0, -1)
-    }
-
-    this.beforeNavigate = beforeNavigate
-    this.onNavigate = onNavigate
-    this.onHashChange = onHashChange
+    window.addEventListener('popstate', this._onpopstate)
   }
 
-  push(path, { query, state = {}, triggerEvents = true } = {}) {
+  _onpopstate() {
+    const from = this.current
 
+    this._beforeLeave().then(next => {
+      if (next === true) {
+        this.onLocationChange()
+      } else if (next === false) {
+
+      } else {
+
+      }
+    })
   }
 
-  replace(path, { query, state = {}, triggerEvents = true } = {}) {
+  push(path, { query, hash, state = {}, slient = false } = {}) {
+    history.pushState()
+  }
+
+  replace(path, { query, hash, state = {}, slient = false } = {}) {
   }
 
   reload() {
 
   }
 
-  go(n, { triggerEvents = true, removeForwardHistory = false } = {}) {
+  go(n, { slient = false, removeForwardHistory = false } = {}) {
     return this._go(n)
   }
 
@@ -45,20 +45,21 @@ export default class {
     return this._go(1)
   }
 
-  backTo(fn, { triggerEvents = true, offset = 0, removeForwardHistory = false } = {}) {
+  backTo(fn, { slient = false, offset = 0, removeForwardHistory = false } = {}) {
 
   }
 
   setState(state) {
   }
 
-  _change(method, url) {
+  _change(method, path, { query, state = {} } = {}) {
+
   }
 
-  // Invoking 'confirm()' during microtask execution is deprecated and will be removed in M53, around September 2016. See https://www.chromestatus.com/features/5647113010544640 for more details.
   _dispatchEvent(name, ...args) {
     if (this[name]) {
       return new Promise(resolve => {
+        // Invoking 'confirm()' during microtask execution is deprecated and will be removed in M53, around September 2016. See https://www.chromestatus.com/features/5647113010544640 for more details.
         setTimeout(() => {
           resolve(this[name](...args))
         })

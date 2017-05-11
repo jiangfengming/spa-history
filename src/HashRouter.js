@@ -13,10 +13,6 @@ export default {
 
   _go: mixinHtml5._go,
 
-  _convertLocation() {
-    // no need to fallback to hashbang URL if history API is available
-  },
-
   _getCurrentId() {
     return history.state ? history.state.id : null
   },
