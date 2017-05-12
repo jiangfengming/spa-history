@@ -5,8 +5,17 @@ export default class {
 
     if (!history.state || !history.state.state) history.pushState({ id: this.id++, state: {} })
 
+    const url = history.state.url || location.href
+
+    this.current = {
+      id: history.state.id,
+      state: history.state.state
+    }
+
     window.addEventListener('popstate', this._onpopstate)
   }
+
+
 
   _onpopstate() {
     const from = this.current

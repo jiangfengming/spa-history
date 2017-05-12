@@ -1,20 +1,25 @@
 import Base from './Base'
+import { appendSearchParams } from './util'
 
 export default class extends Base {
-  _parseUrl(url) {
-    url = new URL(url)
-    url.pathname = url.pathname.replace(this.base, '/')
-    return url
+  parseUrl(url) {
+    url = new URL(url, 'file://')
+    return {
+      path: url.pathname.replace(this.base, '/'),
+      query: url.searchParams,
+      hash: url.hash
+    }
   }
 
-  url(location) {
-    if（location.constructor === String) {
-      return this.base + location.slice(1)
+  url(path, opts) {
+    if (!opts) {
+      return this.base + path.slice(1)
     } else {
-
+      const url = new URL(path, 'file://')
+      if (opts.query) appendSearchParams(url.searchParams, location.query)
+      if (opts.hash) url.hash = opts.hash
+      return this.base + url.pathname.slice(1) + url.search + url.hash
     }
-    const url = this._locationToUrl(location)
-    return this._baseNoTrailingSlash + url.pathname + url.search + url.hash
   }
 
   _changeHistory(method, url) {
