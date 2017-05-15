@@ -2,13 +2,8 @@ import Base from './Base'
 import { appendSearchParams } from './util'
 
 export default class extends Base {
-  parseUrl(url) {
-    url = new URL(url, 'file://')
-    return {
-      path: url.pathname.replace(this.base, '/'),
-      query: url.searchParams,
-      hash: url.hash
-    }
+  getCurrentLocation() {
+    return location.pathname + location.search + location.hash
   }
 
   url(path, opts) {

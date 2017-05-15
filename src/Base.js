@@ -1,38 +1,64 @@
 export default class {
-  constructor({ base = '/' } = {}) {
+  constructor({ base = '/', onchange } = {}) {
     this.base = base
-    this._id = 0
+    this.onchange = onchange
 
-    if (!history.state || !history.state.state) history.pushState({ id: this.id++, state: {} })
+    if (!history.state || !history.state.state) history.pushState({ state: {} })
 
-    const url = history.state.url || location.href
-
-    this.current = {
-      id: history.state.id,
-      state: history.state.state
-    }
+    this.current = this.parse('/')
+    const to = this.parse(history.state.path || this.getCurrentLocation())
+    this._triggerChangeEvent(to)
 
     window.addEventListener('popstate', this._onpopstate)
   }
 
+  parse(path) {
+    url = new URL(url, 'file://')
+    return {
+      path: url.pathname.replace(this.base, '/'),
+      query: url.searchParams,
+      hash: url.hash
+    }
+  }
 
-
-  _onpopstate() {
-    const from = this.current
-
-    this._beforeLeave().then(next => {
-      if (next === true) {
-        this.onLocationChange()
-      } else if (next === false) {
+  _triggerChangeEvent(to) {
+    Promise.resolve(this.onchange(this.current, to)).then(res => {
+      if (res === true || res === undefined) {
+        this.current = to
+      } else if (res === false) {
 
       } else {
-
+        this.push(res)
       }
     })
   }
 
-  push(path, { query, hash, state = {}, slient = false } = {}) {
-    history.pushState()
+  _onpopstate() {
+  }
+
+  /*
+    {
+      path,
+      query,
+      hash,
+      state,
+      hidden
+    }
+  */
+  push(to) {
+
+    if (to.constructor === String) {
+
+    } else {
+
+    }
+
+    const state = { state: to.state }
+    if (to.hidden) {
+      state.path = fullPath
+    }
+    history.pushState({ state: to.state }, '', to)
+    this._triggerChangeEvent(to)
   }
 
   replace(path, { query, hash, state = {}, slient = false } = {}) {
@@ -42,7 +68,7 @@ export default class {
 
   }
 
-  go(n, { slient = false, removeForwardHistory = false } = {}) {
+  go(n, { slient = false } = {}) {
     return this._go(n)
   }
 
@@ -54,52 +80,10 @@ export default class {
     return this._go(1)
   }
 
-  backTo(fn, { slient = false, offset = 0, removeForwardHistory = false } = {}) {
+  backTo(fn, { slient = false, offset = 0 } = {}) {
 
   }
 
   setState(state) {
-  }
-
-  _change(method, path, { query, state = {} } = {}) {
-
-  }
-
-  _dispatchEvent(name, ...args) {
-    if (this[name]) {
-      return new Promise(resolve => {
-        // Invoking 'confirm()' during microtask execution is deprecated and will be removed in M53, around September 2016. See https://www.chromestatus.com/features/5647113010544640 for more details.
-        setTimeout(() => {
-          resolve(this[name](...args))
-        })
-      })
-    } else {
-      return Promise.resolve(true)
-    }
-  }
-
-  _hookAClick() {
-    document.body.addEventListener('click', e => {
-      const a = e.target.closest('a')
-
-      if (!a || a.getAttribute('spa-history-skip') != null) {
-        return
-      }
-
-      let url = new Url(a.href)
-      const base = new Url(this.base)
-      if (url.href.indexOf(base.href) !== 0) {
-        return
-      }
-
-      const target = a.getAttribute('target')
-      if (target && (target === '_blank' || target === '_parent' && window.parent !== window || target === '_top' && window.top !== window || !(target in { _self: 1, _blank: 1, _parent: 1, _top: 1 }) && target !== window.name)) {
-        return
-      }
-
-      e.preventDefault()
-      url = this._parseUrl(url.href)
-      this.goto(url.href)
-    })
   }
 }

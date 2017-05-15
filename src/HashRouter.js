@@ -1,7 +1,10 @@
-import Url from 'browser-url'
-import mixinHtml5 from './html5'
+import Base from './Base'
 
-export default {
+export default class extends Base {
+  getCurrentLocation() {
+    return location.hash.slice(1) || '/'
+  }
+
   url(location) {
     const url = this._locationToUrl(location)
     return '#!' + url.pathname + url.search + url.hash
@@ -15,20 +18,5 @@ export default {
 
   _getCurrentId() {
     return history.state ? history.state.id : null
-  },
-
-  _parseUrl(url) {
-    url = new Url(url)
-    if (url.hash.indexOf('#!') === 0) {
-      url = url.hash.slice(2)
-    } else {
-      url = '/'
-    }
-
-    return new Url(url).sortQuery()
-  },
-
-  _registerEvent: mixinHtml5._registerEvent,
-  _enableEvent: mixinHtml5._enableEvent,
-  _disableEvent: mixinHtml5._disableEvent
+  }
 }
