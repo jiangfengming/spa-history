@@ -3,21 +3,34 @@ export default class {
     this.base = base
     this.onchange = onchange
 
-    if (!history.state || !history.state.state) history.pushState({ state: {} })
+    if (!history.state || !history.state.state) history.replaceState({ state: {} }, '')
 
     this.current = this.parse('/')
     const to = this.parse(history.state.path || this.getCurrentLocation())
+    to.state = history.state.state
+    if (history.state.path) to.hidden = true
     this._triggerChangeEvent(to)
 
     window.addEventListener('popstate', this._onpopstate)
   }
 
-  parse(path) {
+  parse(url) {
     url = new URL(url, 'file://')
     return {
       path: url.pathname.replace(this.base, '/'),
       query: url.searchParams,
       hash: url.hash
+    }
+  }
+
+  url(loc) {
+    if (loc.constructor === String) {
+      return this.base + loc.slice(1)
+    } else {
+      const url = new URL(loc.path, 'file://')
+      if (loc.query) appendSearchParams(url.searchParams, location.query)
+      if (loc.hash) url.hash = loc.hash
+      return this.base + url.pathname.slice(1) + url.search + url.hash
     }
   }
 
@@ -46,9 +59,9 @@ export default class {
     }
   */
   push(to) {
-
+    let url
     if (to.constructor === String) {
-
+      to = this.parse(to)
     } else {
 
     }
@@ -56,6 +69,7 @@ export default class {
     const state = { state: to.state }
     if (to.hidden) {
       state.path = fullPath
+      url = this.url(to)
     }
     history.pushState({ state: to.state }, '', to)
     this._triggerChangeEvent(to)
