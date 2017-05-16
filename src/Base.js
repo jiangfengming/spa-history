@@ -1,45 +1,33 @@
 export default class {
-  constructor({ base = '/', onchange } = {}) {
-    this.base = base
+  constructor({ onchange }) {
     this.onchange = onchange
+  }
 
+  _init() {
     if (!history.state || !history.state.state) history.replaceState({ state: {} }, '')
-
-    this.current = this.parse('/')
-    const to = this.parse(history.state.path || this.getCurrentLocation())
+    this.current = this._parse('/')
+    const to = this._parse(history.state.path || this.getCurrentLocation())
     to.state = history.state.state
     if (history.state.path) to.hidden = true
-    this._triggerChangeEvent(to)
-
     window.addEventListener('popstate', this._onpopstate)
   }
 
-  parse(url) {
+  _parse(url) {
     url = new URL(url, 'file://')
     return {
-      path: url.pathname.replace(this.base, '/'),
+      path: url.pathname,
       query: url.searchParams,
       hash: url.hash
     }
   }
 
-  url(loc) {
-    if (loc.constructor === String) {
-      return this.base + loc.slice(1)
-    } else {
-      const url = new URL(loc.path, 'file://')
-      if (loc.query) appendSearchParams(url.searchParams, location.query)
-      if (loc.hash) url.hash = loc.hash
-      return this.base + url.pathname.slice(1) + url.search + url.hash
-    }
-  }
-
-  _triggerChangeEvent(to) {
-    Promise.resolve(this.onchange(this.current, to)).then(res => {
+  _dispatchChangeEvent(to) {
+    if (to === this.current)
+    Promise.resolve(this.onchange(to, this.current)).then(res => {
       if (res === true || res === undefined) {
         this.current = to
       } else if (res === false) {
-
+        this.push(this.current)
       } else {
         this.push(res)
       }
@@ -47,6 +35,8 @@ export default class {
   }
 
   _onpopstate() {
+    const to =
+    this._dispatchChangeEvent(to)
   }
 
   /*
@@ -59,9 +49,9 @@ export default class {
     }
   */
   push(to) {
-    let url
     if (to.constructor === String) {
-      to = this.parse(to)
+
+      to = this._parse(to)
     } else {
 
     }
@@ -71,27 +61,24 @@ export default class {
       state.path = fullPath
       url = this.url(to)
     }
-    history.pushState({ state: to.state }, '', to)
-    this._triggerChangeEvent(to)
+
+    history.pushState({ state: to.state }, '',  )
+    this._dispatchChangeEvent(to)
   }
 
-  replace(path, { query, hash, state = {}, slient = false } = {}) {
+  replace(to) {
   }
 
-  reload() {
-
+  go(n) {
+    return history.go(n)
   }
 
-  go(n, { slient = false } = {}) {
-    return this._go(n)
-  }
-
-  back(opts) {
-    return this._go(-1, opts)
+  back() {
+    return history.back()
   }
 
   forward() {
-    return this._go(1)
+    return history.forward()
   }
 
   backTo(fn, { slient = false, offset = 0 } = {}) {
