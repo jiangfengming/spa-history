@@ -34,9 +34,10 @@ export default class {
       query: url.searchParams,
       hash: url.hash,
       fullPath: url.pathname + url.search + url.hash,
-      state: {},
-      hidden: false,
-      position: null
+      state: loc.state || {},
+      hidden: Boolean(loc.hidden),
+      position: loc.position,
+      silent: loc.silent
     }
   }
 
@@ -72,7 +73,8 @@ export default class {
       query,
       hash,
       state,
-      hidden
+      hidden,
+      silent
     }
   */
   push(to) {
@@ -104,19 +106,34 @@ export default class {
     window.history[method + 'State'](state, '', url)
   }
 
-  go(n, state) {
+  go(n, { state = null, slient = false } = {}) {
     if (!SUPPORT_HISTORY_API) return
 
     this.eventDisabled = true
     history.go(n)
+
+    return new Promise(resolve => {
+      const onpopstate = () => {
+        window.removeEventListener('popstate', onpopstate)
+
+        if (state) {
+          this.setState(state)
+        }
+
+        resolve()
+      }
+
+      window.removeEventListener('popstate', this._onpopstate)
+      window.addEventListener('popstate', onpopstate)
+    })
   }
 
-  back(state) {
-    return this.go(-1, state)
+  back(opts) {
+    return this.go(-1, opts)
   }
 
-  forward(state) {
-    return this.go(1, state)
+  forward(opts) {
+    return this.go(1, opts)
   }
 
   setState(state) {
