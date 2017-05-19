@@ -29,16 +29,12 @@ export default class {
     const url = new URL(loc.path, 'file://')
     if (loc.query) appendSearchParams(url.searchParams, location.query)
     if (loc.hash) url.hash = loc.hash
-    return {
+    return Object.assign({}, loc, {
       path: url.pathname,
       query: url.searchParams,
       hash: url.hash,
-      fullPath: url.pathname + url.search + url.hash,
-      state: loc.state || {},
-      hidden: Boolean(loc.hidden),
-      position: loc.position,
-      silent: loc.silent
-    }
+      fullPath: url.pathname + url.search + url.hash
+    })
   }
 
   _getCurrentLocation() {
@@ -49,7 +45,7 @@ export default class {
     return loc
   }
 
-  _dispatchChangeEvent(to) {
+  _dispatchChangeEvent(to, onSuccess, onRedirect) {
     if (to === this.current) return
     Promise.resolve(this.onchange(to, this.current)).then(res => {
       if (res === true || res === undefined) {
@@ -73,29 +69,37 @@ export default class {
       query,
       hash,
       state,
-      hidden,
-      silent
+      hidden
     }
   */
-  push(to) {
-    to = this._normalize(to)
-    to.position = this.current.position + 1
-    this._changeHistory('push', to)
+  push(...args) {
+    this._changeHistory('push', ...args)
   }
 
-  replace(to) {
+  replace(...args) {
+    this._changeHistory('replace', ...args)
+  }
+
+  setState(state) {
+    Object.assign(this.current.state, state)
+    if (SUPPORT_HISTORY_API) this._changeHistory('replace', this.current)
+  }
+
+  _changeHistory(method, to, { silent = false } = {}) {
     to = this._normalize(to)
-    to.position = this.current.position
-    this._changeHistory('replace', to)
+    if (silent) {
+      this._changeHistory('push', to)
+    } else {
+      this._dispatchChangeEvent(to).then(res => {
+        if (res) this._changeHistory('push', to)
+      })
+    }
   }
 
   _changeHistory(method, to) {
     if (!SUPPORT_HISTORY_API) return
 
-    const state = {
-      state: to.state,
-      position: to.position
-    }
+    const state = { state: to.state }
 
     let url = to.fullPath
     if (to.hidden) {
@@ -134,10 +138,5 @@ export default class {
 
   forward(opts) {
     return this.go(1, opts)
-  }
-
-  setState(state) {
-    Object.assign(this.current.state, state)
-    if (SUPPORT_HISTORY_API) this._changeHistory('replace', this.current)
   }
 }
