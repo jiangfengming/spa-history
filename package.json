@@ -4,8 +4,7 @@
   "description": "A rewritable and stateful browser history.",
   "main": "dist/SpaHistory.js",
   "scripts": {
-    "dev": "rollup -c rollup.bundle.config.js -w",
-    "build": "rollup -c && rollup -c rollup.bundle.config.js"
+    "build": "rollup -c rollup.config.HashHistory.js && rollup -c rollup.config.PathHistory.js"
   },
   "repository": {
     "type": "git",

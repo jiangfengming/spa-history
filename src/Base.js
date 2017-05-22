@@ -3,7 +3,7 @@ import { appendSearchParams } from './util'
 const SUPPORT_HISTORY_API = typeof window === 'object' && window.history && window.history.pushState
 
 export default class {
-  constructor({ beforeChange, onChange }) {
+  constructor({ beforeChange = () => {}, onChange }) {
     this.beforeChange = beforeChange
     this.onChange = onChange
   }
@@ -11,6 +11,10 @@ export default class {
   _init() {
     this.current = this._normalize('/')
     if (SUPPORT_HISTORY_API) {
+      this._onpopstate = () => {
+        this._beforeChange(this._getCurrentLocation(), false, 'push', 'push')
+      }
+
       window.addEventListener('popstate', this._onpopstate)
       this._beforeChange(this._getCurrentLocation(), false, 'replace', 'replace')
     }
@@ -29,7 +33,7 @@ export default class {
     const url = new URL(loc.path, 'file://')
     if (loc.query) appendSearchParams(url.searchParams, location.query)
     if (loc.hash) url.hash = loc.hash
-    return Object.assign({}, loc, {
+    return Object.assign({ state: {} }, loc, {
       path: url.pathname,
       query: url.searchParams,
       hash: url.hash,
@@ -38,30 +42,27 @@ export default class {
   }
 
   _getCurrentLocation() {
-    const loc = this._normalize(history.state.path || this._getCurrentPath())
-    loc.state = history.state.state
-    loc.position = history.state.position
-    if (history.state.path) loc.hidden = true
+    const state = window.history.state || {}
+    const loc = this._normalize(state.path || this._getCurrentPath())
+    loc.state = state.state || {}
+    if (state.path) loc.hidden = true
     return loc
   }
 
   _beforeChange(to, onSuccess, onFail, onRedirect) {
-    this.beforeChange(to, this.current).then(to => {
-      if (to === undefined || to === true) {
+    Promise.resolve(this.beforeChange(to, this.current)).then(ret => {
+      if (ret == null || ret === true) {
         if (onSuccess) this.__changeHistory(onSuccess, to)
         this.current = to
         this.onChange(to)
-      } else if (to.constructor === String || to.constructor === Object) {
-        this._changeHistory(onRedirect, to)
-      } else if (to === false && onFail) {
+      } else if (ret.constructor === String || ret.constructor === Object) {
+        this._changeHistory(onRedirect, ret)
+      } else if (ret === false && onFail) {
         this._changeHistory(onFail, this.current)
       }
     })
   }
 
-  _onpopstate() {
-    this._beforeChange(this._getCurrentLocation(), false, 'push', 'push')
-  }
 
   /*
     {
@@ -100,7 +101,7 @@ export default class {
 
     const state = { state: to.state }
 
-    let url = to.fullPath
+    let url = this._url(to.fullPath)
     if (to.hidden) {
       state.path = to.fullPath
       url = undefined

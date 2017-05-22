@@ -3,8 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=default,es6"></script>
-    <script src="../dist/SpaHistory.bundle.js"></script>
+    <script src="../HashHistory.js"></script>
     <title>SPA History</title>
   </head>
 
@@ -12,119 +11,102 @@
     <div id="main"></div>
 
     <script>
-    if (location.pathname.indexOf('hashbang') != -1) {
-      sessionStorage.setItem('spaHistoryMode', 'hashbang');
-      if (location.pathname.indexOf('hashbang-only') != -1) {
-        sessionStorage.setItem('noHistoryApi', '1');
-      }
-      location.replace('/');
-      throw 1;
-    }
-
-    if (sessionStorage.getItem('noHistoryApi')) {
-      history.pushState = null;
-    }
-
-    var elMain = document.getElementById('main');
-
-    var views = {
-      '/': function() {
-        elMain.innerHTML =
-          '<h1>Home</h1>' +
-          '<p>Open console to see logs.</p>' +
-          '<a href="' + spaHistory.url('/product') + '">/product</a>';
+    const views = {
+      '/': class {
+        constructor(container, history) {
+          container.innerHTML = `
+            <h1>Home</h1>
+            <p>Open console to see logs.</p>
+            <a href="${history.url('/product')}">/product</a>
+            `
+        }
       },
 
-      '/product': function() {
-        elMain.innerHTML =
-          '<h1>Product Page</h1>' +
-          '<p>Clicking hash links will emit the <code>onHashChange</code> event.</p>' +
-          '<a href="' + spaHistory.url('/product') + '">/product</a> ' +
-          '<a href="' + spaHistory.url('/product#foo') + '">/product#foo</a> ' +
-          '<a href="' + spaHistory.url('/product#bar') + '">/product#bar</a> <br>' +
-          '<a href="' + spaHistory.url('/buy') + '">/buy</a>';
+      '/product': class {
+        constructor(container, history) {
+          container.innerHTML = `
+            <h1>Product Page</h1>
+            <a href="${history.url('/product')}">/product</a>
+            <a href="${history.url('/product#foo')}">/product#foo</a>
+            <a href="${history.url('/product#bar')}">/product#bar</a>
+            <a href="${history.url('/buy')}">/buy</a>
+            `
+        }
       },
 
-      '/buy': function() {
-        elMain.innerHTML =
-          '<h1>Order Form</h1>' +
-          '<p>Try reloading, going back and forth, the input value will be preserved.</p>' +
-          '<p>Clicking back will emit the <code>beforeNavigate</code> event.</p>' +
-          '<form id="order">' +
-            'Name: <input type="text" id="name"> <button>Submit</button>' +
-          '</form>';
+      '/buy': class {
+        constructor(container, history) {
+          container.innerHTML = `
+            <h1>Order Form</h1>
+            <p>Try reloading, going back and forth, the input value will be preserved.</p>
+            <p>Clicking back will emit the <code>beforeNavigate</code> event.</p>
+            <form id="order">
+              Name: <input type="text" id="name"> <button>Submit</button>
+            </form>
+            `
 
-        var elForm = document.getElementById('order');
-        var elName = document.getElementById('name');
+          const elForm = document.getElementById('order')
+          const elName = document.getElementById('name')
 
-        if (spaHistory.current.state && spaHistory.current.state.name) {
-          elName.value = spaHistory.current.state.name;
+          elForm.addEventListener('submit', e => {
+            e.preventDefault()
+            history.push({
+              path: '/complete',
+              state: {
+                name: elName.value
+              }
+            })
+          })
         }
 
-        elForm.onsubmit = function(e) {
-          e.preventDefault();
-          spaHistory.beforeNavigate = null;
-          window.onbeforeunload = null;
+        static beforeEnter() {
 
-          spaHistory.reset('/', '/product', '/complete').then(function() {
-            spaHistory.reload();
-          });
-        };
+        }
 
-        window.onbeforeunload = function(e) {
-          spaHistory.setState({ name: elName.value });
-          e.returnValue = 'Are you sure you want to leave?';
-        };
+        beforeLeave() {
+          // history.setState({ name: elName.value })
+        }
+      },
 
-        spaHistory.beforeNavigate = function(location, isReload) {
-          spaHistory.setState({ name: elName.value });
-          var bool = confirm('Are you sure you want to leave?');
-          if (bool) {
-            spaHistory.beforeNavigate = null;
-            window.onbeforeunload = null;
+      '/complete': class {
+        constructor(container, history) {
+          container.innerHTML = `
+            <h1>Complete</h1>
+            <p>Name: ${history.current.state.name}</p>
+            `
+        }
+      }
+    }
+
+    const elMain = document.getElementById('main')
+    let currentView = null
+
+    const history = new HashHistory({
+      beforeChange(to, from) {
+        console.log('------------')
+        console.log('beforeChange')
+        console.log('to:', to)
+        console.log('from:', from)
+
+        Promise.resolve(currentView && currentView.beforeLeave && currentView.beforeLeave(to, from)).then(ret => {
+          if (ret == null || ret === true) {
+            const ToView = views[to.path]
+            return ToView.beforeEnter && ToView.beforeEnter(to, from)
+          } else {
+            return ret
           }
-          return bool;
-        };
-
-        this.destory = function() {
-          spaHistory.beforeNavigate = null;
-        }
+        })
       },
 
-      '/complete': function() {
-        elMain.innerHTML = '<h1>Complete</h1>' +
-          "<p>The history has been rewritten with <code>['/', '/product', '/complete']</code>, try going back to see.</p>";
+      onChange(to) {
+        console.log('------------')
+        console.log('onChange')
+        console.log('to:', to)
+
+        elMain.innerHTML = ''
+        currentView = new views[to.path](elMain, history)
       }
-    };
-
-    var currentView = null;
-    var spaHistory = new SpaHistory({
-      mode: sessionStorage.getItem('spaHistoryMode'),
-
-      onNavigate: function(location, isReload) {
-        console.log('------------');
-        console.log('onNavigate');
-        console.log('currentIndex:', spaHistory.currentIndex);
-        console.log('location:', location);
-        console.log('isReload:', isReload);
-        console.log('states:', this.getAll());
-        if (currentView && currentView.destroy) {
-          currentView.destroy();
-        }
-        elMain.innerHTML = '';
-        currentView = new views[location.path]();
-      },
-
-      onHashChange: function(newHash, oldHash) {
-        console.log('------------');
-        console.log('onHashChange');
-        console.log('currentIndex:', spaHistory.currentIndex);
-        console.log('newHash:', newHash);
-        console.log('oldHash:', oldHash);
-        console.log('location:', spaHistory.current);
-        console.log('states:', this.getAll());
-      }
-    });
+    })
     </script>
   </body>
 </html>
