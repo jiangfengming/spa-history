@@ -130,6 +130,8 @@ export default class {
 
     window.removeEventListener('popstate', this._onpopstate)
     window.addEventListener('popstate', onpopstate)
+
+    window.history.go(n)
   }
 
   back(opts) {

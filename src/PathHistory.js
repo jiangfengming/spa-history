@@ -3,7 +3,7 @@ import Base from './Base'
 export default class extends Base {
   constructor(args) {
     super(args)
-    this.base = args.base
+    this.base = args.base || '/'
     this._init()
   }
 

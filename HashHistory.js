@@ -250,6 +250,8 @@ var _class$2 = function () {
 
     window.removeEventListener('popstate', this._onpopstate);
     window.addEventListener('popstate', onpopstate);
+
+    window.history.go(n);
   };
 
   _class.prototype.back = function back(opts) {

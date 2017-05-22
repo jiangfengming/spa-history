@@ -250,6 +250,8 @@ var _class$2 = function () {
 
     window.removeEventListener('popstate', this._onpopstate);
     window.addEventListener('popstate', onpopstate);
+
+    window.history.go(n);
   };
 
   _class.prototype.back = function back(opts) {
@@ -271,7 +273,7 @@ var _class = function (_Base) {
 
     var _this = possibleConstructorReturn(this, _Base.call(this, args));
 
-    _this.base = args.base;
+    _this.base = args.base || '/';
     _this._init();
     return _this;
   }
