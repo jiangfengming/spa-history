@@ -1,9 +1,9 @@
 import Base from './Base'
 
 export default class extends Base {
-  constructor({ base = '/', onchange }) {
-    super({ onchange })
-    this.base = base
+  constructor(args) {
+    super(args)
+    this.base = args.base
     this._init()
   }
 

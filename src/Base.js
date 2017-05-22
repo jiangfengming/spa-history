@@ -3,16 +3,16 @@ import { appendSearchParams } from './util'
 const SUPPORT_HISTORY_API = typeof window === 'object' && window.history && window.history.pushState
 
 export default class {
-  constructor({ onchange }) {
-    this.onchange = onchange
+  constructor({ beforeChange, onChange }) {
+    this.beforeChange = beforeChange
+    this.onChange = onChange
   }
 
   _init() {
     this.current = this._normalize('/')
     if (SUPPORT_HISTORY_API) {
       window.addEventListener('popstate', this._onpopstate)
-      const to = this._getCurrentLocation()
-      this.replace(to)
+      this._beforeChange(this._getCurrentLocation(), false, 'replace', 'replace')
     }
   }
 
@@ -45,22 +45,22 @@ export default class {
     return loc
   }
 
-  _dispatchChangeEvent(to, onSuccess, onRedirect) {
-    if (to === this.current) return
-    Promise.resolve(this.onchange(to, this.current)).then(res => {
-      if (res === true || res === undefined) {
+  _beforeChange(to, onSuccess, onFail, onRedirect) {
+    this.beforeChange(to, this.current).then(to => {
+      if (to === undefined || to === true) {
+        if (onSuccess) this.__changeHistory(onSuccess, to)
         this.current = to
-      } else if (res === false) {
-        this.push(this.current)
-      } else {
-        this.push(res)
+        this.onChange(to)
+      } else if (to.constructor === String || to.constructor === Object) {
+        this._changeHistory(onRedirect, to)
+      } else if (to === false && onFail) {
+        this._changeHistory(onFail, this.current)
       }
     })
   }
 
   _onpopstate() {
-    const to = this._getCurrentLocation()
-    this._dispatchChangeEvent(to)
+    this._beforeChange(this._getCurrentLocation(), false, 'push', 'push')
   }
 
   /*
@@ -72,31 +72,30 @@ export default class {
       hidden
     }
   */
-  push(...args) {
-    this._changeHistory('push', ...args)
+  push(to) {
+    this._changeHistory('push', to)
   }
 
-  replace(...args) {
-    this._changeHistory('replace', ...args)
+  replace(to) {
+    this._changeHistory('replace', to)
   }
 
   setState(state) {
     Object.assign(this.current.state, state)
-    if (SUPPORT_HISTORY_API) this._changeHistory('replace', this.current)
-  }
-
-  _changeHistory(method, to, { silent = false } = {}) {
-    to = this._normalize(to)
-    if (silent) {
-      this._changeHistory('push', to)
-    } else {
-      this._dispatchChangeEvent(to).then(res => {
-        if (res) this._changeHistory('push', to)
-      })
-    }
+    this.__changeHistory('replace', this.current)
   }
 
   _changeHistory(method, to) {
+    to = this._normalize(to)
+    if (to.silent) {
+      this.__changeHistory(method, to)
+      this.current = to
+    } else {
+      this._beforeChange(to, method, false, method)
+    }
+  }
+
+  __changeHistory(method, to) {
     if (!SUPPORT_HISTORY_API) return
 
     const state = { state: to.state }
@@ -113,23 +112,23 @@ export default class {
   go(n, { state = null, slient = false } = {}) {
     if (!SUPPORT_HISTORY_API) return
 
-    this.eventDisabled = true
-    history.go(n)
+    const onpopstate = () => {
+      window.removeEventListener('popstate', onpopstate)
+      window.addEventListener('popstate', this._onpopstate)
 
-    return new Promise(resolve => {
-      const onpopstate = () => {
-        window.removeEventListener('popstate', onpopstate)
+      const to = this._getCurrentLocation()
 
-        if (state) {
-          this.setState(state)
-        }
-
-        resolve()
+      if (state) {
+        Object.assign(to.state, state)
+        this.__changeHistory('replace', to)
       }
 
-      window.removeEventListener('popstate', this._onpopstate)
-      window.addEventListener('popstate', onpopstate)
-    })
+      if (slient) this.current = to
+      else this._beforeChange(to, false, 'push', 'push')
+    }
+
+    window.removeEventListener('popstate', this._onpopstate)
+    window.addEventListener('popstate', onpopstate)
   }
 
   back(opts) {
