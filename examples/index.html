@@ -84,7 +84,7 @@
 
     let _History = HashHistory
     if (location.protocol.slice(0, 4) === 'http') {
-      if (confirm('Use HashHistory?')) _History = PathHistory
+      if (confirm('Use PathHistory?')) _History = PathHistory
     }
 
     const history = new _History({

@@ -28,7 +28,10 @@ export default class {
   _normalize(loc) {
     if (loc.fullPath) return loc // normalized
 
-    if (loc.constructor === String) loc = { path: loc }
+    if (loc.constructor === String) {
+      if (loc.constructor === String && /^\w+:\/\//.test(loc)) loc = this._extractPathFromUrl(loc)
+      loc = { path: loc }
+    }
 
     const url = new URL(loc.path, 'file://')
     if (loc.query) appendSearchParams(url.searchParams, location.query)
@@ -140,5 +143,21 @@ export default class {
 
   forward(opts) {
     return this.go(1, opts)
+  }
+
+  hookAnchorElements(container) {
+    container.addEventListener('click', e => {
+      const a = e.target.closest('a')
+
+      if (!a || a.getAttribute('spa-history-skip') != null) return
+
+      const target = a.getAttribute('target')
+      if (target && (target === '_blank' || target === '_parent' && window.parent !== window || target === '_top' && window.top !== window || !(target in { _self: 1, _blank: 1, _parent: 1, _top: 1 }) && target !== window.name)) return
+
+      if (a.href.indexOf(location.origin + history.url('/')) !== 0) return
+
+      e.preventDefault()
+      this.push(a.href)
+    })
   }
 }
