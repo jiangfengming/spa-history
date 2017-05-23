@@ -6,18 +6,18 @@ export default class {
   constructor({ beforeChange = () => {}, onChange }) {
     this.beforeChange = beforeChange
     this.onChange = onChange
+    this.current = this._normalize('/')
   }
 
   _init() {
-    this.current = this._normalize('/')
-    if (SUPPORT_HISTORY_API) {
-      this._onpopstate = () => {
-        this._beforeChange(this._getCurrentLocation(), false, 'push', 'push')
-      }
+    if (!SUPPORT_HISTORY_API) return
 
-      window.addEventListener('popstate', this._onpopstate)
-      this._beforeChange(this._getCurrentLocation(), false, 'replace', 'replace')
+    this._onpopstate = () => {
+      this._beforeChange(this._getCurrentLocation(), false, 'push', 'push')
     }
+
+    window.addEventListener('popstate', this._onpopstate)
+    this._beforeChange(this._getCurrentLocation(), false, 'replace', 'replace')
   }
 
   url(loc) {
@@ -65,7 +65,6 @@ export default class {
       }
     })
   }
-
 
   /*
     {
@@ -155,6 +154,8 @@ export default class {
       if (target && (target === '_blank' || target === '_parent' && window.parent !== window || target === '_top' && window.top !== window || !(target in { _self: 1, _blank: 1, _parent: 1, _top: 1 }) && target !== window.name)) return
 
       if (a.href.indexOf(location.origin + history.url('/')) !== 0) return
+
+      if (a.pathname === location.pathname && a.search === location.search && a.hash !== location.hash) return
 
       e.preventDefault()
       this.push(a.href)
