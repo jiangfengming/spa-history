@@ -1,31 +1,32 @@
 import { appendSearchParams } from './util'
 
 const SUPPORT_HISTORY_API = typeof window === 'object' && window.history && window.history.pushState
+const SUPPORT_HISTORY_ERR = 'Current environment doesn\'t support History API'
 
 export default class {
   constructor({ beforeChange = () => {}, onChange }) {
     this.beforeChange = beforeChange
     this.onChange = onChange
-    this.current = this._normalize('/')
+    this.current = this.normalize('/')
   }
 
   _init() {
     if (!SUPPORT_HISTORY_API) return
 
     this._onpopstate = () => {
-      this._beforeChange(this._getCurrentLocation(), false, 'push', 'push')
+      this._beforeChange('popstate', this._getCurrentLocation())
     }
 
     window.addEventListener('popstate', this._onpopstate)
-    this._beforeChange(this._getCurrentLocation(), false, 'replace', 'replace')
+    this._beforeChange('init', this._getCurrentLocation())
   }
 
   url(loc) {
-    if (loc.constructor === Object) loc = this._normalize(loc).fullPath
+    if (loc.constructor === Object) loc = this.normalize(loc).fullPath
     return this._url(loc)
   }
 
-  _normalize(loc) {
+  normalize(loc) {
     if (loc.fullPath) return loc // normalized
 
     if (loc.constructor === String) {
@@ -34,7 +35,7 @@ export default class {
     }
 
     const url = new URL(loc.path, 'file://')
-    if (loc.query) appendSearchParams(url.searchParams, location.query)
+    if (loc.query) appendSearchParams(url.searchParams, loc.query)
     if (loc.hash) url.hash = loc.hash
     return Object.assign({ state: {} }, loc, {
       path: url.pathname,
@@ -46,24 +47,25 @@ export default class {
 
   _getCurrentLocation() {
     const state = window.history.state || {}
-    const loc = this._normalize(state.path || this._getCurrentPath())
+    const loc = this.normalize(state.path || this._getCurrentPath())
     loc.state = state.state || {}
     if (state.path) loc.hidden = true
     return loc
   }
 
-  _beforeChange(to, onSuccess, onFail, onRedirect) {
-    if (to.path === this.current.path && to.query.toString() === this.current.query.toString()) return
+  _beforeChange(op, to) {
+    if (op !== 'init' && to.path === this.current.path && to.query.toString() === this.current.query.toString()) return
 
     Promise.resolve(this.beforeChange(to, this.current)).then(ret => {
       if (ret == null || ret === true) {
-        if (onSuccess) this.__changeHistory(onSuccess, to)
+        if (op === 'push' || op === 'replace') this.__changeHistory(op, to)
         this.current = to
         this.onChange(to)
       } else if (ret.constructor === String || ret.constructor === Object) {
-        this._changeHistory(onRedirect, ret)
-      } else if (ret === false && onFail) {
-        this._changeHistory(onFail, this.current)
+        this._beforeChange(op, this.normalize(ret))
+      } else if (ret === false) {
+        if (op === 'init') this._beforeChange('init', this.current)
+        else if (op === 'popstate') this.__changeHistory('push', this.current)
       }
     })
   }
@@ -91,12 +93,12 @@ export default class {
   }
 
   _changeHistory(method, to) {
-    to = this._normalize(to)
+    to = this.normalize(to)
     if (to.silent) {
       this.__changeHistory(method, to)
       this.current = to
     } else {
-      this._beforeChange(to, method, false, method)
+      this._beforeChange(method, to)
     }
   }
 
@@ -115,27 +117,31 @@ export default class {
   }
 
   go(n, { state = null, slient = false } = {}) {
-    if (!SUPPORT_HISTORY_API) return
+    return new Promise((resolve, reject) => {
+      if (!SUPPORT_HISTORY_API) return reject(new Error(SUPPORT_HISTORY_ERR))
 
-    const onpopstate = () => {
-      window.removeEventListener('popstate', onpopstate)
-      window.addEventListener('popstate', this._onpopstate)
+      const onpopstate = () => {
+        window.removeEventListener('popstate', onpopstate)
+        window.addEventListener('popstate', this._onpopstate)
 
-      const to = this._getCurrentLocation()
+        const to = this._getCurrentLocation()
 
-      if (state) {
-        Object.assign(to.state, state)
-        this.__changeHistory('replace', to)
+        if (state) {
+          Object.assign(to.state, state)
+          this.__changeHistory('replace', to)
+        }
+
+        if (slient) this.current = to
+        else this._beforeChange('popstate', to)
+
+        resolve()
       }
 
-      if (slient) this.current = to
-      else this._beforeChange(to, false, 'push', 'push')
-    }
+      window.removeEventListener('popstate', this._onpopstate)
+      window.addEventListener('popstate', onpopstate)
 
-    window.removeEventListener('popstate', this._onpopstate)
-    window.addEventListener('popstate', onpopstate)
-
-    window.history.go(n)
+      window.history.go(n)
+    })
   }
 
   back(opts) {

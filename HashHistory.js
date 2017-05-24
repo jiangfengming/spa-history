@@ -104,6 +104,7 @@ var possibleConstructorReturn = function (self, call) {
 };
 
 var SUPPORT_HISTORY_API = (typeof window === 'undefined' ? 'undefined' : _typeof(window)) === 'object' && window.history && window.history.pushState;
+var SUPPORT_HISTORY_ERR = 'Current environment doesn\'t support History API';
 
 var _class$2 = function () {
   function _class(_ref) {
@@ -114,34 +115,37 @@ var _class$2 = function () {
 
     this.beforeChange = beforeChange;
     this.onChange = onChange;
+    this.current = this.normalize('/');
   }
 
   _class.prototype._init = function _init() {
     var _this = this;
 
-    this.current = this._normalize('/');
-    if (SUPPORT_HISTORY_API) {
-      this._onpopstate = function () {
-        _this._beforeChange(_this._getCurrentLocation(), false, 'push', 'push');
-      };
+    if (!SUPPORT_HISTORY_API) return;
 
-      window.addEventListener('popstate', this._onpopstate);
-      this._beforeChange(this._getCurrentLocation(), false, 'replace', 'replace');
-    }
+    this._onpopstate = function () {
+      _this._beforeChange('popstate', _this._getCurrentLocation());
+    };
+
+    window.addEventListener('popstate', this._onpopstate);
+    this._beforeChange('init', this._getCurrentLocation());
   };
 
   _class.prototype.url = function url(loc) {
-    if (loc.constructor === Object) loc = this._normalize(loc).fullPath;
+    if (loc.constructor === Object) loc = this.normalize(loc).fullPath;
     return this._url(loc);
   };
 
-  _class.prototype._normalize = function _normalize(loc) {
+  _class.prototype.normalize = function normalize(loc) {
     if (loc.fullPath) return loc; // normalized
 
-    if (loc.constructor === String) loc = { path: loc };
+    if (loc.constructor === String) {
+      if (loc.constructor === String && /^\w+:\/\//.test(loc)) loc = this._extractPathFromUrl(loc);
+      loc = { path: loc };
+    }
 
     var url = new URL(loc.path, 'file://');
-    if (loc.query) appendSearchParams(url.searchParams, location.query);
+    if (loc.query) appendSearchParams(url.searchParams, loc.query);
     if (loc.hash) url.hash = loc.hash;
     return Object.assign({ state: {} }, loc, {
       path: url.pathname,
@@ -153,24 +157,26 @@ var _class$2 = function () {
 
   _class.prototype._getCurrentLocation = function _getCurrentLocation() {
     var state = window.history.state || {};
-    var loc = this._normalize(state.path || this._getCurrentPath());
+    var loc = this.normalize(state.path || this._getCurrentPath());
     loc.state = state.state || {};
     if (state.path) loc.hidden = true;
     return loc;
   };
 
-  _class.prototype._beforeChange = function _beforeChange(to, onSuccess, onFail, onRedirect) {
+  _class.prototype._beforeChange = function _beforeChange(op, to) {
     var _this2 = this;
+
+    if (op !== 'init' && to.path === this.current.path && to.query.toString() === this.current.query.toString()) return;
 
     Promise.resolve(this.beforeChange(to, this.current)).then(function (ret) {
       if (ret == null || ret === true) {
-        if (onSuccess) _this2.__changeHistory(onSuccess, to);
+        if (op === 'push' || op === 'replace') _this2.__changeHistory(op, to);
         _this2.current = to;
         _this2.onChange(to);
       } else if (ret.constructor === String || ret.constructor === Object) {
-        _this2._changeHistory(onRedirect, ret);
-      } else if (ret === false && onFail) {
-        _this2._changeHistory(onFail, _this2.current);
+        _this2._beforeChange(op, _this2.normalize(ret));
+      } else if (ret === false) {
+        if (op === 'init') _this2._beforeChange('init', _this2.current);else if (op === 'popstate') _this2.__changeHistory('push', _this2.current);
       }
     });
   };
@@ -200,12 +206,12 @@ var _class$2 = function () {
   };
 
   _class.prototype._changeHistory = function _changeHistory(method, to) {
-    to = this._normalize(to);
+    to = this.normalize(to);
     if (to.silent) {
       this.__changeHistory(method, to);
       this.current = to;
     } else {
-      this._beforeChange(to, method, false, method);
+      this._beforeChange(method, to);
     }
   };
 
@@ -232,26 +238,30 @@ var _class$2 = function () {
         _ref2$slient = _ref2.slient,
         slient = _ref2$slient === undefined ? false : _ref2$slient;
 
-    if (!SUPPORT_HISTORY_API) return;
+    return new Promise(function (resolve, reject) {
+      if (!SUPPORT_HISTORY_API) return reject(new Error(SUPPORT_HISTORY_ERR));
 
-    var onpopstate = function onpopstate() {
-      window.removeEventListener('popstate', onpopstate);
-      window.addEventListener('popstate', _this3._onpopstate);
+      var onpopstate = function onpopstate() {
+        window.removeEventListener('popstate', onpopstate);
+        window.addEventListener('popstate', _this3._onpopstate);
 
-      var to = _this3._getCurrentLocation();
+        var to = _this3._getCurrentLocation();
 
-      if (state) {
-        Object.assign(to.state, state);
-        _this3.__changeHistory('replace', to);
-      }
+        if (state) {
+          Object.assign(to.state, state);
+          _this3.__changeHistory('replace', to);
+        }
 
-      if (slient) _this3.current = to;else _this3._beforeChange(to, false, 'push', 'push');
-    };
+        if (slient) _this3.current = to;else _this3._beforeChange('popstate', to);
 
-    window.removeEventListener('popstate', this._onpopstate);
-    window.addEventListener('popstate', onpopstate);
+        resolve();
+      };
 
-    window.history.go(n);
+      window.removeEventListener('popstate', _this3._onpopstate);
+      window.addEventListener('popstate', onpopstate);
+
+      window.history.go(n);
+    });
   };
 
   _class.prototype.back = function back(opts) {
@@ -260,6 +270,30 @@ var _class$2 = function () {
 
   _class.prototype.forward = function forward(opts) {
     return this.go(1, opts);
+  };
+
+  _class.prototype.hookAnchorElements = function hookAnchorElements(container) {
+    var _this4 = this;
+
+    container.addEventListener('click', function (e) {
+      var a = e.target.closest('a');
+
+      // force not handle the <a> element
+      if (!a || a.getAttribute('spa-history-skip') != null) return;
+
+      // open new window
+      var target = a.getAttribute('target');
+      if (target && (target === '_blank' || target === '_parent' && window.parent !== window || target === '_top' && window.top !== window || !(target in { _self: 1, _blank: 1, _parent: 1, _top: 1 }) && target !== window.name)) return;
+
+      // out of app
+      if (a.href.indexOf(location.origin + history.url('/')) !== 0) return;
+
+      // hash change
+      if (a.pathname === location.pathname && a.search === location.search && a.hash && a.hash !== location.hash) return;
+
+      e.preventDefault();
+      _this4.push(a.href);
+    });
   };
 
   return _class;
@@ -279,6 +313,11 @@ var _class = function (_Base) {
 
   _class.prototype._getCurrentPath = function _getCurrentPath() {
     return location.hash.slice(1) || '/';
+  };
+
+  _class.prototype._extractPathFromUrl = function _extractPathFromUrl(url) {
+    url = new URL(url);
+    return url.hash.slice(1) || '/';
   };
 
   _class.prototype._url = function _url(loc) {

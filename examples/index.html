@@ -19,7 +19,17 @@
             <h1>Home</h1>
             <p>Open console to see logs.</p>
             <a href="${history.url('/product')}">/product</a>
+            <button class="set-state">setState({ foo: 123 })</button>
+            <button class="get-state">get state</button>
             `
+
+          container.querySelector('.set-state').addEventListener('click', () => {
+            history.setState({ foo: 123 })
+          })
+
+          container.querySelector('.get-state').addEventListener('click', () => {
+            console.log(history.current.state)
+          })
         }
       },
 
@@ -31,7 +41,12 @@
             <a href="${history.url('/product#foo')}">/product#foo</a>
             <a href="${history.url('/product#bar')}">/product#bar</a>
             <a href="${history.url('/buy')}">/buy</a>
+            <button class="back">back</button>
             `
+
+          container.querySelector('.back').addEventListener('click', () => {
+            history.back({ state: { foo: 456 } })
+          })
         }
       },
 
@@ -39,33 +54,38 @@
         constructor(container, history) {
           container.innerHTML = `
             <h1>Order Form</h1>
-            <p>Try reloading, going back and forth, the input value will be preserved.</p>
-            <p>Clicking back will emit the <code>beforeNavigate</code> event.</p>
-            <form id="order">
-              Name: <input type="text" id="name"> <button>Submit</button>
-            </form>
+            <p>User: ${window.loginUser}</p>
+            <p>Phone: <input type="text" class="phone"> <button class="submit">Submit</button></p>
             `
 
-          const elForm = document.getElementById('order')
-          const elName = document.getElementById('name')
+          container.querySelector('.submit').addEventListener('click', e => {
+            this.beforeLeave = null
 
-          elForm.addEventListener('submit', e => {
-            e.preventDefault()
-            history.push({
-              path: '/complete',
-              state: {
-                name: elName.value
-              }
+            history.back({ silent: true }).then(() => {
+              history.push({
+                path: '/complete',
+                state: {
+                  phone: container.querySelector('.phone').value
+                }
+              })
             })
           })
         }
 
-        static beforeEnter() {
-
+        static beforeEnter(to, from) {
+          console.log('beforeEnter')
+          if (!window.loginUser) {
+            return {
+              path: '/login',
+              query: {
+                redirect: '/buy'
+              }
+            }
+          }
         }
 
-        beforeLeave() {
-          // history.setState({ name: elName.value })
+        beforeLeave(to, from) {
+          return window.confirm('Are you sure you want to leave?')
         }
       },
 
@@ -73,8 +93,22 @@
         constructor(container, history) {
           container.innerHTML = `
             <h1>Complete</h1>
-            <p>Name: ${history.current.state.name}</p>
+            <p>User: ${window.loginUser}</p>
+            <p>Phone: ${history.current.state.phone}</p>
             `
+        }
+      },
+
+      '/login': class {
+        constructor(container, history) {
+          container.innerHTML = `
+            User: <input type="text" class="user"><button class="btn-login">login</button>
+            `
+
+          container.querySelector('.btn-login').addEventListener('click', () => {
+            window.loginUser = container.querySelector('.user').value
+            history.replace(history.current.query.get('redirect') || '/')
+          })
         }
       }
     }
@@ -94,10 +128,12 @@
         console.log('to:', to)
         console.log('from:', from)
 
-        Promise.resolve(currentView && currentView.beforeLeave && currentView.beforeLeave(to, from)).then(ret => {
+        return Promise.resolve(currentView && currentView.beforeLeave && currentView.beforeLeave(to, from)).then(ret => {
           if (ret == null || ret === true) {
             const ToView = views[to.path]
-            return ToView.beforeEnter && ToView.beforeEnter(to, from)
+            const foo = ToView.beforeEnter && ToView.beforeEnter(to, from)
+            console.log(foo)
+            return foo
           } else {
             return ret
           }
@@ -113,6 +149,8 @@
         currentView = new views[to.path](elMain, history)
       }
     })
+
+    history.hookAnchorElements(document.body)
     </script>
   </body>
 </html>
