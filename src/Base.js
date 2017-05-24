@@ -62,7 +62,7 @@ export default class {
         this.current = to
         this.onChange(to)
       } else if (ret.constructor === String || ret.constructor === Object) {
-        this._beforeChange(op, this.normalize(ret))
+        this._beforeChange(op === 'init' ? 'replace' : op, this.normalize(ret))
       } else if (ret === false) {
         if (op === 'init') this._beforeChange('init', this.current)
         else if (op === 'popstate') this.__changeHistory('push', this.current)

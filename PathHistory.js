@@ -174,7 +174,7 @@ var _class$2 = function () {
         _this2.current = to;
         _this2.onChange(to);
       } else if (ret.constructor === String || ret.constructor === Object) {
-        _this2._beforeChange(op, _this2.normalize(ret));
+        _this2._beforeChange(op === 'init' ? 'replace' : op, _this2.normalize(ret));
       } else if (ret === false) {
         if (op === 'init') _this2._beforeChange('init', _this2.current);else if (op === 'popstate') _this2.__changeHistory('push', _this2.current);
       }
