@@ -53,6 +53,8 @@ export default class {
   }
 
   _beforeChange(to, onSuccess, onFail, onRedirect) {
+    if (to.path === this.current.path && to.query.toString() === this.current.query.toString()) return
+
     Promise.resolve(this.beforeChange(to, this.current)).then(ret => {
       if (ret == null || ret === true) {
         if (onSuccess) this.__changeHistory(onSuccess, to)
@@ -148,14 +150,18 @@ export default class {
     container.addEventListener('click', e => {
       const a = e.target.closest('a')
 
+      // force not handle the <a> element
       if (!a || a.getAttribute('spa-history-skip') != null) return
 
+      // open new window
       const target = a.getAttribute('target')
       if (target && (target === '_blank' || target === '_parent' && window.parent !== window || target === '_top' && window.top !== window || !(target in { _self: 1, _blank: 1, _parent: 1, _top: 1 }) && target !== window.name)) return
 
+      // out of app
       if (a.href.indexOf(location.origin + history.url('/')) !== 0) return
 
-      if (a.pathname === location.pathname && a.search === location.search && a.hash !== location.hash) return
+      // hash change
+      if (a.pathname === location.pathname && a.search === location.search && a.hash && a.hash !== location.hash) return
 
       e.preventDefault()
       this.push(a.href)
