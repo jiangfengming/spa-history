@@ -79,7 +79,8 @@
               path: '/login',
               query: {
                 redirect: '/buy'
-              }
+              },
+              hidden: true
             }
           }
         }
@@ -131,9 +132,7 @@
         return Promise.resolve(currentView && currentView.beforeLeave && currentView.beforeLeave(to, from)).then(ret => {
           if (ret == null || ret === true) {
             const ToView = views[to.path]
-            const foo = ToView.beforeEnter && ToView.beforeEnter(to, from)
-            console.log(foo)
-            return foo
+            return ToView.beforeEnter && ToView.beforeEnter(to, from)
           } else {
             return ret
           }

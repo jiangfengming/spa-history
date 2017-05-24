@@ -166,11 +166,13 @@ export default class {
       // out of app
       if (a.href.indexOf(location.origin + history.url('/')) !== 0) return
 
+      const to = this.normalize(a.href)
+
       // hash change
-      if (a.pathname === location.pathname && a.search === location.search && a.hash && a.hash !== location.hash) return
+      if (to.path === this.current.path && to.query.toString() === this.current.query.toString() && to.hash && to.hash !== this.current.hash) return
 
       e.preventDefault()
-      this.push(a.href)
+      this.push(to)
     })
   }
 }

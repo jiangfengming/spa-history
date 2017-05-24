@@ -288,11 +288,13 @@ var _class$2 = function () {
       // out of app
       if (a.href.indexOf(location.origin + history.url('/')) !== 0) return;
 
+      var to = _this4.normalize(a.href);
+
       // hash change
-      if (a.pathname === location.pathname && a.search === location.search && a.hash && a.hash !== location.hash) return;
+      if (to.path === _this4.current.path && to.query.toString() === _this4.current.query.toString() && to.hash && to.hash !== _this4.current.hash) return;
 
       e.preventDefault();
-      _this4.push(a.href);
+      _this4.push(to);
     });
   };
 
