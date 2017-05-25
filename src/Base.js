@@ -8,9 +8,7 @@ export default class {
     this.beforeChange = beforeChange
     this.change = change
     this.current = this.normalize('/')
-  }
 
-  _init() {
     if (!SUPPORT_HISTORY_API) return
 
     this._onpopstate = () => {

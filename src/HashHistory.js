@@ -2,8 +2,8 @@ import Base from './Base'
 
 export default class extends Base {
   constructor(args) {
-    super(args)
-    this._init()
+    super()
+    this._init(args)
   }
 
   _getCurrentPath() {

@@ -2,9 +2,9 @@ import Base from './Base'
 
 export default class extends Base {
   constructor(args) {
-    super(args)
+    super()
     this.base = args.base || '/'
-    this._init()
+    this._init(args)
   }
 
   _getCurrentPath() {
