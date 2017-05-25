@@ -218,7 +218,8 @@ var _class$2 = function () {
   _class.prototype.__changeHistory = function __changeHistory(method, to) {
     if (!SUPPORT_HISTORY_API) return;
 
-    var state = { state: to.state };
+    var state = {};
+    if (to.state) state.state = to.state;
 
     var url = this._url(to.fullPath);
     if (to.hidden) {
@@ -226,7 +227,7 @@ var _class$2 = function () {
       url = undefined;
     }
 
-    window.history[method + 'State'](state, '', url);
+    window.history[method + 'State'](Object.keys(state).length ? state : null, '', url);
   };
 
   _class.prototype.go = function go(n) {
@@ -288,7 +289,7 @@ var _class$2 = function () {
       if (target && (target === '_blank' || target === '_parent' && window.parent !== window || target === '_top' && window.top !== window || !(target in { _self: 1, _blank: 1, _parent: 1, _top: 1 }) && target !== window.name)) return;
 
       // out of app
-      if (a.href.indexOf(location.origin + history.url('/')) !== 0) return;
+      if (a.href.indexOf(location.origin + _this4.url('/')) !== 0) return;
 
       var to = _this4.normalize(a.href);
 

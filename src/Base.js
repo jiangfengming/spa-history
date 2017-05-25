@@ -105,7 +105,8 @@ export default class {
   __changeHistory(method, to) {
     if (!SUPPORT_HISTORY_API) return
 
-    const state = { state: to.state }
+    const state = {}
+    if (to.state) state.state = to.state
 
     let url = this._url(to.fullPath)
     if (to.hidden) {
@@ -113,7 +114,7 @@ export default class {
       url = undefined
     }
 
-    window.history[method + 'State'](state, '', url)
+    window.history[method + 'State'](Object.keys(state).length ? state : null, '', url)
   }
 
   go(n, { state = null, slient = false } = {}) {
@@ -164,7 +165,7 @@ export default class {
       if (target && (target === '_blank' || target === '_parent' && window.parent !== window || target === '_top' && window.top !== window || !(target in { _self: 1, _blank: 1, _parent: 1, _top: 1 }) && target !== window.name)) return
 
       // out of app
-      if (a.href.indexOf(location.origin + history.url('/')) !== 0) return
+      if (a.href.indexOf(location.origin + this.url('/')) !== 0) return
 
       const to = this.normalize(a.href)
 
