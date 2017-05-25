@@ -4,9 +4,9 @@ const SUPPORT_HISTORY_API = typeof window === 'object' && window.history && wind
 const SUPPORT_HISTORY_ERR = 'Current environment doesn\'t support History API'
 
 export default class {
-  constructor({ beforeChange = () => {}, onChange }) {
+  constructor({ beforeChange = () => {}, change }) {
     this.beforeChange = beforeChange
-    this.onChange = onChange
+    this.change = change
     this.current = this.normalize('/')
   }
 
@@ -60,7 +60,7 @@ export default class {
       if (ret == null || ret === true) {
         if (op === 'push' || op === 'replace') this.__changeHistory(op, to)
         this.current = to
-        this.onChange(to)
+        this.change(to)
       } else if (ret.constructor === String || ret.constructor === Object) {
         this._beforeChange(op === 'init' ? 'replace' : op, this.normalize(ret))
       } else if (ret === false) {
@@ -153,6 +153,8 @@ export default class {
   }
 
   hookAnchorElements(container) {
+    if (!container) container = document.body
+
     container.addEventListener('click', e => {
       const a = e.target.closest('a')
 

@@ -110,11 +110,11 @@ var _class$2 = function () {
   function _class(_ref) {
     var _ref$beforeChange = _ref.beforeChange,
         beforeChange = _ref$beforeChange === undefined ? function () {} : _ref$beforeChange,
-        onChange = _ref.onChange;
+        change = _ref.change;
     classCallCheck(this, _class);
 
     this.beforeChange = beforeChange;
-    this.onChange = onChange;
+    this.change = change;
     this.current = this.normalize('/');
   }
 
@@ -172,7 +172,7 @@ var _class$2 = function () {
       if (ret == null || ret === true) {
         if (op === 'push' || op === 'replace') _this2.__changeHistory(op, to);
         _this2.current = to;
-        _this2.onChange(to);
+        _this2.change(to);
       } else if (ret.constructor === String || ret.constructor === Object) {
         _this2._beforeChange(op === 'init' ? 'replace' : op, _this2.normalize(ret));
       } else if (ret === false) {
@@ -274,6 +274,8 @@ var _class$2 = function () {
 
   _class.prototype.hookAnchorElements = function hookAnchorElements(container) {
     var _this4 = this;
+
+    if (!container) container = document.body;
 
     container.addEventListener('click', function (e) {
       var a = e.target.closest('a');
