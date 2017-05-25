@@ -272,10 +272,10 @@ var _class$2 = function () {
     return this.go(1, opts);
   };
 
-  _class.prototype.hookAnchorElements = function hookAnchorElements(container) {
+  _class.prototype.hookAnchorElements = function hookAnchorElements() {
     var _this4 = this;
 
-    if (!container) container = document.body;
+    var container = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : document.body;
 
     container.addEventListener('click', function (e) {
       var a = e.target.closest('a');

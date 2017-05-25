@@ -1,9 +1,9 @@
 # spa-history
 
-History APIs for SPA.
+A HTML5 history routing library for single-page application.
 
 
-## Usage
+## Constructor
 
 ### HashHistory
 
@@ -59,36 +59,152 @@ const history = new PathHistory({
 
 ```js
 {
-  path,
-  query,
+  path, // in-app path, which has stripped the protocol, host, and base path.
+  query, // URLSearchParams object
   hash,
-  state,
-  fullPath,
-  hidden
+  state, // state object
+  fullPath, // path + query + hash
+  hidden // Boolean. Indicate whether it is a hidden history entry. see history.push() for detail.
 }
 ```
-
-### location.path
 
 
 ## APIs
 - history.current
-- history.url(URL string | location)
 - history.normalize(URL string | location)
+- history.url(URL String | location)
 - history.push(URL string | location)
 - history.replace(URL string | location)
 - history.setState(state)
-- history.go(position, options)
+- history.go(position, { silent = false, state = null } = {})
 - history.back(position, options)
 - history.forward(position, options)
-- history.hookAnchorElements(container)
+- history.hookAnchorElements(container = document.body)
 
 
 ### history.current
-  The current location
+The current location. See location object.
 
-### history.url
+### history.normalize(URL string | location)
+convert the URL string or unnormalized location object to normalized object
 
+```js
+// PathHistory with base '/foo/bar/'
+history.normalize('http://www.example.com/foo/bar/home?a=1#b')
+/*
+  {
+    path: '/home',
+    query: new URLSearchParams('a=1'),
+    hash: '#b',
+    fullPath: '/home?a=1#b',
+    state: {}
+  }
+*/
+
+// resulting same as above
+history.normalize({
+  path: '/home',
+  query: {
+    a: 1
+  },
+  hash: '#b'
+})
+
+
+// HashHistory
+// resulting same as above
+history.normalize('http://www.example.com/app/#/home?a=1#b')
+```
+
+The `query` property can be of type Object, String and Array. see [URLSearchParams()](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/URLSearchParams) for detail.
+
+### history.url(URL string | location)
+Convert the in-app url string or location object to a URL which can be used in `href` attribute of `<a>`.
+
+```js
+history.url({
+  path: '/home',
+  query: {
+    a: 1
+  },
+  hash: '#b'
+})
+
+// or
+history.url('/home?a=1#b')
+
+/*
+  result:
+  HashHistory: #/home?a=1#b
+  PathHistory(with base: '/foo/bar/'): /foo/bar/home?a=1#b
+*/
+```
+
+### history.push(URL string | location)
+Counterpart of `window.history.pushState()`. Push the location onto the history stack. `beforeChange` will be called.
+
+```js
+history.push('/home?a=1#b')
+
+history.push({
+  path: '/home',
+  query: {
+    a: 1
+  },
+  hash: '#b'
+})
+
+// PathHistory, complete URL
+history.push('http://www.example.com/foo/bar/home?a=1#b')
+
+// HashHistory, complete URL
+history.push('http://www.example.com/#/home?a=1#b')
+```
+
+You can push a location with state.
+
+```js
+history.push(
+  path: '/home',
+  state: {
+    foo: 1,
+    bar: 2
+  }
+)
+```
+
+And you can push a hidden location, which will not change the value of browser's address bar. the hidden location is stored in `window.history.state`
+
+```js
+history.push(
+  path: '/login',
+  state: {
+    foo: 1
+  },
+  hidden: true
+)
+```
+
+## history.replace(URL string | location)
+Counterpart of `window.history.replaceState()`. Replace the current history entry with the location.
+
+## history.setState(state)
+Set state of the current location. the state will be merged into `history.current.state`
+
+## history.go(position, { silent = false, state = null } = {})
+Counterpart of `window.history.go()`. Returns a promise which will be resolved when `popstate` event fired.
+
+`silent`: if true, `beforeChange` won't be called.
+`state`: if set, the state object will be merged into the state object of the destination location.
+
+## history.back(options)
+Same as `history.go(-1, options)`
+
+## history.forward(options)
+Same as `history.go(1, options)`
+
+## history.hookAnchorElements(container = document.body)
+Prevent the navigation when clicking the `<a>` element in the container and the `href` is an in-app address, `history.push()` will be called instead.
 
 ## Dependencies
 - URL

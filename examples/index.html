@@ -41,7 +41,7 @@
             <a href="${history.url('/product#foo')}">/product#foo</a>
             <a href="${history.url('/product#bar')}">/product#bar</a>
             <a href="${history.url('/buy')}">/buy</a>
-            <button class="back">back</button>
+            <button class="back">back({ state: { foo: 456 } })</button>
             `
 
           container.querySelector('.back').addEventListener('click', () => {

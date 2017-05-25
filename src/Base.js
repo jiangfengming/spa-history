@@ -152,9 +152,7 @@ export default class {
     return this.go(1, opts)
   }
 
-  hookAnchorElements(container) {
-    if (!container) container = document.body
-
+  hookAnchorElements(container = document.body) {
     container.addEventListener('click', e => {
       const a = e.target.closest('a')
 
