@@ -107,19 +107,20 @@ var SUPPORT_HISTORY_API = (typeof window === 'undefined' ? 'undefined' : _typeof
 var SUPPORT_HISTORY_ERR = 'Current environment doesn\'t support History API';
 
 var _class$2 = function () {
-  function _class(_ref) {
+  function _class() {
+    classCallCheck(this, _class);
+  }
+
+  _class.prototype._init = function _init(_ref) {
+    var _this = this;
+
     var _ref$beforeChange = _ref.beforeChange,
         beforeChange = _ref$beforeChange === undefined ? function () {} : _ref$beforeChange,
         change = _ref.change;
-    classCallCheck(this, _class);
 
     this.beforeChange = beforeChange;
     this.change = change;
     this.current = this.normalize('/');
-  }
-
-  _class.prototype._init = function _init() {
-    var _this = this;
 
     if (!SUPPORT_HISTORY_API) return;
 
@@ -310,10 +311,10 @@ var _class = function (_Base) {
   function _class(args) {
     classCallCheck(this, _class);
 
-    var _this = possibleConstructorReturn(this, _Base.call(this, args));
+    var _this = possibleConstructorReturn(this, _Base.call(this));
 
     _this.base = args.base || '/';
-    _this._init();
+    _this._init(args);
     return _this;
   }
 

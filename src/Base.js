@@ -4,7 +4,7 @@ const SUPPORT_HISTORY_API = typeof window === 'object' && window.history && wind
 const SUPPORT_HISTORY_ERR = 'Current environment doesn\'t support History API'
 
 export default class {
-  constructor({ beforeChange = () => {}, change }) {
+  _init({ beforeChange = () => {}, change }) {
     this.beforeChange = beforeChange
     this.change = change
     this.current = this.normalize('/')
