@@ -125,11 +125,11 @@ var _class$2 = function () {
     if (!SUPPORT_HISTORY_API) return;
 
     this._onpopstate = function () {
-      _this._beforeChange('popstate', _this._getCurrentLocation());
+      _this._beforeChange('popstate', _this._getCurrentLocationFromBrowser());
     };
 
     window.addEventListener('popstate', this._onpopstate);
-    this._beforeChange('init', this._getCurrentLocation());
+    this._beforeChange('init', this._getCurrentLocationFromBrowser());
   };
 
   _class.prototype.url = function url(loc) {
@@ -156,18 +156,32 @@ var _class$2 = function () {
     });
   };
 
-  _class.prototype._getCurrentLocation = function _getCurrentLocation() {
+  _class.prototype._getCurrentLocationFromBrowser = function _getCurrentLocationFromBrowser() {
     var state = window.history.state || {};
-    var loc = this.normalize(state.path || this._getCurrentPath());
+    var loc = this.normalize(state.path || this._getCurrentPathFromBrowser());
     loc.state = state.state || {};
     if (state.path) loc.hidden = true;
     return loc;
   };
 
+  /*
+    init
+    success: nop                       fail: _beforeChange('replace', current)       redirect: _beforeChange('replace', redirect)
+     push
+    success: pushState(to)             fail: nop                                     redirect: _beforeChange('push', redirect)
+     replace
+    success: replaceState(to)          fail: nop                                     redirect: _beforeChange('replace', redirect)
+     popstate
+    success: nop                       fail: __changeHistory('push', current)        redirect: _beforeChange('push', redirect)
+     stateless
+    success: nop                       fail: nop                                     redirect: _beforeChange('stateless', redirect)
+  */
+
+
   _class.prototype._beforeChange = function _beforeChange(op, to) {
     var _this2 = this;
 
-    if (op !== 'init' && to.path === this.current.path && to.query.toString() === this.current.query.toString()) return;
+    if (to !== this.current && to.path === this.current.path && to.query.toString() === this.current.query.toString()) return;
 
     Promise.resolve(this.beforeChange(to, this.current)).then(function (ret) {
       if (ret == null || ret === true) {
@@ -175,11 +189,17 @@ var _class$2 = function () {
         _this2.current = to;
         _this2.change(to);
       } else if (ret.constructor === String || ret.constructor === Object) {
-        _this2._beforeChange(op === 'init' ? 'replace' : op, _this2.normalize(ret));
+        if (op === 'init') op = 'replace';else if (op === 'popstate') op = 'push';
+        _this2._beforeChange(op, _this2.normalize(ret));
       } else if (ret === false) {
-        if (op === 'init') _this2._beforeChange('init', _this2.current);else if (op === 'popstate') _this2.__changeHistory('push', _this2.current);
+        if (op === 'init') _this2._beforeChange('replace', _this2.current);else if (op === 'popstate') _this2.__changeHistory('push', _this2.current);
       }
     });
+  };
+
+  _class.prototype.gotoStatelessLocation = function gotoStatelessLocation(to) {
+    to = this.normalize(to);
+    this._beforeChange('stateless', to);
   };
 
   /*
@@ -237,8 +257,8 @@ var _class$2 = function () {
     var _ref2 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
         _ref2$state = _ref2.state,
         state = _ref2$state === undefined ? null : _ref2$state,
-        _ref2$slient = _ref2.slient,
-        slient = _ref2$slient === undefined ? false : _ref2$slient;
+        _ref2$silent = _ref2.silent,
+        silent = _ref2$silent === undefined ? false : _ref2$silent;
 
     return new Promise(function (resolve, reject) {
       if (!SUPPORT_HISTORY_API) return reject(new Error(SUPPORT_HISTORY_ERR));
@@ -247,14 +267,14 @@ var _class$2 = function () {
         window.removeEventListener('popstate', onpopstate);
         window.addEventListener('popstate', _this3._onpopstate);
 
-        var to = _this3._getCurrentLocation();
+        var to = _this3._getCurrentLocationFromBrowser();
 
         if (state) {
           Object.assign(to.state, state);
           _this3.__changeHistory('replace', to);
         }
 
-        if (slient) _this3.current = to;else _this3._beforeChange('popstate', to);
+        if (silent) _this3.current = to;else _this3._beforeChange('popstate', to);
 
         resolve();
       };
@@ -317,7 +337,7 @@ var _class = function (_Base) {
     return _this;
   }
 
-  _class.prototype._getCurrentPath = function _getCurrentPath() {
+  _class.prototype._getCurrentPathFromBrowser = function _getCurrentPathFromBrowser() {
     return location.hash.slice(1) || '/';
   };
 

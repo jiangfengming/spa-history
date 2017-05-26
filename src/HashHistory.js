@@ -6,7 +6,7 @@ export default class extends Base {
     this._init(args)
   }
 
-  _getCurrentPath() {
+  _getCurrentPathFromBrowser() {
     return location.hash.slice(1) || '/'
   }
 

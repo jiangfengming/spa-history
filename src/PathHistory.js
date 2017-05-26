@@ -7,7 +7,7 @@ export default class extends Base {
     this._init(args)
   }
 
-  _getCurrentPath() {
+  _getCurrentPathFromBrowser() {
     return location.pathname.replace(this.base, '/') + location.search + location.hash
   }
 

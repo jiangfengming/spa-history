@@ -12,11 +12,11 @@ export default class {
     if (!SUPPORT_HISTORY_API) return
 
     this._onpopstate = () => {
-      this._beforeChange('popstate', this._getCurrentLocation())
+      this._beforeChange('popstate', this._getCurrentLocationFromBrowser())
     }
 
     window.addEventListener('popstate', this._onpopstate)
-    this._beforeChange('init', this._getCurrentLocation())
+    this._beforeChange('init', this._getCurrentLocationFromBrowser())
   }
 
   url(loc) {
@@ -43,16 +43,32 @@ export default class {
     })
   }
 
-  _getCurrentLocation() {
+  _getCurrentLocationFromBrowser() {
     const state = window.history.state || {}
-    const loc = this.normalize(state.path || this._getCurrentPath())
+    const loc = this.normalize(state.path || this._getCurrentPathFromBrowser())
     loc.state = state.state || {}
     if (state.path) loc.hidden = true
     return loc
   }
 
+  /*
+    init
+    success: nop                       fail: _beforeChange('replace', current)       redirect: _beforeChange('replace', redirect)
+
+    push
+    success: pushState(to)             fail: nop                                     redirect: _beforeChange('push', redirect)
+
+    replace
+    success: replaceState(to)          fail: nop                                     redirect: _beforeChange('replace', redirect)
+
+    popstate
+    success: nop                       fail: __changeHistory('push', current)        redirect: _beforeChange('push', redirect)
+
+    stateless
+    success: nop                       fail: nop                                     redirect: _beforeChange('stateless', redirect)
+  */
   _beforeChange(op, to) {
-    if (op !== 'init' && to.path === this.current.path && to.query.toString() === this.current.query.toString()) return
+    if (to !== this.current && to.path === this.current.path && to.query.toString() === this.current.query.toString()) return
 
     Promise.resolve(this.beforeChange(to, this.current)).then(ret => {
       if (ret == null || ret === true) {
@@ -60,12 +76,19 @@ export default class {
         this.current = to
         this.change(to)
       } else if (ret.constructor === String || ret.constructor === Object) {
-        this._beforeChange(op === 'init' ? 'replace' : op, this.normalize(ret))
+        if (op === 'init') op = 'replace'
+        else if (op === 'popstate') op = 'push'
+        this._beforeChange(op, this.normalize(ret))
       } else if (ret === false) {
-        if (op === 'init') this._beforeChange('init', this.current)
+        if (op === 'init') this._beforeChange('replace', this.current)
         else if (op === 'popstate') this.__changeHistory('push', this.current)
       }
     })
+  }
+
+  gotoStatelessLocation(to) {
+    to = this.normalize(to)
+    this._beforeChange('stateless', to)
   }
 
   /*
@@ -115,7 +138,7 @@ export default class {
     window.history[method + 'State'](Object.keys(state).length ? state : null, '', url)
   }
 
-  go(n, { state = null, slient = false } = {}) {
+  go(n, { state = null, silent = false } = {}) {
     return new Promise((resolve, reject) => {
       if (!SUPPORT_HISTORY_API) return reject(new Error(SUPPORT_HISTORY_ERR))
 
@@ -123,14 +146,14 @@ export default class {
         window.removeEventListener('popstate', onpopstate)
         window.addEventListener('popstate', this._onpopstate)
 
-        const to = this._getCurrentLocation()
+        const to = this._getCurrentLocationFromBrowser()
 
         if (state) {
           Object.assign(to.state, state)
           this.__changeHistory('replace', to)
         }
 
-        if (slient) this.current = to
+        if (silent) this.current = to
         else this._beforeChange('popstate', to)
 
         resolve()
