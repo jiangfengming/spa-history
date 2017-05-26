@@ -35,6 +35,8 @@ const history = new HashHistory({
   change(to) {
   }
 })
+
+history.start()
 ```
 
 ### PathHistory
@@ -53,6 +55,8 @@ const history = new PathHistory({
 
   }
 })
+
+history.start()
 ```
 
 ### location object
@@ -71,6 +75,7 @@ const history = new PathHistory({
 
 ## APIs
 - history.current
+- history.start(URL string | location)
 - history.normalize(URL string | location)
 - history.url(URL String | location)
 - history.push(URL string | location)
@@ -84,6 +89,9 @@ const history = new PathHistory({
 
 ### history.current
 The current location. See location object.
+
+### history.start(URL string | location)
+
 
 ### history.normalize(URL string | location)
 convert the URL string or unnormalized location object to normalized object
