@@ -4,19 +4,24 @@ const SUPPORT_HISTORY_API = typeof window === 'object' && window.history && wind
 const SUPPORT_HISTORY_ERR = 'Current environment doesn\'t support History API'
 
 export default class {
-  _init({ beforeChange = () => {}, change }) {
+  constructor({ beforeChange = () => {}, change }) {
     this.beforeChange = beforeChange
     this.change = change
-    this.current = this.normalize('/')
+  }
 
-    if (!SUPPORT_HISTORY_API) return
+  start(loc) {
+    if (!loc && SUPPORT_HISTORY_API) loc = this._getCurrentLocationFromBrowser()
+    else loc = this.normalize(loc)
 
-    this._onpopstate = () => {
-      this._beforeChange('popstate', this._getCurrentLocationFromBrowser())
+    this._beforeChange('init', loc)
+
+    if (SUPPORT_HISTORY_API) {
+      this._onpopstate = () => {
+        this._beforeChange('popstate', this._getCurrentLocationFromBrowser())
+      }
+
+      window.addEventListener('popstate', this._onpopstate)
     }
-
-    window.addEventListener('popstate', this._onpopstate)
-    this._beforeChange('init', this._getCurrentLocationFromBrowser())
   }
 
   url(loc) {
@@ -68,7 +73,7 @@ export default class {
     success: nop                       fail: nop                                     redirect: _beforeChange('stateless', redirect)
   */
   _beforeChange(op, to) {
-    if (to !== this.current && to.path === this.current.path && to.query.toString() === this.current.query.toString()) return
+    if (this.current && to.path === this.current.path && to.query.toString() === this.current.query.toString()) return
 
     Promise.resolve(this.beforeChange(to, this.current)).then(ret => {
       if (ret == null || ret === true) {
@@ -80,8 +85,7 @@ export default class {
         else if (op === 'popstate') op = 'push'
         this._beforeChange(op, this.normalize(ret))
       } else if (ret === false) {
-        if (op === 'init') this._beforeChange('replace', this.current)
-        else if (op === 'popstate') this.__changeHistory('push', this.current)
+        if (op === 'popstate') this.__changeHistory('push', this.current)
       }
     })
   }

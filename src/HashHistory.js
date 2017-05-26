@@ -1,11 +1,6 @@
 import Base from './Base'
 
 export default class extends Base {
-  constructor(args) {
-    super()
-    this._init(args)
-  }
-
   _getCurrentPathFromBrowser() {
     return location.hash.slice(1) || '/'
   }

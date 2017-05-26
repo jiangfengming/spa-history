@@ -107,29 +107,30 @@ var SUPPORT_HISTORY_API = (typeof window === 'undefined' ? 'undefined' : _typeof
 var SUPPORT_HISTORY_ERR = 'Current environment doesn\'t support History API';
 
 var _class$2 = function () {
-  function _class() {
-    classCallCheck(this, _class);
-  }
-
-  _class.prototype._init = function _init(_ref) {
-    var _this = this;
-
+  function _class(_ref) {
     var _ref$beforeChange = _ref.beforeChange,
         beforeChange = _ref$beforeChange === undefined ? function () {} : _ref$beforeChange,
         change = _ref.change;
+    classCallCheck(this, _class);
 
     this.beforeChange = beforeChange;
     this.change = change;
-    this.current = this.normalize('/');
+  }
 
-    if (!SUPPORT_HISTORY_API) return;
+  _class.prototype.start = function start(loc) {
+    var _this = this;
 
-    this._onpopstate = function () {
-      _this._beforeChange('popstate', _this._getCurrentLocationFromBrowser());
-    };
+    if (!loc && SUPPORT_HISTORY_API) loc = this._getCurrentLocationFromBrowser();else loc = this.normalize(loc);
 
-    window.addEventListener('popstate', this._onpopstate);
-    this._beforeChange('init', this._getCurrentLocationFromBrowser());
+    this._beforeChange('init', loc);
+
+    if (SUPPORT_HISTORY_API) {
+      this._onpopstate = function () {
+        _this._beforeChange('popstate', _this._getCurrentLocationFromBrowser());
+      };
+
+      window.addEventListener('popstate', this._onpopstate);
+    }
   };
 
   _class.prototype.url = function url(loc) {
@@ -181,7 +182,7 @@ var _class$2 = function () {
   _class.prototype._beforeChange = function _beforeChange(op, to) {
     var _this2 = this;
 
-    if (to !== this.current && to.path === this.current.path && to.query.toString() === this.current.query.toString()) return;
+    if (this.current && to.path === this.current.path && to.query.toString() === this.current.query.toString()) return;
 
     Promise.resolve(this.beforeChange(to, this.current)).then(function (ret) {
       if (ret == null || ret === true) {
@@ -192,7 +193,7 @@ var _class$2 = function () {
         if (op === 'init') op = 'replace';else if (op === 'popstate') op = 'push';
         _this2._beforeChange(op, _this2.normalize(ret));
       } else if (ret === false) {
-        if (op === 'init') _this2._beforeChange('replace', _this2.current);else if (op === 'popstate') _this2.__changeHistory('push', _this2.current);
+        if (op === 'popstate') _this2.__changeHistory('push', _this2.current);
       }
     });
   };
@@ -328,13 +329,9 @@ var _class$2 = function () {
 var _class = function (_Base) {
   inherits(_class, _Base);
 
-  function _class(args) {
+  function _class() {
     classCallCheck(this, _class);
-
-    var _this = possibleConstructorReturn(this, _Base.call(this));
-
-    _this._init(args);
-    return _this;
+    return possibleConstructorReturn(this, _Base.apply(this, arguments));
   }
 
   _class.prototype._getCurrentPathFromBrowser = function _getCurrentPathFromBrowser() {
