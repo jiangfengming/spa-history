@@ -32,9 +32,11 @@ export default class {
   normalize(loc) {
     if (loc.fullPath) return loc // normalized
 
-    if (loc.constructor === String) {
-      if (loc.constructor === String && /^\w+:\/\//.test(loc)) loc = this._extractPathFromUrl(loc)
-      loc = { path: loc }
+    if (loc.constructor === String) loc = { path: loc }
+
+    if (loc.external || /^\w+:\/\//.test(loc.path)) {
+      loc.path = this._extractPathFromExternalURL(new URL(loc.path, 'file://'))
+      delete loc.external
     }
 
     const url = new URL(loc.path, 'file://')
@@ -50,7 +52,7 @@ export default class {
 
   _getCurrentLocationFromBrowser() {
     const state = window.history.state || {}
-    const loc = this.normalize(state.path || this._getCurrentPathFromBrowser())
+    const loc = this.normalize(state.path || this._extractPathFromExternalURL(window.location))
     loc.state = state.state || {}
     if (state.path) loc.hidden = true
     return loc

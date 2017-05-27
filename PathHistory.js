@@ -141,9 +141,11 @@ var _class$2 = function () {
   _class.prototype.normalize = function normalize(loc) {
     if (loc.fullPath) return loc; // normalized
 
-    if (loc.constructor === String) {
-      if (loc.constructor === String && /^\w+:\/\//.test(loc)) loc = this._extractPathFromUrl(loc);
-      loc = { path: loc };
+    if (loc.constructor === String) loc = { path: loc };
+
+    if (loc.external || /^\w+:\/\//.test(loc.path)) {
+      loc.path = this._extractPathFromExternalURL(new URL(loc.path, 'file://'));
+      delete loc.external;
     }
 
     var url = new URL(loc.path, 'file://');
@@ -159,7 +161,7 @@ var _class$2 = function () {
 
   _class.prototype._getCurrentLocationFromBrowser = function _getCurrentLocationFromBrowser() {
     var state = window.history.state || {};
-    var loc = this.normalize(state.path || this._getCurrentPathFromBrowser());
+    var loc = this.normalize(state.path || this._extractPathFromExternalURL(window.location));
     loc.state = state.state || {};
     if (state.path) loc.hidden = true;
     return loc;
@@ -338,12 +340,7 @@ var _class = function (_Base) {
     return _this;
   }
 
-  _class.prototype._getCurrentPathFromBrowser = function _getCurrentPathFromBrowser() {
-    return location.pathname.replace(this.base, '/') + location.search + location.hash;
-  };
-
-  _class.prototype._extractPathFromUrl = function _extractPathFromUrl(url) {
-    url = new URL(url);
+  _class.prototype._extractPathFromExternalURL = function _extractPathFromExternalURL(url) {
     return url.pathname.replace(this.base, '/') + url.search + url.hash;
   };
 

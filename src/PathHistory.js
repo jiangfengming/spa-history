@@ -6,12 +6,7 @@ export default class extends Base {
     this.base = args.base || '/'
   }
 
-  _getCurrentPathFromBrowser() {
-    return location.pathname.replace(this.base, '/') + location.search + location.hash
-  }
-
-  _extractPathFromUrl(url) {
-    url = new URL(url)
+  _extractPathFromExternalURL(url) {
     return url.pathname.replace(this.base, '/') + url.search + url.hash
   }
 

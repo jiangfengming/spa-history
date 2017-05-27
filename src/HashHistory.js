@@ -1,12 +1,7 @@
 import Base from './Base'
 
 export default class extends Base {
-  _getCurrentPathFromBrowser() {
-    return location.hash.slice(1) || '/'
-  }
-
-  _extractPathFromUrl(url) {
-    url = new URL(url)
+  _extractPathFromExternalURL(url) {
     return url.hash.slice(1) || '/'
   }
 
