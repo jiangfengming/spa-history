@@ -63,7 +63,7 @@ history.start()
 
 ```js
 {
-  path, // in-app path, which has stripped the protocol, host, and base path.
+  path, // router internal path, which has stripped the protocol, host, and base path.
   query, // URLSearchParams object
   hash,
   state, // state object
@@ -91,10 +91,14 @@ history.start()
 The current location. See location object.
 
 ### history.start(URL string | location)
+Start the history router.
 
+In browser, if URL/location is not given, the default value is current address. The argument is mainly for server-side rendering.
 
 ### history.normalize(URL string | location)
 convert the URL string or unnormalized location object to normalized object
+
+if URL/location.path is started with protocal, or `location.external` is `true`, `location.path` is treated as an external path, and will be converted to an internal path.
 
 ```js
 // PathHistory with base '/foo/bar/'
@@ -109,7 +113,16 @@ history.normalize('http://www.example.com/foo/bar/home?a=1#b')
   }
 */
 
-// resulting same as above
+// same result as above
+history.normalize({
+  path: '/foo/bar/home?a=1#b',
+  external: true
+})
+
+// same result as above
+history.normalize('/home?a=1#b')
+
+// same result as above
 history.normalize({
   path: '/home',
   query: {
@@ -118,16 +131,15 @@ history.normalize({
   hash: '#b'
 })
 
-
 // HashHistory
-// resulting same as above
+// same result as above
 history.normalize('http://www.example.com/app/#/home?a=1#b')
 ```
 
 The `query` property can be of type Object, String and Array. see [URLSearchParams()](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/URLSearchParams) for detail.
 
 ### history.url(URL string | location)
-Convert the in-app url string or location object to a URL which can be used in `href` attribute of `<a>`.
+Convert the internal URL string or location object to an external URL which can be used in `href` attribute of `<a>`.
 
 ```js
 history.url({
