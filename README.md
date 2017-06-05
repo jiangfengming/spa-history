@@ -230,15 +230,18 @@ Same as `history.go(1, options)`
 ## history.hookAnchorElements(container = document.body)
 Prevent the navigation when clicking the `<a>` element in the container and the `href` is an in-app address, `history.push()` will be called instead.
 
+
 ## Dependencies
-- URL
-- Object.assign
-- Element#closest
+- [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL)
+- [Object.assign()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign)
+- [Element.closest()](https://developer.mozilla.org/en-US/docs/Web/API/Element/closest)
 
 You can use <a href="http://babeljs.io/docs/usage/polyfill/">babel-polyfill</a> and <a href="https://github.com/WebReflection/dom4">dom4</a> to meet the requirements.
 
-Or use the <a href="https://polyfill.io/">polyfill.io</a> service: https://cdn.polyfill.io/v2/polyfill.min.js?features=default,es6
-
+Or use the <a href="https://polyfill.io/">polyfill.io</a> service:
+```html
+<script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
+```
 
 ## Build
 ```
