@@ -206,28 +206,28 @@ history.push(
 )
 ```
 
-## history.replace(URL string | location)
+### history.replace(URL string | location)
 Counterpart of `window.history.replaceState()`. Replace the current history entry with the location.
 
-## history.dispatch(URL string | location)
-Dispatch the navigation events without changing the history.
+### history.dispatch(URL string | location)
+Dispatch the navigation events and set the current location without changing the history session.
 
-## history.setState(state)
+### history.setState(state)
 Set state of the current location. the state will be merged into `history.current.state`
 
-## history.go(position, { silent = false, state = null } = {})
+### history.go(position, { silent = false, state = null } = {})
 Counterpart of `window.history.go()`. Returns a promise which will be resolved when `popstate` event fired.
 
 `silent`: if true, `beforeChange` won't be called.
 `state`: if set, the state object will be merged into the state object of the destination location.
 
-## history.back(options)
+### history.back(options)
 Same as `history.go(-1, options)`
 
-## history.forward(options)
+### history.forward(options)
 Same as `history.go(1, options)`
 
-## history.hookAnchorElements(container = document.body)
+### history.hookAnchorElements(container = document.body)
 Prevent the navigation when clicking the `<a>` element in the container and the `href` is an in-app address, `history.push()` will be called instead.
 
 
