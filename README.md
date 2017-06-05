@@ -74,28 +74,29 @@ history.start()
 
 
 ## APIs
-- history.current
-- history.start(URL string | location)
-- history.normalize(URL string | location)
-- history.url(URL String | location)
-- history.push(URL string | location)
-- history.replace(URL string | location)
-- history.setState(state)
-- history.go(position, { silent = false, state = null } = {})
-- history.back(position, options)
-- history.forward(position, options)
-- history.hookAnchorElements(container = document.body)
+- [history.current](#current)
+- [history.start(URL string | location)](#start)
+- [history.normalize(URL string | location)](#normalize)
+- [history.url(URL String | location)](#url)
+- [history.push(URL string | location)](#push)
+- [history.replace(URL string | location)](#replace)
+- [history.dispatch(URL string | location)](#dispatch)
+- [history.setState(state)](#setState)
+- [history.go(position, { silent = false, state = null } = {})](#go)
+- [history.back(position, options)](#back)
+- [history.forward(position, options)](#forward)
+- [history.hookAnchorElements(container = document.body)](#hookAnchorElements)
 
 
-### history.current
+### <span id="current">history.current</span>
 The current location. See location object.
 
-### history.start(URL string | location)
+### <span id="start">history.start(URL string | location)</span>
 Start the history router.
 
-In browser, if URL/location is not given, the default value is current address. The argument is mainly for server-side rendering.
+In browser, if URL/location is not given, the default value is the current address. This argument is mainly for server-side rendering.
 
-### history.normalize(URL string | location)
+### <span id="normalize">history.normalize(URL string | location)</span>
 convert the URL string or unnormalized location object to normalized object
 
 if URL/location.path is started with protocal, or `location.external` is `true`, `location.path` is treated as an external path, and will be converted to an internal path.
@@ -138,7 +139,7 @@ history.normalize('http://www.example.com/app/#/home?a=1#b')
 
 The `query` property can be of type Object, String and Array. see [URLSearchParams()](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/URLSearchParams) for detail.
 
-### history.url(URL string | location)
+### <span id="url">history.url(URL string | location)</span>
 Convert the internal URL string or location object to an external URL which can be used in `href` attribute of `<a>`.
 
 ```js
@@ -160,7 +161,7 @@ history.url('/home?a=1#b')
 */
 ```
 
-### history.push(URL string | location)
+### <span id="push">history.push(URL string | location)</span>
 Counterpart of `window.history.pushState()`. Push the location onto the history stack. `beforeChange` will be called.
 
 ```js
@@ -205,25 +206,28 @@ history.push(
 )
 ```
 
-## history.replace(URL string | location)
+## <span id="replace">history.replace(URL string | location)</span>
 Counterpart of `window.history.replaceState()`. Replace the current history entry with the location.
 
-## history.setState(state)
+## <span id="dispatch">history.dispatch(URL string | location)</span>
+Dispatch the navigation events without changing the history.
+
+## <span id="setState">history.setState(state)</span>
 Set state of the current location. the state will be merged into `history.current.state`
 
-## history.go(position, { silent = false, state = null } = {})
+## <span id="go">history.go(position, { silent = false, state = null } = {})</span>
 Counterpart of `window.history.go()`. Returns a promise which will be resolved when `popstate` event fired.
 
 `silent`: if true, `beforeChange` won't be called.
 `state`: if set, the state object will be merged into the state object of the destination location.
 
-## history.back(options)
+## <span id="back">history.back(options)</span>
 Same as `history.go(-1, options)`
 
-## history.forward(options)
+## <span id="forward">history.forward(options)</span>
 Same as `history.go(1, options)`
 
-## history.hookAnchorElements(container = document.body)
+## <span id="hookAnchorElements">history.hookAnchorElements(container = document.body)</span>
 Prevent the navigation when clicking the `<a>` element in the container and the `href` is an in-app address, `history.push()` will be called instead.
 
 ## Dependencies

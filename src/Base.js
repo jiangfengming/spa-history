@@ -71,8 +71,8 @@ export default class {
     popstate
     success: nop                       fail: __changeHistory('push', current)        redirect: _beforeChange('push', redirect)
 
-    stateless
-    success: nop                       fail: nop                                     redirect: _beforeChange('stateless', redirect)
+    sessionless
+    success: nop                       fail: nop                                     redirect: _beforeChange('sessionless', redirect)
   */
   _beforeChange(op, to) {
     if (this.current && to.path === this.current.path && to.query.toString() === this.current.query.toString()) return
@@ -92,9 +92,9 @@ export default class {
     })
   }
 
-  gotoStatelessLocation(to) {
+  dispatch(to) {
     to = this.normalize(to)
-    this._beforeChange('stateless', to)
+    this._beforeChange('sessionless', to)
   }
 
   /*

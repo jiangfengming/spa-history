@@ -176,8 +176,8 @@ var _class$2 = function () {
     success: replaceState(to)          fail: nop                                     redirect: _beforeChange('replace', redirect)
      popstate
     success: nop                       fail: __changeHistory('push', current)        redirect: _beforeChange('push', redirect)
-     stateless
-    success: nop                       fail: nop                                     redirect: _beforeChange('stateless', redirect)
+     sessionless
+    success: nop                       fail: nop                                     redirect: _beforeChange('sessionless', redirect)
   */
 
 
@@ -200,9 +200,9 @@ var _class$2 = function () {
     });
   };
 
-  _class.prototype.gotoStatelessLocation = function gotoStatelessLocation(to) {
+  _class.prototype.dispatch = function dispatch(to) {
     to = this.normalize(to);
-    this._beforeChange('stateless', to);
+    this._beforeChange('sessionless', to);
   };
 
   /*

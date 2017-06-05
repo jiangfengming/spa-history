@@ -1,6 +1,6 @@
 {
   "name": "spa-history",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "A HTML5 history routing library for single-page application.",
   "main": "",
   "scripts": {
@@ -26,7 +26,7 @@
     "babel-preset-stage-2": "6.24.1",
     "eslint": "3.19.0",
     "eslint-config-enough": "0.2.6",
-    "rollup": "0.41.6",
+    "rollup": "0.42.0",
     "rollup-plugin-babel": "2.7.1"
   },
   "dependencies": {},
