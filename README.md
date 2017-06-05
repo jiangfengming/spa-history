@@ -139,7 +139,8 @@ history.normalize('http://www.example.com/app/#/home?a=1#b')
 
 The `query` property can be of type Object, String and Array. see [URLSearchParams()](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/URLSearchParams) for detail.
 
-### <span id="url">history.url(URL string | location)</span>
+### history.url(URL string | location)
+<span id="url"></span>
 Convert the internal URL string or location object to an external URL which can be used in `href` attribute of `<a>`.
 
 ```js
