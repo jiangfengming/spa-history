@@ -75,7 +75,11 @@ export default class {
     success: nop                       fail: nop                                     redirect: _beforeChange('sessionless', redirect)
   */
   _beforeChange(op, to) {
-    if (this.current && to.path === this.current.path && to.query.toString() === this.current.query.toString()) return
+    // to is the same as current and op is push, set op to replace
+    if (
+      this.current
+      && to.path === this.current.path && to.query.toString() === this.current.query.toString()
+      && op === 'push') op = 'replace'
 
     Promise.resolve(this.beforeChange(to, this.current)).then(ret => {
       if (ret == null || ret === true) {
@@ -189,7 +193,15 @@ export default class {
 
       // open new window
       const target = a.getAttribute('target')
-      if (target && (target === '_blank' || target === '_parent' && window.parent !== window || target === '_top' && window.top !== window || !(target in { _self: 1, _blank: 1, _parent: 1, _top: 1 }) && target !== window.name)) return
+      if (
+        target
+        && (
+          target === '_blank'
+          || target === '_parent' && window.parent !== window
+          || target === '_top' && window.top !== window
+          || !(target in { _self: 1, _blank: 1, _parent: 1, _top: 1 }) && target !== window.name
+        )
+      ) return
 
       // out of app
       if (a.href.indexOf(location.origin + this.url('/')) !== 0) return
@@ -197,7 +209,11 @@ export default class {
       const to = this.normalize(a.href)
 
       // hash change
-      if (to.path === this.current.path && to.query.toString() === this.current.query.toString() && to.hash && to.hash !== this.current.hash) return
+      if (
+        to.path === this.current.path
+        && to.query.toString() === this.current.query.toString()
+        && to.hash
+        && to.hash !== this.current.hash) return
 
       e.preventDefault()
       this.push(to)

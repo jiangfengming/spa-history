@@ -218,7 +218,8 @@ Set state of the current location. the state will be merged into `history.curren
 ### history.go(position, { silent = false, state = null } = {})
 Counterpart of `window.history.go()`. Returns a promise which will be resolved when `popstate` event fired.
 
-`silent`: if true, `beforeChange` won't be called.
+`silent`: if `true`, `beforeChange` won't be called.
+
 `state`: if set, the state object will be merged into the state object of the destination location.
 
 ### history.back(options)

@@ -184,7 +184,8 @@ var _class$2 = function () {
   _class.prototype._beforeChange = function _beforeChange(op, to) {
     var _this2 = this;
 
-    if (this.current && to.path === this.current.path && to.query.toString() === this.current.query.toString()) return;
+    // to is the same as current and op is push, set op to replace
+    if (this.current && to.path === this.current.path && to.query.toString() === this.current.query.toString() && op === 'push') op = 'replace';
 
     Promise.resolve(this.beforeChange(to, this.current)).then(function (ret) {
       if (ret == null || ret === true) {
