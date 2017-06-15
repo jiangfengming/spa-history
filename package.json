@@ -1,6 +1,6 @@
 {
   "name": "spa-history",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "description": "A HTML5 history routing library for single-page application.",
   "main": "",
   "scripts": {
@@ -20,14 +20,14 @@
   },
   "homepage": "https://github.com/fenivana/spa-history#readme",
   "devDependencies": {
-    "babel-core": "6.24.1",
-    "babel-plugin-external-helpers": "6.22.0",
-    "babel-preset-env": "1.5.1",
-    "babel-preset-stage-2": "6.24.1",
-    "eslint": "3.19.0",
-    "eslint-config-enough": "0.2.6",
-    "rollup": "0.42.0",
-    "rollup-plugin-babel": "2.7.1"
+    "babel-core": "^6.25.0",
+    "babel-plugin-external-helpers": "^6.22.0",
+    "babel-preset-env": "^1.5.2",
+    "babel-preset-stage-2": "^6.24.1",
+    "eslint": "^4.0.0",
+    "eslint-config-enough": "^0.2.6",
+    "rollup": "^0.43.0",
+    "rollup-plugin-babel": "^2.7.1"
   },
   "dependencies": {},
   "babel": {

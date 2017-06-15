@@ -304,10 +304,10 @@ var _class$2 = function () {
     var container = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : document.body;
 
     container.addEventListener('click', function (e) {
-      var a = e.target.closest('a');
+      var a = e.target.closest('a'
 
       // force not handle the <a> element
-      if (!a || a.getAttribute('spa-history-skip') != null) return;
+      );if (!a || a.getAttribute('spa-history-skip') != null) return;
 
       // open new window
       var target = a.getAttribute('target');
@@ -316,10 +316,10 @@ var _class$2 = function () {
       // out of app
       if (a.href.indexOf(location.origin + _this4.url('/')) !== 0) return;
 
-      var to = _this4.normalize(a.href);
+      var to = _this4.normalize(a.href
 
       // hash change
-      if (to.path === _this4.current.path && to.query.toString() === _this4.current.query.toString() && to.hash && to.hash !== _this4.current.hash) return;
+      );if (to.path === _this4.current.path && to.query.toString() === _this4.current.query.toString() && to.hash && to.hash !== _this4.current.hash) return;
 
       e.preventDefault();
       _this4.push(to);
