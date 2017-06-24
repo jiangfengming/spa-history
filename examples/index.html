@@ -78,10 +78,8 @@
           if (!window.loginUser) {
             return {
               path: '/login',
-              query: {
-                redirect: '/buy'
-              },
-              hidden: true
+              hidden: true,
+              appearPath: '/buy'
             }
           }
         }
@@ -109,7 +107,7 @@
 
           container.querySelector('.btn-login').addEventListener('click', () => {
             window.loginUser = container.querySelector('.user').value
-            history.replace(history.current.query.get('redirect') || '/')
+            history.replace(location.href)
           })
         }
       }

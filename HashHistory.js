@@ -249,7 +249,7 @@ var _class$2 = function () {
     var url = this._url(to.fullPath);
     if (to.hidden) {
       state.path = to.fullPath;
-      url = undefined;
+      url = to.appearPath && this.url(to.appearPath);
     }
 
     window.history[method + 'State'](Object.keys(state).length ? state : null, '', url);

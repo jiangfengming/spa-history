@@ -142,7 +142,7 @@ export default class {
     let url = this._url(to.fullPath)
     if (to.hidden) {
       state.path = to.fullPath
-      url = undefined
+      url = to.appearPath && this.url(to.appearPath)
     }
 
     window.history[method + 'State'](Object.keys(state).length ? state : null, '', url)
@@ -194,8 +194,8 @@ export default class {
       // open new window
       const target = a.getAttribute('target')
       if (
-        target
-        && (
+        target &&
+        (
           target === '_blank'
           || target === '_parent' && window.parent !== window
           || target === '_top' && window.top !== window

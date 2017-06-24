@@ -202,7 +202,12 @@ history.push(
   state: {
     foo: 1
   },
-  hidden: true
+
+  // '/login' won't show in the location bar
+  hidden: true,
+
+  // optional. if set, the location bar will show this address instead
+  appearPath: '/buy'
 )
 ```
 
