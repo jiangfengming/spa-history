@@ -233,8 +233,12 @@ Same as `history.go(-1, options)`
 ### history.forward(options)
 Same as `history.go(1, options)`
 
-### history.hookAnchorElements(container = document.body)
+### history.captureLinkClickEvent(e)
 Prevent the navigation when clicking the `<a>` element in the container and the `href` is an in-app address, `history.push()` will be called instead.
+
+```js
+document.body.addEventListener('click', e => history.captureLinkClickEvent(e))
+```
 
 
 ## Dependencies

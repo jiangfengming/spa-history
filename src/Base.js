@@ -184,39 +184,37 @@ export default class {
     return this.go(1, opts)
   }
 
-  hookAnchorElements(container = document.body) {
-    container.addEventListener('click', e => {
-      const a = e.target.closest('a')
+  captureLinkClickEvent(e) {
+    const a = e.target.closest('a')
 
-      // force not handle the <a> element
-      if (!a || a.getAttribute('spa-history-skip') != null) return
+    // force not handle the <a> element
+    if (!a || a.getAttribute('spa-history-skip') != null) return
 
-      // open new window
-      const target = a.getAttribute('target')
-      if (
-        target &&
-        (
-          target === '_blank'
-          || target === '_parent' && window.parent !== window
-          || target === '_top' && window.top !== window
-          || !(target in { _self: 1, _blank: 1, _parent: 1, _top: 1 }) && target !== window.name
-        )
-      ) return
+    // open new window
+    const target = a.getAttribute('target')
+    if (
+      target &&
+      (
+        target === '_blank'
+        || target === '_parent' && window.parent !== window
+        || target === '_top' && window.top !== window
+        || !(target in { _self: 1, _blank: 1, _parent: 1, _top: 1 }) && target !== window.name
+      )
+    ) return
 
-      // out of app
-      if (a.href.indexOf(location.origin + this.url('/')) !== 0) return
+    // out of app
+    if (a.href.indexOf(location.origin + this.url('/')) !== 0) return
 
-      const to = this.normalize(a.href)
+    const to = this.normalize(a.href)
 
-      // hash change
-      if (
-        to.path === this.current.path
-        && to.query.toString() === this.current.query.toString()
-        && to.hash
-        && to.hash !== this.current.hash) return
+    // hash change
+    if (
+      to.path === this.current.path
+      && to.query.toString() === this.current.query.toString()
+      && to.hash
+      && to.hash !== this.current.hash) return
 
-      e.preventDefault()
-      this.push(to)
-    })
+    e.preventDefault()
+    this.push(to)
   }
 }

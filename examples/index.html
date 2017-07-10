@@ -148,7 +148,7 @@
       }
     })
 
-    history.hookAnchorElements(document.body)
+    document.body.addEventListener('click', e => history.captureLinkClickEvent(e))
     history.start()
     </script>
   </body>
