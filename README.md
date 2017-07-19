@@ -185,19 +185,19 @@ history.push('http://www.example.com/#/home?a=1#b')
 You can push a location with state.
 
 ```js
-history.push(
+history.push({
   path: '/home',
   state: {
     foo: 1,
     bar: 2
   }
-)
+})
 ```
 
 And you can push a hidden location, which will not change the value of browser's address bar. the hidden location is stored in `window.history.state`
 
 ```js
-history.push(
+history.push({
   path: '/login',
   state: {
     foo: 1
@@ -208,7 +208,7 @@ history.push(
 
   // optional. if set, the location bar will show this address instead
   appearPath: '/buy'
-)
+})
 ```
 
 ### history.replace(URL string | location)
