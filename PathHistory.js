@@ -176,8 +176,8 @@ var _class$2 = function () {
     success: replaceState(to)          fail: nop                                     redirect: _beforeChange('replace', redirect)
      popstate
     success: nop                       fail: __changeHistory('push', current)        redirect: _beforeChange('push', redirect)
-     sessionless
-    success: nop                       fail: nop                                     redirect: _beforeChange('sessionless', redirect)
+     dispatch
+    success: nop                       fail: nop                                     redirect: _beforeChange('dispatch', redirect)
   */
 
 
@@ -203,7 +203,7 @@ var _class$2 = function () {
 
   _class.prototype.dispatch = function dispatch(to) {
     to = this.normalize(to);
-    this._beforeChange('sessionless', to);
+    this._beforeChange('dispatch', to);
   };
 
   /*
