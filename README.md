@@ -12,7 +12,7 @@ import HashHistory from 'spa-history/HashHistory'
 
 const history = new HashHistory({
   /*
-    beforeChange callback will be called at initializing and before location change.
+    beforeChange callback will be called before location change.
 
     Arguments:
       to: The location will be changed to.
@@ -27,8 +27,10 @@ const history = new HashHistory({
     Returns:
       true | undefined: The navigation is confirmed.
       false: Prevent the navigation.
-      location: Redirect to this location. beforeChange will be called again.
+      location: Redirect to this location.
                 You can override the history manipulate method by providing location.method, values are: push, replace, dispatch.
+
+    Return value can be a Promise.
   */
   beforeChange(to, from, operation) {
   },
