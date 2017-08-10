@@ -17,13 +17,20 @@ const history = new HashHistory({
     Arguments:
       to: The location will be changed to.
       from: The current location.
+      operation:
+        push: history.push() is called.
+        replace: history.replace() is called.
+        init: "to" is the initial page, at this stage, "from" is null.
+        popstate: user clicked the back or foraward button , or history.go(), history.back(), history.forward() is called.
+        dispatch: history.dispatch() is called.
 
     Returns:
       true | undefined: The navigation is confirmed.
       false: Prevent the navigation.
       location: Redirect to this location. beforeChange will be called again.
+                You can override the history manipulate method by providing location.method, values are: push, replace, dispatch.
   */
-  beforeChange(to, from) {
+  beforeChange(to, from, operation) {
   },
 
   /*

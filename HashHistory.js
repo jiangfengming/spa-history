@@ -187,13 +187,13 @@ var _class$2 = function () {
     // to is the same as current and op is push, set op to replace
     if (this.current && to.path === this.current.path && to.query.toString() === this.current.query.toString() && op === 'push') op = 'replace';
 
-    Promise.resolve(this.beforeChange(to, this.current)).then(function (ret) {
+    Promise.resolve(this.beforeChange(to, this.current, op)).then(function (ret) {
       if (ret == null || ret === true) {
         if (op === 'push' || op === 'replace') _this2.__changeHistory(op, to);
         _this2.current = to;
         _this2.change(to);
       } else if (ret.constructor === String || ret.constructor === Object) {
-        if (op === 'init') op = 'replace';else if (op === 'popstate') op = 'push';
+        if (op === 'init') op = 'replace';else if (op === 'popstate') op = 'push';else if (ret.method) op = ret.method;
         _this2._beforeChange(op, _this2.normalize(ret));
       } else if (ret === false) {
         if (op === 'popstate') _this2.__changeHistory('push', _this2.current);

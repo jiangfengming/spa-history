@@ -71,8 +71,8 @@ export default class {
     popstate
     success: nop                       fail: __changeHistory('push', current)        redirect: _beforeChange('push', redirect)
 
-    sessionless
-    success: nop                       fail: nop                                     redirect: _beforeChange('sessionless', redirect)
+    dispatch
+    success: nop                       fail: nop                                     redirect: _beforeChange('dispatch', redirect)
   */
   _beforeChange(op, to) {
     // to is the same as current and op is push, set op to replace
@@ -81,7 +81,7 @@ export default class {
       && to.path === this.current.path && to.query.toString() === this.current.query.toString()
       && op === 'push') op = 'replace'
 
-    Promise.resolve(this.beforeChange(to, this.current)).then(ret => {
+    Promise.resolve(this.beforeChange(to, this.current, op)).then(ret => {
       if (ret == null || ret === true) {
         if (op === 'push' || op === 'replace') this.__changeHistory(op, to)
         this.current = to
@@ -89,6 +89,7 @@ export default class {
       } else if (ret.constructor === String || ret.constructor === Object) {
         if (op === 'init') op = 'replace'
         else if (op === 'popstate') op = 'push'
+        else if (ret.method) op = ret.method
         this._beforeChange(op, this.normalize(ret))
       } else if (ret === false) {
         if (op === 'popstate') this.__changeHistory('push', this.current)
@@ -98,7 +99,7 @@ export default class {
 
   dispatch(to) {
     to = this.normalize(to)
-    this._beforeChange('sessionless', to)
+    this._beforeChange('dispatch', to)
   }
 
   /*
