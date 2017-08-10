@@ -7,6 +7,7 @@ export default class {
   constructor({ beforeChange = () => {}, change }) {
     this.beforeChange = beforeChange
     this.change = change
+    this.current = null
   }
 
   start(loc) {
