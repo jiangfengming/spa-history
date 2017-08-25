@@ -28,7 +28,7 @@ const history = new HashHistory({
       true | undefined: The navigation is confirmed.
       false: Prevent the navigation.
       location: Redirect to this location.
-                You can override the history manipulate method by providing location.method, values are: push, replace, dispatch.
+                You can override the history manipulate method by providing location.method property, values are: 'push', 'replace', 'dispatch'.
 
     Return value can be a Promise.
   */
@@ -94,11 +94,11 @@ history.start()
 - [history.go(position, { silent = false, state = null } = {})](#historygoposition--silent--false-state--null---)
 - [history.back(position, options)](#historybackoptions)
 - [history.forward(position, options)](#historyforwardoptions)
-- [history.hookAnchorElements(container = document.body)](#historyhookanchorelementscontainer--documentbody)
+- [history.captureLinkClickEvent(e)](#historycapturelinkclickevente)
 
 
 ### history.current
-The current location. See location object.
+The current location. See [location object](#location-object).
 
 ### history.start(URL string | location)
 Start the history router.
@@ -221,10 +221,11 @@ history.push({
 ```
 
 ### history.replace(URL string | location)
-Counterpart of `window.history.replaceState()`. Replace the current history entry with the location.
+Counterpart of `window.history.replaceState()`. Replace the current history entry with the provided URL/location.
 
 ### history.dispatch(URL string | location)
-Dispatch the navigation events and set the current location without changing the history session.
+Set the current location to the provided URL/location without changing the history session.
+That is, the location of browser's address bar won't change. `beforeChange` will be called.
 
 ### history.setState(state)
 Set state of the current location. the state will be merged into `history.current.state`
