@@ -1,6 +1,6 @@
 {
   "name": "spa-history",
-  "version": "0.5.8",
+  "version": "0.5.9",
   "description": "A HTML5 history routing library for single-page application.",
   "main": "",
   "scripts": {
