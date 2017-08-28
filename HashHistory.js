@@ -21,11 +21,9 @@ function appendSearchParams(searchParams, q) {
         var _ref2;
 
         if (_isArray) {
-          if (_i >= _iterator.length) break;
           _ref2 = _iterator[_i++];
         } else {
           _i = _iterator.next();
-          if (_i.done) break;
           _ref2 = _i.value;
         }
 
@@ -47,7 +45,118 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 
 
+var asyncGenerator = function () {
+  function AwaitValue(value) {
+    this.value = value;
+  }
 
+  function AsyncGenerator(gen) {
+    var front, back;
+
+    function send(key, arg) {
+      return new Promise(function (resolve, reject) {
+        var request = {
+          key: key,
+          arg: arg,
+          resolve: resolve,
+          reject: reject,
+          next: null
+        };
+
+        if (back) {
+          back = back.next = request;
+        } else {
+          front = back = request;
+          resume(key, arg);
+        }
+      });
+    }
+
+    function resume(key, arg) {
+      try {
+        var result = gen[key](arg);
+        var value = result.value;
+
+        if (value instanceof AwaitValue) {
+          Promise.resolve(value.value).then(function (arg) {
+            resume("next", arg);
+          }, function (arg) {
+            resume("throw", arg);
+          });
+        } else {
+          settle(result.done ? "return" : "normal", result.value);
+        }
+      } catch (err) {
+        settle("throw", err);
+      }
+    }
+
+    function settle(type, value) {
+      switch (type) {
+        case "return":
+          front.resolve({
+            value: value,
+            done: true
+          });
+          break;
+
+        case "throw":
+          front.reject(value);
+          break;
+
+        default:
+          front.resolve({
+            value: value,
+            done: false
+          });
+          break;
+      }
+
+      front = front.next;
+
+      if (front) {
+        resume(front.key, front.arg);
+      } else {
+        back = null;
+      }
+    }
+
+    this._invoke = send;
+
+    if (typeof gen.return !== "function") {
+      this.return = undefined;
+    }
+  }
+
+  if (typeof Symbol === "function" && Symbol.asyncIterator) {
+    AsyncGenerator.prototype[Symbol.asyncIterator] = function () {
+      return this;
+    };
+  }
+
+  AsyncGenerator.prototype.next = function (arg) {
+    return this._invoke("next", arg);
+  };
+
+  AsyncGenerator.prototype.throw = function (arg) {
+    return this._invoke("throw", arg);
+  };
+
+  AsyncGenerator.prototype.return = function (arg) {
+    return this._invoke("return", arg);
+  };
+
+  return {
+    wrap: function (fn) {
+      return function () {
+        return new AsyncGenerator(fn.apply(this, arguments));
+      };
+    },
+    await: function (value) {
+      return new AwaitValue(value);
+    }
+  };
+}();
 
 
 
@@ -145,7 +254,7 @@ var _class$2 = function () {
     } else {
       loc = Object.assign({}, loc);
 
-      if (loc.fullPath) return loc; // normalized
+       // normalized
     }
 
     if (loc.external || /^\w+:\/\//.test(loc.path)) {
@@ -248,8 +357,6 @@ var _class$2 = function () {
   };
 
   _class.prototype.__changeHistory = function __changeHistory(method, to) {
-    if (!SUPPORT_HISTORY_API) return;
-
     var state = {};
     if (to.state) state.state = to.state;
 
@@ -306,22 +413,19 @@ var _class$2 = function () {
   };
 
   _class.prototype.captureLinkClickEvent = function captureLinkClickEvent(e) {
-    var a = e.target.closest('a'
+    var a = e.target.closest('a');
 
     // force not handle the <a> element
-    );if (!a || a.getAttribute('spa-history-skip') != null) return;
+    if (!a || a.getAttribute('spa-history-skip') != null) return;
 
     // open new window
     var target = a.getAttribute('target');
-    if (target && (target === '_blank' || target === '_parent' && window.parent !== window || target === '_top' && window.top !== window || !(target in { _self: 1, _blank: 1, _parent: 1, _top: 1 }) && target !== window.name)) return;
-
-    // out of app
     if (a.href.indexOf(location.origin + this.url('/')) !== 0) return;
 
-    var to = this.normalize(a.href
+    var to = this.normalize(a.href);
 
     // hash change
-    );if (to.path === this.current.path && to.query.toString() === this.current.query.toString() && to.hash && to.hash !== this.current.hash) return;
+    if (to.path === this.current.path && to.query.toString() === this.current.query.toString() && to.hash && to.hash !== this.current.hash) return;
 
     e.preventDefault();
     this.push(to);
