@@ -13,17 +13,17 @@ function appendSearchParams(searchParams, q) {
     case String:
       q = new URLSearchParams(q);
     case URLSearchParams:
-      // eslint-disable-line
       q = Array.from(q);
     case Array:
-      // eslint-disable-line
       for (var _iterator = q, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
         var _ref2;
 
         if (_isArray) {
+          if (_i >= _iterator.length) break;
           _ref2 = _iterator[_i++];
         } else {
           _i = _iterator.next();
+          if (_i.done) break;
           _ref2 = _i.value;
         }
 
@@ -254,7 +254,7 @@ var _class$2 = function () {
     } else {
       loc = Object.assign({}, loc);
 
-       // normalized
+      if (loc.fullPath) return loc; // normalized
     }
 
     if (loc.external || /^\w+:\/\//.test(loc.path)) {
@@ -357,6 +357,8 @@ var _class$2 = function () {
   };
 
   _class.prototype.__changeHistory = function __changeHistory(method, to) {
+    if (!SUPPORT_HISTORY_API) return;
+
     var state = {};
     if (to.state) state.state = to.state;
 
@@ -420,6 +422,9 @@ var _class$2 = function () {
 
     // open new window
     var target = a.getAttribute('target');
+    if (target && (target === '_blank' || target === '_parent' && window.parent !== window || target === '_top' && window.top !== window || !(target in { _self: 1, _blank: 1, _parent: 1, _top: 1 }) && target !== window.name)) return;
+
+    // out of app
     if (a.href.indexOf(location.origin + this.url('/')) !== 0) return;
 
     var to = this.normalize(a.href);

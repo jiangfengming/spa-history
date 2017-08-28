@@ -5,9 +5,9 @@ export function appendSearchParams(searchParams, q) {
       break
     case String:
       q = new URLSearchParams(q)
-    case URLSearchParams: // eslint-disable-line
+    case URLSearchParams:
       q = Array.from(q)
-    case Array: // eslint-disable-line
+    case Array:
       for (const [name, value] of q) searchParams.append(name, value)
       break
   }
