@@ -53,7 +53,7 @@ export default class {
       query: url.searchParams,
       hash: url.hash,
       fullPath: url.pathname + url.search + url.hash,
-      state: loc.state || {}
+      state: loc.state ? JSON.parse(JSON.stringify(loc.state)) : {} // dereferencing
     })
   }
 
@@ -127,7 +127,7 @@ export default class {
   }
 
   setState(state) {
-    Object.assign(this.current.state, state)
+    Object.assign(this.current.state, JSON.parse(JSON.stringify(state))) // dereferencing
     this.__changeHistory('replace', this.current)
   }
 
