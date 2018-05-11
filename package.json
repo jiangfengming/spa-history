@@ -1,6 +1,6 @@
 {
   "name": "spa-history",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "A HTML5 history routing library for single-page application.",
   "main": "dist/spaHistory.umd.js",
   "module": "dist/spaHistory.esm.js",
