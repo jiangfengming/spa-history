@@ -5,19 +5,22 @@ A HTML5 history routing library for single-page application.
 
 ## Constructor
 
-### HashHistory
+### PathHistory
 
 ```js
-import HashHistory from 'spa-history/HashHistory'
+import { PathHistory } from 'spa-history'
 
-const history = new HashHistory({
+const history = new PathHistory({
+  // path of base directory. defaults to '/'
+  base: '/',
+  
   /*
-    beforeChange callback will be called before location change.
+    beforeChange() will be called before location change.
 
     Arguments:
-      to: The location will be changed to.
-      from: The current location.
-      operation:
+      to: Location object. The location will be changed to.
+      from: Location object. The current location.
+      operation: String. What operation triggered the history change.
         push: history.push() is called.
         replace: history.replace() is called.
         init: "to" is the initial page, at this stage, "from" is null.
@@ -27,8 +30,8 @@ const history = new HashHistory({
     Returns:
       true | undefined: The navigation is confirmed.
       false: Prevent the navigation.
-      location: Redirect to this location.
-                You can override the history manipulate method by providing location.method property, values are: 'push', 'replace', 'dispatch'.
+      path | location object: Redirect to this location.
+        You can override the history manipulate method by providing "location.method" property, values are: 'push', 'replace', 'dispatch'.
 
     Return value can be a Promise.
   */
@@ -36,10 +39,10 @@ const history = new HashHistory({
   },
 
   /*
-    change callback will be called when the location has been changed.
+    change() will be called when the location has been changed.
 
     Arguments:
-      to: The location has been changed to.
+      to: Location object. The location has been changed to.
   */
   change(to) {
   }
@@ -48,25 +51,24 @@ const history = new HashHistory({
 history.start()
 ```
 
-### PathHistory
+### HashHistory
 
 ```js
-import PathHistory from 'spa-history/PathHistory'
+import { HashHistory } from 'spa-history'
 
-const history = new PathHistory({
-  base: '/', // path of base directory. default: '/'
-
-  beforeChange(to, from) {
-
+const history = new HashHistory({
+  beforeChange(to, from, operation) {
   },
 
   change(to) {
-
   }
 })
 
 history.start()
 ```
+
+`HashHistory` has no `base` option.
+
 
 ### location object
 

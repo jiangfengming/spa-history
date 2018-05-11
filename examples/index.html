@@ -3,8 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <script src="../HashHistory.js"></script>
-    <script src="../PathHistory.js"></script>
+    <script src="../dist/spaHistory.umd.js"></script>
     <title>SPA History</title>
   </head>
 
@@ -116,9 +115,9 @@
     const elMain = document.getElementById('main')
     let currentView = null
 
-    let _History = HashHistory
+    let _History = spaHistory.HashHistory
     if (location.protocol.slice(0, 4) === 'http') {
-      if (confirm('Use PathHistory?')) _History = PathHistory
+      if (confirm('Use PathHistory?')) _History = spaHistory.PathHistory
     }
 
     const history = new _History({

@@ -1,11 +1,11 @@
 import babel from 'rollup-plugin-babel'
 
 export default {
-  input: 'src/PathHistory.js',
+  input: 'src/index.js',
   output: {
     format: 'umd',
-    name: 'PathHistory',
-    file: 'PathHistory.js'
+    name: 'spaHistory',
+    file: 'dist/spaHistory.umd.js'
   },
   plugins: [
     babel()

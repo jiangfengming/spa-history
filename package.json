@@ -1,10 +1,11 @@
 {
   "name": "spa-history",
-  "version": "0.5.12",
+  "version": "0.6.0",
   "description": "A HTML5 history routing library for single-page application.",
-  "main": "",
+  "main": "dist/spaHistory.umd.js",
+  "module": "dist/spaHistory.esm.js",
   "scripts": {
-    "build": "rollup -c rollup.config.HashHistory.js && rollup -c rollup.config.PathHistory.js"
+    "build": "rollup -c rollup.config.esm.js && rollup -c rollup.config.umd.js"
   },
   "repository": {
     "type": "git",
@@ -20,14 +21,13 @@
   },
   "homepage": "https://github.com/fenivana/spa-history#readme",
   "devDependencies": {
-    "babel-core": "^6.26.0",
+    "babel-core": "^6.26.3",
     "babel-plugin-external-helpers": "^6.22.0",
-    "babel-preset-env": "^1.6.1",
-    "babel-preset-stage-2": "^6.24.1",
-    "eslint": "^4.19.0",
+    "babel-preset-env": "^1.7.0",
+    "eslint": "^4.19.1",
     "eslint-config-enough": "^0.3.0",
-    "rollup": "^0.57.1",
-    "rollup-plugin-babel": "^3.0.3"
+    "rollup": "^0.58.2",
+    "rollup-plugin-babel": "^3.0.4"
   },
   "dependencies": {},
   "babel": {
@@ -38,8 +38,7 @@
           "loose": true,
           "modules": false
         }
-      ],
-      "stage-2"
+      ]
     ],
     "plugins": [
       "external-helpers"

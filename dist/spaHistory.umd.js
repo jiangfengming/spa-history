@@ -1,8 +1,8 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-  typeof define === 'function' && define.amd ? define(factory) :
-  (global.HashHistory = factory());
-}(this, (function () { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+  typeof define === 'function' && define.amd ? define(['exports'], factory) :
+  (factory((global.spaHistory = {})));
+}(this, (function (exports) { 'use strict';
 
   function appendSearchParams(searchParams, q) {
     switch (q.constructor) {
@@ -12,8 +12,10 @@
         }break;
       case String:
         q = new URLSearchParams(q);
+      // falls through
       case URLSearchParams:
         q = Array.from(q);
+      // falls through
       case Array:
         for (var _iterator = q, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
           var _ref2;
@@ -301,6 +303,29 @@
   var _class$1 = function (_Base) {
     inherits(_class$$1, _Base);
 
+    function _class$$1(args) {
+      classCallCheck(this, _class$$1);
+
+      var _this = possibleConstructorReturn(this, _Base.call(this, args));
+
+      _this.base = args.base || '/';
+      return _this;
+    }
+
+    _class$$1.prototype._extractPathFromExternalURL = function _extractPathFromExternalURL(url) {
+      return url.pathname.replace(this.base, '/') + url.search + url.hash;
+    };
+
+    _class$$1.prototype._url = function _url(loc) {
+      return this.base + loc.slice(1);
+    };
+
+    return _class$$1;
+  }(_class);
+
+  var _class$2 = function (_Base) {
+    inherits(_class$$1, _Base);
+
     function _class$$1() {
       classCallCheck(this, _class$$1);
       return possibleConstructorReturn(this, _Base.apply(this, arguments));
@@ -317,6 +342,9 @@
     return _class$$1;
   }(_class);
 
-  return _class$1;
+  exports.PathHistory = _class$1;
+  exports.HashHistory = _class$2;
+
+  Object.defineProperty(exports, '__esModule', { value: true });
 
 })));

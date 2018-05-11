@@ -5,8 +5,10 @@ export function appendSearchParams(searchParams, q) {
       break
     case String:
       q = new URLSearchParams(q)
+      // falls through
     case URLSearchParams:
       q = Array.from(q)
+      // falls through
     case Array:
       for (const [name, value] of q) searchParams.append(name, value)
       break
