@@ -4,7 +4,6 @@ export default {
   input: 'src/index.js',
   output: {
     format: 'es',
-    name: 'spaHistory',
     file: 'dist/spaHistory.esm.js'
   },
   plugins: [
