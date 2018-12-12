@@ -1,11 +1,10 @@
 import babel from 'rollup-plugin-babel'
 
 export default {
-  input: 'src/index.js',
+  input: 'src/index.mjs',
   output: {
-    format: 'umd',
-    name: 'spaHistory',
-    file: 'dist/spaHistory.umd.js'
+    format: 'es',
+    file: 'dist/spaHistory.esm.js'
   },
   plugins: [
     babel()

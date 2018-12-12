@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <script src="../dist/spaHistory.umd.js"></script>
+    <script src="dist/spaHistory.js"></script>
     <title>SPA History</title>
   </head>
 
@@ -120,7 +120,7 @@
       if (confirm('Use PathHistory?')) _History = spaHistory.PathHistory
     }
 
-    const history = new _History({
+    const _history = new _History({
       beforeChange(to, from) {
         console.log('------------')
         console.log('beforeChange')
@@ -143,12 +143,12 @@
         console.log('to:', to)
 
         elMain.innerHTML = ''
-        currentView = new views[to.path](elMain, history)
+        currentView = new views[to.path](elMain, _history)
       }
     })
 
-    document.body.addEventListener('click', e => history.captureLinkClickEvent(e))
-    history.start()
+    document.body.addEventListener('click', e => _history.captureLinkClickEvent(e))
+    _history.start()
     </script>
   </body>
 </html>
