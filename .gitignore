@@ -1,4 +1,6 @@
 .vscode
+package-lock.json
+yarn.lock
 shrinkwrap.yaml
 
 # Logs
