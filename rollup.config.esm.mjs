@@ -4,7 +4,7 @@ export default {
   input: 'src/index.mjs',
   output: {
     format: 'es',
-    file: 'dist/spaHistory.esm.js'
+    file: 'dist/spaHistory.mjs'
   },
   plugins: [
     babel()

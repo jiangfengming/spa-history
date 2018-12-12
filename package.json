@@ -3,7 +3,7 @@
   "version": "0.6.2",
   "description": "A HTML5 history routing library for single-page application.",
   "main": "dist/spaHistory.js",
-  "module": "dist/spaHistory.esm.js",
+  "module": "dist/spaHistory.mjs",
   "scripts": {
     "build": "rollup -c rollup.config.esm.mjs && rollup -c rollup.config.umd.mjs",
     "example": "ws --spa example.html"
