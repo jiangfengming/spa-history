@@ -1,9 +1,8 @@
 {
   "name": "spa-history",
-  "version": "0.6.3",
+  "version": "0.6.4-alpha.0",
   "description": "A HTML5 history routing library for single-page application.",
-  "main": "dist/spaHistory.js",
-  "module": "dist/spaHistory.mjs",
+  "main": "dist/spaHistory",
   "scripts": {
     "build": "rollup -c rollup.config.esm.mjs && rollup -c rollup.config.umd.mjs",
     "example": "ws --spa example.html"
@@ -24,13 +23,13 @@
   },
   "homepage": "https://github.com/jiangfengming/spa-history#readme",
   "devDependencies": {
-    "@babel/core": "^7.2.0",
+    "@babel/core": "^7.2.2",
     "@babel/preset-env": "^7.2.0",
     "babel-eslint": "^10.0.1",
     "eslint": "^5.10.0",
     "eslint-config-enough": "^0.3.4",
     "local-web-server": "^2.6.0",
-    "rollup": "^0.67.4",
+    "rollup": "^0.68.0",
     "rollup-plugin-babel": "^4.1.0"
   },
   "babel": {
