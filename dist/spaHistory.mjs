@@ -89,7 +89,6 @@ function () {
       };
     } else {
       loc = Object.assign({}, loc);
-      if (loc.fullPath) return loc; // normalized
     }
 
     if (loc.external || /^\w+:\/\//.test(loc.path)) {
@@ -100,7 +99,7 @@ function () {
     var url = new URL(loc.path, 'file://');
     if (loc.query) appendSearchParams(url.searchParams, loc.query);
     if (loc.hash) url.hash = loc.hash;
-    return Object.assign(loc, {
+    Object.assign(loc, {
       path: url.pathname,
       query: url.searchParams,
       hash: url.hash,
@@ -108,6 +107,8 @@ function () {
       state: loc.state ? JSON.parse(JSON.stringify(loc.state)) : {} // dereferencing
 
     });
+    loc.url = this._url(loc.fullPath);
+    return loc;
   };
 
   _proto._getCurrentLocationFromBrowser = function _getCurrentLocationFromBrowser() {

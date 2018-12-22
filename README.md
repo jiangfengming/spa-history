@@ -70,7 +70,7 @@ history.start()
 `HashHistory` has no `base` option.
 
 
-### location object
+### Location object
 
 ```js
 {
@@ -79,6 +79,7 @@ history.start()
   hash,
   state, // state object
   fullPath, // path + query + hash
+  url, // PathHistory: base + path + query + hash; HashHistory: '#' + path + query + hash
   hidden // Boolean. Indicate whether it is a hidden history entry. see history.push() for detail.
 }
 ```
@@ -115,12 +116,13 @@ if URL/location.path is started with protocal, or `location.external` is `true`,
 ```js
 // PathHistory with base '/foo/bar/'
 history.normalize('http://www.example.com/foo/bar/home?a=1#b')
-/*
+/* ->
   {
     path: '/home',
     query: new URLSearchParams('a=1'),
     hash: '#b',
     fullPath: '/home?a=1#b',
+    url: '/foo/bar/home?a=1#b',
     state: {}
   }
 */
@@ -144,8 +146,17 @@ history.normalize({
 })
 
 // HashHistory
-// same result as above
 history.normalize('http://www.example.com/app/#/home?a=1#b')
+/* ->
+  {
+    path: '/home',
+    query: new URLSearchParams('a=1'),
+    hash: '#b',
+    fullPath: '/home?a=1#b',
+    url: '#/home?a=1#b',
+    state: {}
+  }
+*/
 ```
 
 The `query` property can be of type Object, String and Array. see [URLSearchParams()](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/URLSearchParams) for detail.

@@ -35,8 +35,6 @@ export default class {
       loc = { path: loc }
     } else {
       loc = Object.assign({}, loc)
-
-      if (loc.fullPath) return loc // normalized
     }
 
     if (loc.external || /^\w+:\/\//.test(loc.path)) {
@@ -48,13 +46,17 @@ export default class {
     if (loc.query) appendSearchParams(url.searchParams, loc.query)
     if (loc.hash) url.hash = loc.hash
 
-    return Object.assign(loc, {
+    Object.assign(loc, {
       path: url.pathname,
       query: url.searchParams,
       hash: url.hash,
       fullPath: url.pathname + url.search + url.hash,
       state: loc.state ? JSON.parse(JSON.stringify(loc.state)) : {} // dereferencing
     })
+
+    loc.url = this._url(loc.fullPath)
+
+    return loc
   }
 
   _getCurrentLocationFromBrowser() {
