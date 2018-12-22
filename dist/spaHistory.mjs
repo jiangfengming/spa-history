@@ -117,7 +117,7 @@ function () {
     loc.state = state.state || {};
     if (state.path) loc.hidden = true;
     return loc;
-  };
+  }
   /*
     init
     success: nop                       fail: _beforeChange('replace', current)       redirect: _beforeChange('replace', redirect)
@@ -130,7 +130,7 @@ function () {
      dispatch
     success: nop                       fail: nop                                     redirect: _beforeChange('dispatch', redirect)
   */
-
+  ;
 
   _proto._beforeChange = function _beforeChange(op, to) {
     var _this2 = this;
@@ -157,7 +157,7 @@ function () {
     to = this.normalize(to);
 
     this._beforeChange('dispatch', to);
-  };
+  }
   /*
     {
       path,
@@ -167,7 +167,7 @@ function () {
       hidden
     }
   */
-
+  ;
 
   _proto.push = function push(to) {
     this._changeHistory('push', to);

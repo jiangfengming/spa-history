@@ -1,8 +1,8 @@
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
   typeof define === 'function' && define.amd ? define(['exports'], factory) :
-  factory(global.spaHistory = {});
-}(typeof self !== 'undefined' ? self : this, function (exports) { 'use strict';
+  (global = global || self, factory(global.spaHistory = {}));
+}(this, function (exports) { 'use strict';
 
   function _inheritsLoose(subClass, superClass) {
     subClass.prototype = Object.create(superClass.prototype);
@@ -123,7 +123,7 @@
       loc.state = state.state || {};
       if (state.path) loc.hidden = true;
       return loc;
-    };
+    }
     /*
       init
       success: nop                       fail: _beforeChange('replace', current)       redirect: _beforeChange('replace', redirect)
@@ -136,7 +136,7 @@
        dispatch
       success: nop                       fail: nop                                     redirect: _beforeChange('dispatch', redirect)
     */
-
+    ;
 
     _proto._beforeChange = function _beforeChange(op, to) {
       var _this2 = this;
@@ -163,7 +163,7 @@
       to = this.normalize(to);
 
       this._beforeChange('dispatch', to);
-    };
+    }
     /*
       {
         path,
@@ -173,7 +173,7 @@
         hidden
       }
     */
-
+    ;
 
     _proto.push = function push(to) {
       this._changeHistory('push', to);
