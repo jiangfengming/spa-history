@@ -98,11 +98,11 @@
       }
 
       if (loc.external || /^\w+:\/\//.test(loc.path)) {
-        loc.path = this._extractPathFromExternalURL(new URL(loc.path, 'file://'));
+        loc.path = this._extractPathFromExternalURL(new URL(loc.path, 'http://a.a'));
         delete loc.external;
       }
 
-      var url = new URL(loc.path, 'file://');
+      var url = new URL(loc.path, 'http://a.a');
       if (loc.query) appendSearchParams(url.searchParams, loc.query);
       if (loc.hash) url.hash = loc.hash;
       Object.assign(loc, {
@@ -285,9 +285,9 @@
   var _default$1 =
   /*#__PURE__*/
   function (_Base) {
-    _inheritsLoose(_default$$1, _Base);
+    _inheritsLoose(_default, _Base);
 
-    function _default$$1(args) {
+    function _default(args) {
       var _this;
 
       _this = _Base.call(this, args) || this;
@@ -295,7 +295,7 @@
       return _this;
     }
 
-    var _proto = _default$$1.prototype;
+    var _proto = _default.prototype;
 
     _proto._extractPathFromExternalURL = function _extractPathFromExternalURL(url) {
       return url.pathname.replace(this.base, '/') + url.search + url.hash;
@@ -305,19 +305,19 @@
       return this.base + loc.slice(1);
     };
 
-    return _default$$1;
+    return _default;
   }(_default);
 
   var _default$2 =
   /*#__PURE__*/
   function (_Base) {
-    _inheritsLoose(_default$$1, _Base);
+    _inheritsLoose(_default, _Base);
 
-    function _default$$1() {
+    function _default() {
       return _Base.apply(this, arguments) || this;
     }
 
-    var _proto = _default$$1.prototype;
+    var _proto = _default.prototype;
 
     _proto._extractPathFromExternalURL = function _extractPathFromExternalURL(url) {
       return url.hash.slice(1) || '/';
@@ -327,7 +327,7 @@
       return loc === '/' ? location.pathname + location.search : '#' + loc;
     };
 
-    return _default$$1;
+    return _default;
   }(_default);
 
   exports.PathHistory = _default$1;

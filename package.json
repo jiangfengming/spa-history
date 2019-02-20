@@ -23,14 +23,14 @@
   },
   "homepage": "https://github.com/jiangfengming/spa-history#readme",
   "devDependencies": {
-    "@babel/core": "^7.2.2",
-    "@babel/preset-env": "^7.2.3",
+    "@babel/core": "^7.3.3",
+    "@babel/preset-env": "^7.3.1",
     "babel-eslint": "^10.0.1",
-    "eslint": "^5.10.0",
+    "eslint": "^5.14.1",
     "eslint-config-enough": "^0.3.4",
-    "local-web-server": "^2.6.0",
-    "rollup": "^0.68.1",
-    "rollup-plugin-babel": "^4.1.0"
+    "local-web-server": "^2.6.1",
+    "rollup": "^1.2.2",
+    "rollup-plugin-babel": "^4.3.2"
   },
   "babel": {
     "presets": [
