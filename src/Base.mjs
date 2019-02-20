@@ -38,11 +38,11 @@ export default class {
     }
 
     if (loc.external || /^\w+:\/\//.test(loc.path)) {
-      loc.path = this._extractPathFromExternalURL(new URL(loc.path, 'file://'))
+      loc.path = this._extractPathFromExternalURL(new URL(loc.path, 'http://a.a'))
       delete loc.external
     }
 
-    const url = new URL(loc.path, 'file://')
+    const url = new URL(loc.path, 'http://a.a')
     if (loc.query) appendSearchParams(url.searchParams, loc.query)
     if (loc.hash) url.hash = loc.hash
 
