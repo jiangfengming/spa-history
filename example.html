@@ -1,154 +1,156 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <script src="dist/spaHistory.js"></script>
-    <title>SPA History</title>
-  </head>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>SPA History</title>
+</head>
 
-  <body>
-    <div id="main"></div>
+<body>
+<div id="main"></div>
 
-    <script>
-    const views = {
-      '/': class {
-        constructor(container, history) {
-          container.innerHTML = `
-            <h1>Home</h1>
-            <p>Open console to see logs.</p>
-            <a href="${history.url('/product')}">/product</a>
-            <button class="set-state">setState({ foo: 123 })</button>
-            <button class="get-state">get state</button>
-            `
+<script type="module">
+import { PathHistory, HashHistory } from '../dist/spaHistory.mjs'
 
-          container.querySelector('.set-state').addEventListener('click', () => {
-            history.setState({ foo: 123 })
-          })
+const views = {
+  '/': class {
+    constructor(container, history) {
+      container.innerHTML = `
+        <h1>Home</h1>
+        <p>Open console to see logs.</p>
+        <a href="${history.url('/product')}">/product</a>
+        <button class="set-state">setState({ foo: 123 })</button>
+        <button class="get-state">get state</button>
+        `
 
-          container.querySelector('.get-state').addEventListener('click', () => {
-            console.log(history.current.state)
-          })
-        }
-      },
+      container.querySelector('.set-state').addEventListener('click', () => {
+        history.setState({ foo: 123 })
+      })
 
-      '/product': class {
-        constructor(container, history) {
-          container.innerHTML = `
-            <h1>Product Page</h1>
-            <a href="${history.url('/')}">/</a>
-            <a href="${history.url('/product')}">/product</a>
-            <a href="${history.url('/product#foo')}">/product#foo</a>
-            <a href="${history.url('/product#bar')}">/product#bar</a>
-            <a href="${history.url('/buy')}">/buy</a>
-            <button class="back">back({ state: { foo: 456 } })</button>
-            `
+      container.querySelector('.get-state').addEventListener('click', () => {
+        alert(JSON.stringify(history.current.state))
+      })
+    }
+  },
 
-          container.querySelector('.back').addEventListener('click', () => {
-            history.back({ state: { foo: 456 } })
-          })
-        }
-      },
+  '/product': class {
+    constructor(container, history) {
+      container.innerHTML = `
+        <h1>Product Page</h1>
+        <a href="${history.url('/')}">/</a>
+        <a href="${history.url('/product')}">/product</a>
+        <a href="${history.url('/product#foo')}">/product#foo</a>
+        <a href="${history.url('/product#bar')}">/product#bar</a>
+        <a href="${history.url('/buy')}">/buy</a>
+        <button class="back">back({ state: { foo: 456 } })</button>
+        `
 
-      '/buy': class {
-        constructor(container, history) {
-          container.innerHTML = `
-            <h1>Order Form</h1>
-            <p>User: ${window.loginUser}</p>
-            <p>Phone: <input type="text" class="phone"> <button class="submit">Submit</button></p>
-            `
+      container.querySelector('.back').addEventListener('click', () => {
+        history.back({ state: { foo: 456 } })
+      })
+    }
+  },
 
-          container.querySelector('.submit').addEventListener('click', e => {
-            this.beforeLeave = null
+  '/buy': class {
+    constructor(container, history) {
+      container.innerHTML = `
+        <h1>Order Form</h1>
+        <p>User: ${window.loginUser}</p>
+        <p>Phone: <input type="text" class="phone"> <button class="submit">Submit</button></p>
+        `
 
-            history.back({ silent: true }).then(() => {
-              history.push({
-                path: '/complete',
-                state: {
-                  phone: container.querySelector('.phone').value
-                }
-              })
-            })
-          })
-        }
+      container.querySelector('.submit').addEventListener('click', e => {
+        this.beforeLeave = null
 
-        static beforeEnter(to, from) {
-          console.log('beforeEnter')
-          if (!window.loginUser) {
-            return {
-              path: '/login',
-              hidden: true,
-              appearPath: '/buy'
+        history.back({ silent: true }).then(() => {
+          history.push({
+            path: '/complete',
+            state: {
+              phone: container.querySelector('.phone').value
             }
-          }
-        }
-
-        beforeLeave(to, from) {
-          return window.confirm('Are you sure you want to leave?')
-        }
-      },
-
-      '/complete': class {
-        constructor(container, history) {
-          container.innerHTML = `
-            <h1>Complete</h1>
-            <p>User: ${window.loginUser}</p>
-            <p>Phone: ${history.current.state.phone}</p>
-            `
-        }
-      },
-
-      '/login': class {
-        constructor(container, history) {
-          container.innerHTML = `
-            User: <input type="text" class="user"><button class="btn-login">login</button>
-            `
-
-          container.querySelector('.btn-login').addEventListener('click', () => {
-            window.loginUser = container.querySelector('.user').value
-            history.replace(location.href)
           })
+        })
+      })
+    }
+
+    static beforeEnter(to, from) {
+      console.log('beforeEnter')
+      if (!window.loginUser) {
+        return {
+          path: '/login',
+          hidden: true,
+          appearPath: '/buy'
         }
       }
     }
 
-    const elMain = document.getElementById('main')
-    let currentView = null
-
-    let _History = spaHistory.HashHistory
-    if (location.protocol.slice(0, 4) === 'http') {
-      if (confirm('Use PathHistory?')) _History = spaHistory.PathHistory
+    beforeLeave(to, from) {
+      return window.confirm('Are you sure you want to leave?')
     }
+  },
 
-    const _history = new _History({
-      beforeChange(to, from) {
-        console.log('------------')
-        console.log('beforeChange')
-        console.log('to:', to)
-        console.log('from:', from)
+  '/complete': class {
+    constructor(container, history) {
+      container.innerHTML = `
+        <h1>Complete</h1>
+        <p>User: ${window.loginUser}</p>
+        <p>Phone: ${history.current.state.phone}</p>
+        `
+    }
+  },
 
-        return Promise.resolve(currentView && currentView.beforeLeave && currentView.beforeLeave(to, from)).then(ret => {
-          if (ret == null || ret === true) {
-            const ToView = views[to.path]
-            return ToView.beforeEnter && ToView.beforeEnter(to, from)
-          } else {
-            return ret
-          }
-        })
-      },
+  '/login': class {
+    constructor(container, history) {
+      container.innerHTML = `
+        User: <input type="text" class="user"><button class="btn-login">login</button>
+        `
 
-      change(to) {
-        console.log('------------')
-        console.log('change')
-        console.log('to:', to)
+      container.querySelector('.btn-login').addEventListener('click', () => {
+        window.loginUser = container.querySelector('.user').value
+        history.replace(location.href)
+      })
+    }
+  }
+}
 
-        elMain.innerHTML = ''
-        currentView = new views[to.path](elMain, _history)
+const elMain = document.getElementById('main')
+let currentView = null
+
+let _History = HashHistory
+
+if (location.protocol.slice(0, 4) === 'http') {
+  if (confirm('Use PathHistory?')) _History = PathHistory
+}
+
+window._history = new _History({
+  beforeChange(to, from) {
+    console.log('------------')
+    console.log('beforeChange')
+    console.log('to:', to)
+    console.log('from:', from)
+
+    return Promise.resolve(currentView && currentView.beforeLeave && currentView.beforeLeave(to, from)).then(ret => {
+      if (ret == null || ret === true) {
+        const ToView = views[to.path]
+        return ToView.beforeEnter && ToView.beforeEnter(to, from)
+      } else {
+        return ret
       }
     })
+  },
 
-    document.body.addEventListener('click', e => _history.captureLinkClickEvent(e))
-    _history.start()
-    </script>
-  </body>
+  change(to) {
+    console.log('------------')
+    console.log('change')
+    console.log('to:', to)
+
+    elMain.innerHTML = ''
+    currentView = new views[to.path](elMain, _history)
+  }
+})
+
+document.body.addEventListener('click', e => _history.captureLinkClickEvent(e))
+_history.start()
+</script>
+</body>
 </html>
