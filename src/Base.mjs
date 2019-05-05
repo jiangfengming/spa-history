@@ -37,14 +37,21 @@ export default class {
       loc = Object.assign({}, loc)
     }
 
-    if (loc.external || /^\w+:\/\//.test(loc.path)) {
-      loc.path = this._extractPathFromExternalURL(new URL(loc.path, 'http://a.a'))
+    const hasOrigin = /^\w+:\/\//.test(loc.path)
+    if (loc.external || hasOrigin) {
+      loc.path = this._extractPathFromExternalURL(new URL(hasOrigin ? loc.path : 'http://a.a' + loc.path))
       delete loc.external
     }
 
-    const url = new URL(loc.path, 'http://a.a')
-    if (loc.query) appendSearchParams(url.searchParams, loc.query)
-    if (loc.hash) url.hash = loc.hash
+    const url = new URL('http://a.a' + loc.path)
+
+    if (loc.query) {
+      appendSearchParams(url.searchParams, loc.query)
+    }
+
+    if (loc.hash) {
+      url.hash = loc.hash
+    }
 
     Object.assign(loc, {
       path: url.pathname,
