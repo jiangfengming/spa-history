@@ -307,11 +307,21 @@
     var _proto = _default.prototype;
 
     _proto._extractPathFromExternalURL = function _extractPathFromExternalURL(url) {
-      return url.pathname.replace(this.base, '/') + url.search + url.hash;
+      var path = url.pathname;
+
+      if (path.startsWith(this.base)) {
+        path = path.replace(this.base, '');
+
+        if (path[0] !== '/') {
+          path = '/' + path;
+        }
+      }
+
+      return path + url.search + url.hash;
     };
 
     _proto._url = function _url(loc) {
-      return this.base + loc.slice(1);
+      return this.base + (this.base.slice(-1) === '/' ? loc.slice(1) : loc);
     };
 
     return _default;

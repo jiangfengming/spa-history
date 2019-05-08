@@ -7,10 +7,20 @@ export default class extends Base {
   }
 
   _extractPathFromExternalURL(url) {
-    return url.pathname.replace(this.base, '/') + url.search + url.hash
+    let path = url.pathname
+
+    if (path.startsWith(this.base)) {
+      path = path.replace(this.base, '')
+
+      if (path[0] !== '/') {
+        path = '/' + path
+      }
+    }
+
+    return path + url.search + url.hash
   }
 
   _url(loc) {
-    return this.base + loc.slice(1)
+    return this.base + (this.base.slice(-1) === '/' ? loc.slice(1) : loc)
   }
 }
