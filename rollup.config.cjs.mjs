@@ -4,8 +4,7 @@ export default {
   input: 'src/index.mjs',
 
   output: {
-    format: 'umd',
-    name: 'spaHistory',
+    format: 'cjs',
     file: 'dist/spaHistory.js'
   },
 

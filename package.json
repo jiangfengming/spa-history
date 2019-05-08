@@ -4,7 +4,7 @@
   "description": "A HTML5 history routing library for single-page application.",
   "main": "dist/spaHistory",
   "scripts": {
-    "build": "rollup -c rollup.config.esm.mjs && rollup -c rollup.config.umd.mjs",
+    "build": "rollup -c rollup.config.esm.mjs && rollup -c rollup.config.cjs.mjs",
     "example": "ws --spa example.html"
   },
   "repository": {
