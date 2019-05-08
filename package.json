@@ -29,7 +29,7 @@
     "eslint": "^5.16.0",
     "eslint-config-enough": "^0.3.4",
     "local-web-server": "^2.6.1",
-    "rollup": "^1.11.2",
+    "rollup": "^1.11.3",
     "rollup-plugin-babel": "^4.3.2"
   },
   "babel": {
