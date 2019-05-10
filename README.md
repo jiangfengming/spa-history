@@ -12,6 +12,8 @@ import { PathHistory } from 'spa-history'
 
 const history = new PathHistory({
   // path of base directory. defaults to ''
+  // If you want the root path doesn't contain ending slash,
+  // you can set the base without ending slash, like '/app'
   base: '/app/',
   
   /*
