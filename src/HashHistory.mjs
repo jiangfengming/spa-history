@@ -6,6 +6,6 @@ export default class extends Base {
   }
 
   _url(loc) {
-    return loc === '/' ? location.pathname + location.search : '#' + loc
+    return loc.fullPath === '/' ? location.pathname + location.search : '#' + loc.fullPath
   }
 }

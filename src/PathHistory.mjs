@@ -3,16 +3,18 @@ import Base from './Base'
 export default class extends Base {
   constructor(args) {
     super(args)
-    this.base = args.base || '/'
+    this.base = args.base || ''
   }
 
   _extractPathFromExternalURL(url) {
     let path = url.pathname
 
-    if (path.startsWith(this.base)) {
+    if (this.base && this.base !== '/' && path.startsWith(this.base)) {
       path = path.replace(this.base, '')
 
-      if (path[0] !== '/') {
+      if (!path) {
+        path = '/'
+      } else if (this.base.endsWith('/')) {
         path = '/' + path
       }
     }
@@ -21,6 +23,12 @@ export default class extends Base {
   }
 
   _url(loc) {
-    return this.base + (this.base.slice(-1) === '/' ? loc.slice(1) : loc)
+    // if base is not end with /
+    // do not append / if is the root path
+    if (loc.path === '/' && this.base && !this.base.endsWith('/')) {
+      return this.base + loc.fullPath.slice(1)
+    }
+
+    return (this.base && this.base.endsWith('/') ? this.base.slice(0, -1) : this.base) + loc.fullPath
   }
 }

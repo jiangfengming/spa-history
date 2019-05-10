@@ -11,8 +11,11 @@ export default class {
   }
 
   start(loc) {
-    if (!loc && SUPPORT_HISTORY_API) loc = this._getCurrentLocationFromBrowser()
-    else loc = this.normalize(loc)
+    if (!loc && SUPPORT_HISTORY_API) {
+      loc = this._getCurrentLocationFromBrowser()
+    } else {
+      loc = this.normalize(loc)
+    }
 
     this._beforeChange('init', loc)
 
@@ -26,8 +29,7 @@ export default class {
   }
 
   url(loc) {
-    if (loc.constructor === Object) loc = this.normalize(loc).fullPath
-    return this._url(loc)
+    return this.normalize(loc).url
   }
 
   normalize(loc) {
@@ -38,6 +40,7 @@ export default class {
     }
 
     const hasOrigin = /^\w+:\/\//.test(loc.path)
+
     if (loc.external || hasOrigin) {
       loc.path = this._extractPathFromExternalURL(new URL(hasOrigin ? loc.path : 'http://a.a' + loc.path))
       delete loc.external
@@ -61,7 +64,7 @@ export default class {
       state: loc.state ? JSON.parse(JSON.stringify(loc.state)) : {} // dereferencing
     })
 
-    loc.url = this._url(loc.fullPath)
+    loc.url = this._url(loc)
 
     return loc
   }
@@ -95,20 +98,32 @@ export default class {
     if (
       this.current
       && to.path === this.current.path && to.query.toString() === this.current.query.toString()
-      && op === 'push') op = 'replace'
+      && op === 'push') {
+      op = 'replace'
+    }
 
     Promise.resolve(this.beforeChange(to, this.current, op)).then(ret => {
       if (ret == null || ret === true) {
-        if (op === 'push' || op === 'replace') this.__changeHistory(op, to)
+        if (op === 'push' || op === 'replace') {
+          this.__changeHistory(op, to)
+        }
+
         this.current = to
         this.change(to)
       } else if (ret.constructor === String || ret.constructor === Object) {
-        if (op === 'init') op = 'replace'
-        else if (op === 'popstate') op = 'push'
-        else if (ret.method) op = ret.method
+        if (op === 'init') {
+          op = 'replace'
+        } else if (op === 'popstate') {
+          op = 'push'
+        } else if (ret.method) {
+          op = ret.method
+        }
+
         this._beforeChange(op, this.normalize(ret))
       } else if (ret === false) {
-        if (op === 'popstate') this.__changeHistory('push', this.current)
+        if (op === 'popstate') {
+          this.__changeHistory('push', this.current)
+        }
       }
     })
   }
@@ -142,6 +157,7 @@ export default class {
 
   _changeHistory(method, to) {
     to = this.normalize(to)
+
     if (to.silent) {
       this.__changeHistory(method, to)
       this.current = to
@@ -151,12 +167,18 @@ export default class {
   }
 
   __changeHistory(method, to) {
-    if (!SUPPORT_HISTORY_API) return
+    if (!SUPPORT_HISTORY_API) {
+      return
+    }
 
     const state = {}
-    if (to.state) state.state = to.state
 
-    let url = this._url(to.fullPath)
+    if (to.state) {
+      state.state = to.state
+    }
+
+    let url = to.url
+
     if (to.hidden) {
       state.path = to.fullPath
       url = to.appearPath && this.url(to.appearPath)
@@ -167,7 +189,9 @@ export default class {
 
   go(n, { state = null, silent = false } = {}) {
     return new Promise((resolve, reject) => {
-      if (!SUPPORT_HISTORY_API) return reject(new Error(SUPPORT_HISTORY_ERR))
+      if (!SUPPORT_HISTORY_API) {
+        return reject(new Error(SUPPORT_HISTORY_ERR))
+      }
 
       const onpopstate = () => {
         window.removeEventListener('popstate', onpopstate)
@@ -180,8 +204,11 @@ export default class {
           this.__changeHistory('replace', to)
         }
 
-        if (silent) this.current = to
-        else this._beforeChange('popstate', to)
+        if (silent) {
+          this.current = to
+        } else {
+          this._beforeChange('popstate', to)
+        }
 
         resolve()
       }
@@ -205,10 +232,13 @@ export default class {
     const a = e.target.closest('a')
 
     // force not handle the <a> element
-    if (!a || a.getAttribute('spa-history-skip') != null) return
+    if (!a || a.getAttribute('spa-history-skip') != null) {
+      return
+    }
 
     // open new window
     const target = a.getAttribute('target')
+
     if (
       target &&
       (
@@ -217,10 +247,14 @@ export default class {
         || target === '_top' && window.top !== window
         || !(target in { _self: 1, _blank: 1, _parent: 1, _top: 1 }) && target !== window.name
       )
-    ) return
+    ) {
+      return
+    }
 
     // out of app
-    if (a.href.indexOf(location.origin + this.url('/')) !== 0) return
+    if (!a.href.startsWith(location.origin + this.url('/'))) {
+      return
+    }
 
     const to = this.normalize(a.href)
 
@@ -229,7 +263,9 @@ export default class {
       to.path === this.current.path
       && to.query.toString() === this.current.query.toString()
       && to.hash
-      && to.hash !== this.current.hash) return
+      && to.hash !== this.current.hash) {
+      return
+    }
 
     e.preventDefault()
     this.push(to)
