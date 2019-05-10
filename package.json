@@ -1,7 +1,7 @@
 {
   "name": "spa-history",
   "version": "0.8.1",
-  "description": "A HTML5 history routing library for single-page application.",
+  "description": "A HTML5 history library for single-page application.",
   "main": "dist/spaHistory",
   "scripts": {
     "build": "rollup -c rollup.config.esm.js && rollup -c rollup.config.cjs.js",

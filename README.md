@@ -1,6 +1,6 @@
 # spa-history
 
-A HTML5 history routing library for single-page application.
+A HTML5 history library for single-page application.
 
 
 ## Constructor
@@ -81,7 +81,11 @@ history.start()
   hash,
   state, // state object
   fullPath, // path + query + hash
-  url, // PathHistory: base + path + query + hash; HashHistory: '#' + path + query + hash
+
+  // PathHistory: base + path + query + hash
+  // HashHistory: '#' + path + query + hash
+  url,
+  
   hidden // Boolean. Indicate whether it is a hidden history entry. see history.push() for detail.
 }
 ```
@@ -271,9 +275,10 @@ document.body.addEventListener('click', e => history.captureLinkClickEvent(e))
 - [Object.assign()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign)
 - [Element.closest()](https://developer.mozilla.org/en-US/docs/Web/API/Element/closest)
 
-You can use <a href="http://babeljs.io/docs/usage/polyfill/">babel-polyfill</a> and <a href="https://github.com/WebReflection/dom4">dom4</a> to meet the requirements.
+You can use [@babel/polyfill](https://babeljs.io/docs/en/babel-polyfill/) and
+[dom4](https://github.com/WebReflection/dom4) to meet the requirements.
 
-Or use the <a href="https://polyfill.io/">polyfill.io</a> service:
+Or use the [polyfill.io](https://polyfill.io/) service:
 ```html
 <script src="https://polyfill.io/v3/polyfill.min.js"></script>
 ```
