@@ -11,8 +11,8 @@ A HTML5 history routing library for single-page application.
 import { PathHistory } from 'spa-history'
 
 const history = new PathHistory({
-  // path of base directory. defaults to '/'
-  base: '/',
+  // path of base directory. defaults to ''
+  base: '/app/',
   
   /*
     beforeChange() will be called before location change.
