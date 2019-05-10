@@ -275,7 +275,7 @@ You can use <a href="http://babeljs.io/docs/usage/polyfill/">babel-polyfill</a> 
 
 Or use the <a href="https://polyfill.io/">polyfill.io</a> service:
 ```html
-<script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
+<script src="https://polyfill.io/v3/polyfill.min.js"></script>
 ```
 
 ## Build
