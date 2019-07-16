@@ -111,12 +111,12 @@ export default class {
         this.current = to
         this.change(to)
       } else if (ret.constructor === String || ret.constructor === Object) {
-        if (op === 'init') {
+        if (ret.method) {
+          op = ret.method
+        } else if (op === 'init') {
           op = 'replace'
         } else if (op === 'popstate') {
           op = 'push'
-        } else if (ret.method) {
-          op = ret.method
         }
 
         this._beforeChange(op, this.normalize(ret))
