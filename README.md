@@ -32,6 +32,7 @@ const history = new PathHistory({
     Returns:
       true | undefined: The navigation is confirmed.
       false: Prevent the navigation.
+      null: Do nothing.
       path | location object: Redirect to this location.
         You can override the history manipulate method by providing "location.method" property, values are: 'push', 'replace', 'dispatch'.
 

@@ -103,27 +103,40 @@ export default class {
     }
 
     Promise.resolve(this.beforeChange(to, this.current, op)).then(ret => {
-      if (ret == null || ret === true) {
+      if (ret === undefined || ret === true) {
         if (op === 'push' || op === 'replace') {
           this.__changeHistory(op, to)
         }
 
         this.current = to
         this.change(to)
-      } else if (ret.constructor === String || ret.constructor === Object) {
+      }
+
+      else if (ret === false) {
+        if (op === 'popstate') {
+          this.__changeHistory('push', this.current)
+        }
+      }
+
+      // do nothing if returns null
+      else if (ret === null) {
+        return
+      }
+
+      else if (ret.constructor === String || ret.constructor === Object) {
         if (ret.method) {
           op = ret.method
-        } else if (op === 'init') {
+        }
+
+        else if (op === 'init') {
           op = 'replace'
-        } else if (op === 'popstate') {
+        }
+
+        else if (op === 'popstate') {
           op = 'push'
         }
 
         this._beforeChange(op, this.normalize(ret))
-      } else if (ret === false) {
-        if (op === 'popstate') {
-          this.__changeHistory('push', this.current)
-        }
       }
     })
   }
