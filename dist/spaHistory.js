@@ -78,7 +78,7 @@ function () {
 
     if (SUPPORT_HISTORY_API) {
       this._onpopstate = function () {
-        _this._beforeChange('popstate', _this._getCurrentLocationFromBrowser());
+        _this._beforeChange('pop', _this._getCurrentLocationFromBrowser());
       };
 
       window.addEventListener('popstate', this._onpopstate);
@@ -141,47 +141,47 @@ function () {
     success: pushState(to)             fail: nop                                     redirect: _beforeChange('push', redirect)
      replace
     success: replaceState(to)          fail: nop                                     redirect: _beforeChange('replace', redirect)
-     popstate
+     pop
     success: nop                       fail: __changeHistory('push', current)        redirect: _beforeChange('push', redirect)
      dispatch
     success: nop                       fail: nop                                     redirect: _beforeChange('dispatch', redirect)
   */
   ;
 
-  _proto._beforeChange = function _beforeChange(op, to) {
+  _proto._beforeChange = function _beforeChange(action, to) {
     var _this2 = this;
 
-    // to is the same as current and op is push, set op to replace
-    if (this.current && to.path === this.current.path && to.query.toString() === this.current.query.toString() && op === 'push') {
-      op = 'replace';
+    // `to` is same as `current` and `action` is `push`, set `action` to `replace`
+    if (this.current && to.path === this.current.path && to.query.toString() === this.current.query.toString() && action === 'push') {
+      action = 'replace';
     }
 
-    Promise.resolve(this.beforeChange(to, this.current, op)).then(function (ret) {
+    Promise.resolve(this.beforeChange(to, this.current, action)).then(function (ret) {
       if (ret === undefined || ret === true) {
-        if (op === 'push' || op === 'replace') {
-          _this2.__changeHistory(op, to);
+        if (action === 'push' || action === 'replace') {
+          _this2.__changeHistory(action, to);
         }
 
         _this2.current = to;
 
         _this2.change(to);
       } else if (ret === false) {
-        if (op === 'popstate') {
+        if (action === 'popstate') {
           _this2.__changeHistory('push', _this2.current);
         }
       } // do nothing if returns null
       else if (ret === null) {
           return;
         } else if (ret.constructor === String || ret.constructor === Object) {
-          if (ret.method) {
-            op = ret.method;
-          } else if (op === 'init') {
-            op = 'replace';
-          } else if (op === 'popstate') {
-            op = 'push';
+          if (ret.action) {
+            action = ret.action;
+          } else if (action === 'init') {
+            action = 'replace';
+          } else if (action === 'popstate') {
+            action = 'push';
           }
 
-          _this2._beforeChange(op, _this2.normalize(ret));
+          _this2._beforeChange(action, _this2.normalize(ret));
         }
     });
   };
@@ -216,19 +216,19 @@ function () {
     this.__changeHistory('replace', this.current);
   };
 
-  _proto._changeHistory = function _changeHistory(method, to) {
+  _proto._changeHistory = function _changeHistory(action, to) {
     to = this.normalize(to);
 
     if (to.silent) {
-      this.__changeHistory(method, to);
+      this.__changeHistory(action, to);
 
       this.current = to;
     } else {
-      this._beforeChange(method, to);
+      this._beforeChange(action, to);
     }
   };
 
-  _proto.__changeHistory = function __changeHistory(method, to) {
+  _proto.__changeHistory = function __changeHistory(action, to) {
     if (!SUPPORT_HISTORY_API) {
       return;
     }
@@ -246,7 +246,7 @@ function () {
       url = to.appearPath && this.url(to.appearPath);
     }
 
-    window.history[method + 'State'](Object.keys(state).length ? state : null, '', url);
+    window.history[action + 'State'](Object.keys(state).length ? state : null, '', url);
   };
 
   _proto.go = function go(n, _temp) {
@@ -278,7 +278,7 @@ function () {
         if (silent) {
           _this3.current = to;
         } else {
-          _this3._beforeChange('popstate', to);
+          _this3._beforeChange('pop', to);
         }
 
         resolve();
