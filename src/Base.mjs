@@ -21,7 +21,7 @@ export default class {
 
     if (SUPPORT_HISTORY_API) {
       this._onpopstate = () => {
-        this._beforeChange('popstate', this._getCurrentLocationFromBrowser())
+        this._beforeChange('pop', this._getCurrentLocationFromBrowser())
       }
 
       window.addEventListener('popstate', this._onpopstate)
@@ -87,25 +87,24 @@ export default class {
     replace
     success: replaceState(to)          fail: nop                                     redirect: _beforeChange('replace', redirect)
 
-    popstate
+    pop
     success: nop                       fail: __changeHistory('push', current)        redirect: _beforeChange('push', redirect)
 
     dispatch
     success: nop                       fail: nop                                     redirect: _beforeChange('dispatch', redirect)
   */
-  _beforeChange(op, to) {
-    // to is the same as current and op is push, set op to replace
+  _beforeChange(action, to) {
+    // `to` is same as `current` and `action` is `push`, set `action` to `replace`
     if (
-      this.current
-      && to.path === this.current.path && to.query.toString() === this.current.query.toString()
-      && op === 'push') {
-      op = 'replace'
+      this.current && to.path === this.current.path && to.query.toString() === this.current.query.toString()
+      && action === 'push') {
+      action = 'replace'
     }
 
-    Promise.resolve(this.beforeChange(to, this.current, op)).then(ret => {
+    Promise.resolve(this.beforeChange(to, this.current, action)).then(ret => {
       if (ret === undefined || ret === true) {
-        if (op === 'push' || op === 'replace') {
-          this.__changeHistory(op, to)
+        if (action === 'push' || action === 'replace') {
+          this.__changeHistory(action, to)
         }
 
         this.current = to
@@ -113,7 +112,7 @@ export default class {
       }
 
       else if (ret === false) {
-        if (op === 'popstate') {
+        if (action === 'popstate') {
           this.__changeHistory('push', this.current)
         }
       }
@@ -124,19 +123,19 @@ export default class {
       }
 
       else if (ret.constructor === String || ret.constructor === Object) {
-        if (ret.method) {
-          op = ret.method
+        if (ret.action) {
+          action = ret.action
         }
 
-        else if (op === 'init') {
-          op = 'replace'
+        else if (action === 'init') {
+          action = 'replace'
         }
 
-        else if (op === 'popstate') {
-          op = 'push'
+        else if (action === 'popstate') {
+          action = 'push'
         }
 
-        this._beforeChange(op, this.normalize(ret))
+        this._beforeChange(action, this.normalize(ret))
       }
     })
   }
@@ -168,18 +167,18 @@ export default class {
     this.__changeHistory('replace', this.current)
   }
 
-  _changeHistory(method, to) {
+  _changeHistory(action, to) {
     to = this.normalize(to)
 
     if (to.silent) {
-      this.__changeHistory(method, to)
+      this.__changeHistory(action, to)
       this.current = to
     } else {
-      this._beforeChange(method, to)
+      this._beforeChange(action, to)
     }
   }
 
-  __changeHistory(method, to) {
+  __changeHistory(action, to) {
     if (!SUPPORT_HISTORY_API) {
       return
     }
@@ -197,7 +196,7 @@ export default class {
       url = to.appearPath && this.url(to.appearPath)
     }
 
-    window.history[method + 'State'](Object.keys(state).length ? state : null, '', url)
+    window.history[action + 'State'](Object.keys(state).length ? state : null, '', url)
   }
 
   go(n, { state = null, silent = false } = {}) {
@@ -220,7 +219,7 @@ export default class {
         if (silent) {
           this.current = to
         } else {
-          this._beforeChange('popstate', to)
+          this._beforeChange('pop', to)
         }
 
         resolve()

@@ -22,11 +22,11 @@ const history = new PathHistory({
     Arguments:
       to: Location object. The location will be changed to.
       from: Location object. The current location.
-      operation: String. What operation triggered the history change.
+      action: String. What action triggered the history change.
         push: history.push() is called.
         replace: history.replace() is called.
+        pop: user clicked the back or foraward button , or history.go(), history.back(), history.forward() is called.
         init: "to" is the initial page, at this stage, "from" is null.
-        popstate: user clicked the back or foraward button , or history.go(), history.back(), history.forward() is called.
         dispatch: history.dispatch() is called.
 
     Returns:
@@ -34,11 +34,11 @@ const history = new PathHistory({
       false: Prevent the navigation.
       null: Do nothing.
       path | location object: Redirect to this location.
-        You can override the history manipulate method by providing "location.method" property, values are: 'push', 'replace', 'dispatch'.
+        You can override the history manipulate action by providing the `action` property, values are: 'push', 'replace', 'dispatch'.
 
     Return value can be a Promise.
   */
-  beforeChange(to, from, operation) {
+  beforeChange(to, from, action) {
   },
 
   /*
@@ -60,7 +60,7 @@ history.start()
 import { HashHistory } from 'spa-history'
 
 const history = new HashHistory({
-  beforeChange(to, from, operation) {
+  beforeChange(to, from, action) {
   },
 
   change(to) {
