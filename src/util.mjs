@@ -1,16 +1,27 @@
 export function appendSearchParams(searchParams, q) {
   switch (q.constructor) {
     case Object:
-      for (const name in q) searchParams.append(name, q[name])
+      Object.entries(q).forEach((key, val) => {
+        if (val != null) {
+          if (val.constructor === Array) {
+            val.forEach(v => searchParams.append(key, v))
+          } else {
+            searchParams.append(key, val)
+          }
+        }
+      })
+
       break
+
     case String:
       q = new URLSearchParams(q)
       // falls through
     case URLSearchParams:
-      q = Array.from(q)
-      // falls through
+      q.forEach((val, key) => searchParams.append(key, val))
+      break
+
     case Array:
-      for (const [name, value] of q) searchParams.append(name, value)
+      q.forEach(([key, val]) => searchParams.append(key, val))
       break
   }
 }
