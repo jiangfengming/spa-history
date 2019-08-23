@@ -1,3 +1,5 @@
+import { StringCaster } from 'cast-string';
+
 function _inheritsLoose(subClass, superClass) {
   subClass.prototype = Object.create(superClass.prototype);
   subClass.prototype.constructor = subClass;
@@ -7,10 +9,20 @@ function _inheritsLoose(subClass, superClass) {
 function appendSearchParams(searchParams, q) {
   switch (q.constructor) {
     case Object:
-      for (var name in q) {
-        searchParams.append(name, q[name]);
-      }
+      Object.entries(q).forEach(function (_ref) {
+        var key = _ref[0],
+            val = _ref[1];
 
+        if (val != null) {
+          if (val.constructor === Array) {
+            val.forEach(function (v) {
+              return searchParams.append(key, v);
+            });
+          } else {
+            searchParams.append(key, val);
+          }
+        }
+      });
       break;
 
     case String:
@@ -18,28 +30,17 @@ function appendSearchParams(searchParams, q) {
     // falls through
 
     case URLSearchParams:
-      q = Array.from(q);
-    // falls through
+      q.forEach(function (val, key) {
+        return searchParams.append(key, val);
+      });
+      break;
 
     case Array:
-      for (var _iterator = q, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
-        var _ref;
-
-        if (_isArray) {
-          if (_i >= _iterator.length) break;
-          _ref = _iterator[_i++];
-        } else {
-          _i = _iterator.next();
-          if (_i.done) break;
-          _ref = _i.value;
-        }
-
-        var _ref2 = _ref,
-            _name = _ref2[0],
-            value = _ref2[1];
-        searchParams.append(_name, value);
-      }
-
+      q.forEach(function (_ref2) {
+        var key = _ref2[0],
+            val = _ref2[1];
+        return searchParams.append(key, val);
+      });
       break;
   }
 }
@@ -104,7 +105,7 @@ function () {
     var url = new URL('http://a.a' + loc.path);
 
     if (loc.query) {
-      appendSearchParams(url.searchParams, loc.query);
+      appendSearchParams(url.searchParams, loc.query instanceof StringCaster ? loc.query.source : loc.query);
     }
 
     if (loc.hash) {
@@ -113,7 +114,7 @@ function () {
 
     Object.assign(loc, {
       path: url.pathname,
-      query: url.searchParams,
+      query: new StringCaster(url.searchParams),
       hash: url.hash,
       fullPath: url.pathname + url.search + url.hash,
       state: loc.state ? JSON.parse(JSON.stringify(loc.state)) : {} // dereferencing
@@ -148,7 +149,7 @@ function () {
     var _this2 = this;
 
     // `to` is same as `current` and `action` is `push`, set `action` to `replace`
-    if (this.current && to.path === this.current.path && to.query.toString() === this.current.query.toString() && action === 'push') {
+    if (this.current && to.path === this.current.path && to.query.source.toString() === this.current.query.source.toString() && action === 'push') {
       action = 'replace';
     }
 
@@ -320,7 +321,7 @@ function () {
 
     var to = this.normalize(a.href); // hash change
 
-    if (to.path === this.current.path && to.query.toString() === this.current.query.toString() && to.hash && to.hash !== this.current.hash) {
+    if (to.path === this.current.path && to.query.source.toString() === this.current.query.source.toString() && to.hash && to.hash !== this.current.hash) {
       return;
     }
 

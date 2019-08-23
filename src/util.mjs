@@ -1,7 +1,7 @@
 export function appendSearchParams(searchParams, q) {
   switch (q.constructor) {
     case Object:
-      Object.entries(q).forEach((key, val) => {
+      Object.entries(q).forEach(([key, val]) => {
         if (val != null) {
           if (val.constructor === Array) {
             val.forEach(v => searchParams.append(key, v))

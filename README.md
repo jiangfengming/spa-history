@@ -78,7 +78,7 @@ history.start()
 ```js
 {
   path, // router internal path, which has stripped the protocol, host, and base path.
-  query, // URLSearchParams object
+  query, // StringCaster object: https://github.com/jiangfengming/cast-string#stringcaster
   hash,
   state, // state object
   fullPath, // path + query + hash

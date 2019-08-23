@@ -4,7 +4,7 @@
   "description": "A HTML5 history library for single-page application.",
   "main": "dist/spaHistory",
   "scripts": {
-    "build": "rollup -c rollup.config.esm.js && rollup -c rollup.config.cjs.js",
+    "build": "rollup -c rollup.config.esm.js && rollup -c rollup.config.cjs.js && rollup -c rollup.config.esm.bundle.js",
     "example": "ws --spa example.html"
   },
   "repository": {
@@ -22,6 +22,9 @@
     "url": "https://github.com/jiangfengming/spa-history/issues"
   },
   "homepage": "https://github.com/jiangfengming/spa-history#readme",
+  "dependencies": {
+    "cast-string": "^0.3.0"
+  },
   "devDependencies": {
     "@babel/core": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
@@ -29,7 +32,8 @@
     "eslint-config-enough": "^0.3.6",
     "local-web-server": "^3.0.7",
     "rollup": "^1.19.4",
-    "rollup-plugin-babel": "^4.3.3"
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-node-resolve": "^5.2.0"
   },
   "babel": {
     "presets": [

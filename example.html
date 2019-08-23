@@ -10,7 +10,7 @@
 <div id="main"></div>
 
 <script type="module">
-import { PathHistory, HashHistory } from '../dist/spaHistory.mjs'
+import { PathHistory, HashHistory } from '/dist/spaHistory.bundle.mjs'
 
 const views = {
   '/': class {
@@ -18,7 +18,7 @@ const views = {
       container.innerHTML = `
         <h1>Home</h1>
         <p>Open console to see logs.</p>
-        <a href="${history.url('/product')}">/product</a>
+        <a href="${history.url({ path: '/product?id=1', query: { coupon: 'abc' } })}">/product</a>
         <button class="set-state">setState({ foo: 123 })</button>
         <button class="get-state">get state</button>
         `
@@ -34,9 +34,10 @@ const views = {
   },
 
   '/product': class {
-    constructor(container, history) {
+    constructor(container, history, route) {
       container.innerHTML = `
         <h1>Product Page</h1>
+        <p>id: ${route.query.int('id')}, coupon: ${route.query.string('coupon')}</p>
         <a href="${history.url('/')}">/</a>
         <a href="${history.url('/product')}">/product</a>
         <a href="${history.url('/product#foo')}">/product#foo</a>
@@ -126,7 +127,7 @@ window._history = new _History({
   beforeChange(to, from) {
     console.log('------------')
     console.log('beforeChange')
-    console.log('to:', to)
+    console.log('to:', _history.url(to), to)
     console.log('from:', from)
 
     return Promise.resolve(currentView && currentView.beforeLeave && currentView.beforeLeave(to, from)).then(ret => {
@@ -145,7 +146,7 @@ window._history = new _History({
     console.log('to:', to)
 
     elMain.innerHTML = ''
-    currentView = new views[to.path](elMain, _history)
+    currentView = new views[to.path](elMain, _history, to)
   }
 })
 

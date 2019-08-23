@@ -1,3 +1,4 @@
+import { StringCaster } from 'cast-string'
 import { appendSearchParams } from './util'
 
 const SUPPORT_HISTORY_API = typeof window === 'object' && window.history && window.history.pushState
@@ -49,7 +50,7 @@ export default class {
     const url = new URL('http://a.a' + loc.path)
 
     if (loc.query) {
-      appendSearchParams(url.searchParams, loc.query)
+      appendSearchParams(url.searchParams, loc.query instanceof StringCaster ? loc.query.source : loc.query)
     }
 
     if (loc.hash) {
@@ -58,7 +59,7 @@ export default class {
 
     Object.assign(loc, {
       path: url.pathname,
-      query: url.searchParams,
+      query: new StringCaster(url.searchParams),
       hash: url.hash,
       fullPath: url.pathname + url.search + url.hash,
       state: loc.state ? JSON.parse(JSON.stringify(loc.state)) : {} // dereferencing
@@ -96,8 +97,8 @@ export default class {
   _beforeChange(action, to) {
     // `to` is same as `current` and `action` is `push`, set `action` to `replace`
     if (
-      this.current && to.path === this.current.path && to.query.toString() === this.current.query.toString()
-      && action === 'push') {
+      this.current && to.path === this.current.path
+      && to.query.source.toString() === this.current.query.source.toString() && action === 'push') {
       action = 'replace'
     }
 
@@ -273,7 +274,7 @@ export default class {
     // hash change
     if (
       to.path === this.current.path
-      && to.query.toString() === this.current.query.toString()
+      && to.query.source.toString() === this.current.query.source.toString()
       && to.hash
       && to.hash !== this.current.hash) {
       return
