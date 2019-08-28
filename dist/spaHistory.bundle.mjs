@@ -499,9 +499,10 @@ function () {
           _this2.__changeHistory(action, to);
         }
 
+        var from = _this2.current;
         _this2.current = to;
 
-        _this2.afterChange(to);
+        _this2.afterChange(to, from, action);
       } else if (ret === false) {
         if (action === 'popstate') {
           _this2.__changeHistory('push', _this2.current);

@@ -108,8 +108,9 @@ export default class {
           this.__changeHistory(action, to)
         }
 
+        const from = this.current
         this.current = to
-        this.afterChange(to)
+        this.afterChange(to, from, action)
       }
 
       else if (ret === false) {

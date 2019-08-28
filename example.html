@@ -124,11 +124,12 @@ if (location.protocol.slice(0, 4) === 'http') {
 }
 
 window._history = new _History({
-  beforeChange(to, from) {
+  beforeChange(to, from, action) {
     console.log('------------')
     console.log('beforeChange')
-    console.log('to:', _history.url(to), to)
+    console.log('to:', to)
     console.log('from:', from)
+    console.log('action:', action)
 
     return Promise.resolve(currentView && currentView.beforeLeave && currentView.beforeLeave(to, from)).then(ret => {
       if (ret == null || ret === true) {
@@ -140,10 +141,12 @@ window._history = new _History({
     })
   },
 
-  afterChange(to) {
+  afterChange(to, from, action) {
     console.log('------------')
     console.log('afterChange')
     console.log('to:', to)
+    console.log('from:', from)
+    console.log('action:', action)
 
     elMain.innerHTML = ''
     currentView = new views[to.path](elMain, _history, to)

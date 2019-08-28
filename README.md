@@ -47,7 +47,7 @@ const history = new PathHistory({
     Arguments:
       to: Location object. The location changed to.
   */
-  afterChange(to) {
+  afterChange(to, from, action) {
   }
 })
 
@@ -63,7 +63,7 @@ const history = new HashHistory({
   beforeChange(to, from, action) {
   },
 
-  afterChange(to) {
+  afterChange(to, from, action) {
   }
 })
 
