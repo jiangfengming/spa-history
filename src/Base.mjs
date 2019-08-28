@@ -253,15 +253,12 @@ export default class {
     // open new window
     const target = a.getAttribute('target')
 
-    if (
-      target &&
-      (
-        target === '_blank'
-        || target === '_parent' && window.parent !== window
-        || target === '_top' && window.top !== window
-        || !(target in { _self: 1, _blank: 1, _parent: 1, _top: 1 }) && target !== window.name
-      )
-    ) {
+    if (target && (
+      target === '_blank'
+      || target === '_parent' && window.parent !== window
+      || target === '_top' && window.top !== window
+      || !(target in { _self: 1, _blank: 1, _parent: 1, _top: 1 }) && target !== window.name
+    )) {
       return
     }
 
@@ -273,11 +270,11 @@ export default class {
     const to = this.normalize(a.href)
 
     // hash change
-    if (
-      to.path === this.current.path
+    if (to.path === this.current.path
       && to.query.source.toString() === this.current.query.source.toString()
       && to.hash
-      && to.hash !== this.current.hash) {
+      && to.hash !== this.current.hash
+    ) {
       return
     }
 

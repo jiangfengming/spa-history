@@ -25,7 +25,7 @@ const history = new PathHistory({
       action: String. What action triggered the history change.
         push: history.push() is called.
         replace: history.replace() is called.
-        pop: user clicked the back or foraward button , or history.go(), history.back(), history.forward() is called.
+        pop: user clicked the back or forward button, or history.go(), history.back(), history.forward() is called, or hash changed.
         init: "to" is the initial page, at this stage, "from" is null.
         dispatch: history.dispatch() is called.
 
