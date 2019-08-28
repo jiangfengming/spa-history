@@ -5,9 +5,9 @@ const SUPPORT_HISTORY_API = typeof window === 'object' && window.history && wind
 const SUPPORT_HISTORY_ERR = 'Current environment doesn\'t support History API'
 
 export default class {
-  constructor({ beforeChange = () => {}, change }) {
+  constructor({ beforeChange = () => {}, afterChange }) {
     this.beforeChange = beforeChange
-    this.change = change
+    this.afterChange = afterChange
     this.current = null
   }
 
@@ -109,7 +109,7 @@ export default class {
         }
 
         this.current = to
-        this.change(to)
+        this.afterChange(to)
       }
 
       else if (ret === false) {

@@ -54,9 +54,9 @@ function () {
   function _default(_ref) {
     var _ref$beforeChange = _ref.beforeChange,
         beforeChange = _ref$beforeChange === void 0 ? function () {} : _ref$beforeChange,
-        change = _ref.change;
+        afterChange = _ref.afterChange;
     this.beforeChange = beforeChange;
-    this.change = change;
+    this.afterChange = afterChange;
     this.current = null;
   }
 
@@ -161,7 +161,7 @@ function () {
 
         _this2.current = to;
 
-        _this2.change(to);
+        _this2.afterChange(to);
       } else if (ret === false) {
         if (action === 'popstate') {
           _this2.__changeHistory('push', _this2.current);

@@ -42,12 +42,12 @@ const history = new PathHistory({
   },
 
   /*
-    change() will be called when the location has been changed.
+    afterChange() will be called after the location changed.
 
     Arguments:
-      to: Location object. The location has been changed to.
+      to: Location object. The location changed to.
   */
-  change(to) {
+  afterChange(to) {
   }
 })
 
@@ -63,7 +63,7 @@ const history = new HashHistory({
   beforeChange(to, from, action) {
   },
 
-  change(to) {
+  afterChange(to) {
   }
 })
 

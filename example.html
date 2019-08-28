@@ -140,9 +140,9 @@ window._history = new _History({
     })
   },
 
-  change(to) {
+  afterChange(to) {
     console.log('------------')
-    console.log('change')
+    console.log('afterChange')
     console.log('to:', to)
 
     elMain.innerHTML = ''
