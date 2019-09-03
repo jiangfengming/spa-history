@@ -72,9 +72,13 @@ export default class {
 
   _getCurrentLocationFromBrowser() {
     const state = window.history.state || {}
-    const loc = this.normalize(state.path || this._extractPathFromExternalURL(window.location))
-    loc.state = state.state || {}
-    if (state.path) loc.hidden = true
+    const loc = this.normalize(state.__path__ || this._extractPathFromExternalURL(window.location))
+    loc.state = state
+
+    if (state.__path__) {
+      loc.hidden = true
+    }
+
     return loc
   }
 
@@ -185,16 +189,11 @@ export default class {
       return
     }
 
-    const state = {}
-
-    if (to.state) {
-      state.state = to.state
-    }
-
+    const state = to.state
     let url = to.url
 
     if (to.hidden) {
-      state.path = to.fullPath
+      state.__path__ = to.fullPath
       url = to.appearPath && this.url(to.appearPath)
     }
 
