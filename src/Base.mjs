@@ -265,7 +265,7 @@ export default class {
       return
     }
 
-    // out of app
+    // outside of app
     if (!a.href.startsWith(location.origin + this.url('/'))) {
       return
     }
