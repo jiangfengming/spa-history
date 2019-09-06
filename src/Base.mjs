@@ -242,15 +242,19 @@ export default class {
   }
 
   captureLinkClickEvent(e) {
+    if (e.defaultPrevented) {
+      return
+    }
+
     const a = e.target.closest('a')
 
     // force not handle the <a> element
-    if (!a || a.getAttribute('spa-history-skip') != null) {
+    if (!a) {
       return
     }
 
     // open new window
-    const target = a.getAttribute('target')
+    const target = a.target
 
     if (target && (
       target === '_blank'

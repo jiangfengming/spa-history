@@ -300,14 +300,18 @@ function () {
   };
 
   _proto.captureLinkClickEvent = function captureLinkClickEvent(e) {
+    if (e.defaultPrevented) {
+      return;
+    }
+
     var a = e.target.closest('a'); // force not handle the <a> element
 
-    if (!a || a.getAttribute('spa-history-skip') != null) {
+    if (!a) {
       return;
     } // open new window
 
 
-    var target = a.getAttribute('target');
+    var target = a.target;
 
     if (target && (target === '_blank' || target === '_parent' && window.parent !== window || target === '_top' && window.top !== window || !(target in {
       _self: 1,
