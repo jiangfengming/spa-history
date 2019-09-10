@@ -656,7 +656,7 @@ function () {
       _top: 1
     }) && target !== window.name)) {
       return;
-    } // outside of app
+    } // outside of the app
 
 
     if (!a.href.startsWith(location.origin + this.url('/'))) {
