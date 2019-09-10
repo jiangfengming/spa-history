@@ -265,7 +265,7 @@ export default class {
       return
     }
 
-    // outside of app
+    // outside of the app
     if (!a.href.startsWith(location.origin + this.url('/'))) {
       return
     }
@@ -276,7 +276,6 @@ export default class {
     if (to.path === this.current.path
       && to.query.source.toString() === this.current.query.source.toString()
       && to.hash
-      && to.hash !== this.current.hash
     ) {
       return
     }

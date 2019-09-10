@@ -656,7 +656,7 @@ function () {
       _top: 1
     }) && target !== window.name)) {
       return;
-    } // out of app
+    } // outside of app
 
 
     if (!a.href.startsWith(location.origin + this.url('/'))) {
@@ -665,7 +665,7 @@ function () {
 
     var to = this.normalize(a.href); // hash change
 
-    if (to.path === this.current.path && to.query.source.toString() === this.current.query.source.toString() && to.hash && to.hash !== this.current.hash) {
+    if (to.path === this.current.path && to.query.source.toString() === this.current.query.source.toString() && to.hash) {
       return;
     }
 
