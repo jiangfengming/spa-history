@@ -118,7 +118,7 @@ export default class {
       }
 
       else if (ret === false) {
-        if (action === 'popstate') {
+        if (action === 'pop') {
           this.__changeHistory('push', this.current)
         }
       }
@@ -137,7 +137,7 @@ export default class {
           action = 'replace'
         }
 
-        else if (action === 'popstate') {
+        else if (action === 'pop') {
           action = 'push'
         }
 

@@ -172,7 +172,7 @@ function () {
 
         _this2.afterChange(to, from, action);
       } else if (ret === false) {
-        if (action === 'popstate') {
+        if (action === 'pop') {
           _this2.__changeHistory('push', _this2.current);
         }
       } // do nothing if returns null
@@ -183,7 +183,7 @@ function () {
             action = ret.action;
           } else if (action === 'init') {
             action = 'replace';
-          } else if (action === 'popstate') {
+          } else if (action === 'pop') {
             action = 'push';
           }
 
