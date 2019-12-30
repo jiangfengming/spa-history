@@ -2,6 +2,40 @@
 
 A HTML5 history library for single-page application.
 
+## Install
+
+```
+npm install spa-history
+```
+
+- [Constructor](#constructor)
+  - [PathHistory](#pathhistory)
+  - [HashHistory](#hashhistory)
+- [Location object](#location-object)
+  - [path](#path)
+  - [external](#external)
+  - [query](#query)
+  - [hash](#hash)
+  - [fullPath](#fullpath)
+  - [url](#url)
+  - [state](#state)
+  - [hidden](#hidden)
+  - [appearPath](#appearpath)
+- [APIs](#apis)
+  - [history.current](#historycurrent)
+  - [history.start()](#historystart)
+  - [history.normalize()](#historynormalize)
+  - [history.url()](#historyurl)
+  - [history.push()](#historypush)
+  - [history.replace()](#historyreplace)
+  - [history.dispatch()](#historydispatch)
+  - [history.setState()](#historysetstate)
+  - [history.go()](#historygo)
+  - [history.back()](#historyback)
+  - [history.forward()](#historyforward)
+  - [history.captureLinkClickEvent()](#historycapturelinkclickevent)
+- [Dependencies](#dependencies)
+- [License](#license)
 
 ## Constructor
 
@@ -20,8 +54,8 @@ const history = new PathHistory({
     beforeChange() will be called before location change.
 
     Arguments:
-      to: Location object. The location will be changed to.
-      from: Location object. The current location.
+      to: A normalized location object. The location will be changed to.
+      from: A normalized location object. The current location.
       action: String. What action triggered the history change.
         push: history.push() is called.
         replace: history.replace() is called.
@@ -72,53 +106,109 @@ history.start()
 
 `HashHistory` has no `base` option.
 
+## Location object
+A location object is used for changing the current address.
+It can be used in `history.start(location)`, `history.push(location)`, `history.replace(location)`, `history.dispatch(location)`, etc.
 
-### Location object
+A string URL can be converted to a location object by [history.normalize()](#historynormalize).
+ `to` and `from` parameter of `beforeChange` and `afterChange` hook are normalized location objects.
+
+And a location object can be converted to a URL string by [history.url()](#historyurl).
+
 
 ```js
 {
-  path, // router internal path, which has stripped the protocol, host, and base path.
-  query, // StringCaster object: https://github.com/jiangfengming/cast-string#stringcaster
+  path,
+  external,
+  query,
   hash,
-  state, // state object
-  fullPath, // path + query + hash
-
-  // PathHistory: base + path + query + hash
-  // HashHistory: '#' + path + query + hash
+  fullPath,
   url,
-  
-  hidden // Boolean. Indicate whether it is a hidden history entry. see history.push() for detail.
+  state,
+  hidden,
+  appearPath
 }
 ```
 
+### path
+`String`
+
+SPA Internal path, which has stripped the protocol, host, and base path.
+
+### external
+`Boolean`
+
+If `path` is started with protocal, or `external` is `true`,
+`path` is treated as an external path, and will be converted to an internal path.
+
+### query
+`Object` | `String` | `Array` | `URLSearchParams` | `StringCaster<URLSearchParams>`
+
+`query` accepts the same parameter types as [URLSearchParams](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/URLSearchParams)
+constructor. Or it can be a [StringCaster](https://github.com/jiangfengming/cast-string#stringcaster) object that wraps a `URLSearchParams` object.
+
+### hash
+`String`
+
+A string containing a `#` followed by the fragment identifier of the URL.
+If `HashHistory` is used, the fragment identifier is followed by the second `#` mark.
+
+### fullPath
+`String`. Read-only.
+
+path + query string + hash
+
+### url
+`String`. Read-only.
+
+An external relative URL which can be used as `href` attribute of `<a>`.
+It is the same as `history.url(location)`.
+
+* `PathHistory`: base + path + query string + hash
+* `HashHistory`: # + path + query string + hash
+
+### state
+`Object`
+
+The state object is a JavaScript object which is associated with the history entry.
+See `state` parameter of [history.pushState()](https://developer.mozilla.org/en-US/docs/Web/API/History/pushState) for details.
+
+### hidden
+`Boolean`
+
+Indicate whether it is a hidden history entry. see [history.push()](#historypush) for detail.
+
+### appearPath
+`String`
+
+If `hidden` is `true` and `appearPath` is set, the location bar will show this address instead.
 
 ## APIs
-- [history.current](#historycurrent)
-- [history.start(URL string | location)](#historystarturl-string--location)
-- [history.normalize(URL string | location)](#historynormalizeurl-string--location)
-- [history.url(URL String | location)](#historyurlurl-string--location)
-- [history.push(URL string | location)](#historypushurl-string--location)
-- [history.replace(URL string | location)](#historyreplaceurl-string--location)
-- [history.dispatch(URL string | location)](#historydispatchurl-string--location)
-- [history.setState(state)](#historysetstatestate)
-- [history.go(position, { silent = false, state = null } = {})](#historygoposition--silent--false-state--null---)
-- [history.back(position, options)](#historybackoptions)
-- [history.forward(position, options)](#historyforwardoptions)
-- [history.captureLinkClickEvent(e)](#historycapturelinkclickevente)
-
 
 ### history.current
+`Location object`
+
 The current location. See [location object](#location-object).
 
-### history.start(URL string | location)
-Start the history router.
+### history.start()
 
-In browser, if URL/location is not given, the default value is the current address. This argument is mainly for server-side rendering.
+```js
+history.start(URL string | location)
+```
 
-### history.normalize(URL string | location)
-convert the URL string or unnormalized location object to normalized object
+Starts to handle the history.
 
-if URL/location.path is started with protocal, or `location.external` is `true`, `location.path` is treated as an external path, and will be converted to an internal path.
+In browser, if URL/location is not given, the default value is the current address.
+
+### history.normalize()
+
+```js
+history.normalize(URL string | location)
+```
+
+Converts a URL string or an unnormalized location object to a normalized object.
+
+If URL/location.path is started with protocal, or `location.external` is `true`, `location.path` is treated as an external path, and will be converted to an internal path.
 
 ```js
 // PathHistory with base '/foo/bar/'
@@ -126,7 +216,7 @@ history.normalize('http://www.example.com/foo/bar/home?a=1#b')
 /* ->
   {
     path: '/home',
-    query: new URLSearchParams('a=1'),
+    query: new StringCaster(new URLSearchParams('a=1')),
     hash: '#b',
     fullPath: '/home?a=1#b',
     url: '/foo/bar/home?a=1#b',
@@ -157,7 +247,7 @@ history.normalize('http://www.example.com/app/#/home?a=1#b')
 /* ->
   {
     path: '/home',
-    query: new URLSearchParams('a=1'),
+    query: new StringCaster(new URLSearchParams('a=1')),
     hash: '#b',
     fullPath: '/home?a=1#b',
     url: '#/home?a=1#b',
@@ -166,10 +256,13 @@ history.normalize('http://www.example.com/app/#/home?a=1#b')
 */
 ```
 
-The `query` property can be of type Object, String and Array. see [URLSearchParams()](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/URLSearchParams) for detail.
+### history.url()
 
-### history.url(URL string | location)
-Convert the internal URL string or location object to an external URL which can be used in `href` attribute of `<a>`.
+```js
+history.url(URL string | location)
+```
+
+Converts a internal URL string or a location object to an external URL which can be used as `href` of `<a>`.
 
 ```js
 history.url({
@@ -190,8 +283,13 @@ history.url('/home?a=1#b')
 */
 ```
 
-### history.push(URL string | location)
-Counterpart of `window.history.pushState()`. Push the location onto the history stack. `beforeChange` will be called.
+### history.push()
+
+```js
+history.push(URL string | location)
+```
+
+Pushs the location onto the history stack. `beforeChange` will be called.
 
 ```js
 history.push('/home?a=1#b')
@@ -223,7 +321,8 @@ history.push({
 })
 ```
 
-And you can push a hidden location, which will not change the value of browser's address bar. the hidden location is stored in `window.history.state`
+And you can push a hidden location, which will not change the value of browser's address bar.
+the hidden location is stored in `window.history.state`.
 
 ```js
 history.push({
@@ -240,36 +339,71 @@ history.push({
 })
 ```
 
-### history.replace(URL string | location)
-Counterpart of `window.history.replaceState()`. Replace the current history entry with the provided URL/location.
+### history.replace()
 
-### history.dispatch(URL string | location)
-Set the current location to the provided URL/location without changing the history session.
+```js
+history.replace(URL string | location)
+```
+
+Replaces the current history entry with the provided URL/location.
+
+### history.dispatch()
+
+```js
+history.dispatch(URL string | location)
+```
+
+Sets the current location to the provided URL/location without changing the history session.
 That is, the location of browser's address bar won't change. `beforeChange` will be called.
 
-### history.setState(state)
-Set state of the current location. the state will be merged into `history.current.state`
+### history.setState()
 
-### history.go(position, { silent = false, state = null } = {})
+```js
+history.setState(state)
+```
+
+Sets state of the current location. The state will be merged into `history.current.state`
+
+### history.go()
+
+```js
+history.go(position, { silent = false, state = null } = {})
+```
+
 Counterpart of `window.history.go()`. Returns a promise which will be resolved when `popstate` event fired.
 
-`silent`: if `true`, `beforeChange` won't be called.
+`silent`: If `true`, `beforeChange` won't be called.
 
-`state`: if set, the state object will be merged into the state object of the destination location.
+`state`: If set, the state object will be merged into the state object of the destination location.
 
-### history.back(options)
-Same as `history.go(-1, options)`
+### history.back()
 
-### history.forward(options)
-Same as `history.go(1, options)`
+```js
+history.back(options)
+```
 
-### history.captureLinkClickEvent(e)
-Prevent the navigation when clicking the `<a>` element in the container and the `href` is an in-app address, `history.push()` will be called instead.
+Same as `history.go(-1, options)`.
+
+### history.forward()
+
+```js
+history.forward(options)
+```
+
+Same as `history.go(1, options)`.
+
+### history.captureLinkClickEvent()
+
+```js
+history.captureLinkClickEvent(event)
+```
+
+Prevents the navigation when clicking the `<a>` element in the container and the `href` is an in-app address,
+`history.push()` will be called instead.
 
 ```js
 document.body.addEventListener('click', e => history.captureLinkClickEvent(e))
 ```
-
 
 ## Dependencies
 - [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL)
@@ -283,12 +417,6 @@ Or use the [polyfill.io](https://polyfill.io/) service:
 ```html
 <script src="https://polyfill.io/v3/polyfill.min.js"></script>
 ```
-
-## Build
-```
-npm run build
-```
-
 
 ## License
 [MIT](LICENSE)
