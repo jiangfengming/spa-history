@@ -1,6 +1,6 @@
 {
   "name": "spa-history",
-  "version": "0.12.7",
+  "version": "0.12.8",
   "description": "A HTML5 history library for single-page application.",
   "main": "dist/spaHistory",
   "scripts": {
