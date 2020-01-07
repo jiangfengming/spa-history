@@ -134,28 +134,10 @@ function () {
     }
 
     return loc;
-  }
-  /*
-    init
-    success: nop                       fail: _beforeChange('replace', current)       redirect: _beforeChange('replace', redirect)
-     push
-    success: pushState(to)             fail: nop                                     redirect: _beforeChange('push', redirect)
-     replace
-    success: replaceState(to)          fail: nop                                     redirect: _beforeChange('replace', redirect)
-     pop
-    success: nop                       fail: __changeHistory('push', current)        redirect: _beforeChange('push', redirect)
-     dispatch
-    success: nop                       fail: nop                                     redirect: _beforeChange('dispatch', redirect)
-  */
-  ;
+  };
 
   _proto._beforeChange = function _beforeChange(action, to) {
     var _this2 = this;
-
-    // `to` is same as `current` and `action` is `push`, set `action` to `replace`
-    if (this.current && to.path === this.current.path && to.query.source.toString() === this.current.query.source.toString() && action === 'push') {
-      action = 'replace';
-    }
 
     Promise.resolve(this.beforeChange(to, this.current, action)).then(function (ret) {
       if (ret === undefined || ret === true) {
@@ -302,7 +284,7 @@ function () {
       return;
     }
 
-    var a = e.target.closest('a'); // force not handle the <a> element
+    var a = e.target.closest('a');
 
     if (!a) {
       return;
@@ -325,14 +307,14 @@ function () {
       return;
     }
 
-    var to = this.normalize(a.href); // hash change
+    var to = this.normalize(a.href);
+    e.preventDefault(); // same url
 
-    if (to.path === this.current.path && to.query.source.toString() === this.current.query.source.toString() && to.hash) {
-      return;
+    if (to.path === this.current.path && to.query.source.toString() === this.current.query.source.toString() && to.hash === this.current.hash) {
+      this.replace(to);
+    } else {
+      this.push(to);
     }
-
-    e.preventDefault();
-    this.push(to);
   };
 
   return _default;

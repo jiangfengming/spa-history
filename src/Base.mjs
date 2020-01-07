@@ -82,30 +82,7 @@ export default class {
     return loc
   }
 
-  /*
-    init
-    success: nop                       fail: _beforeChange('replace', current)       redirect: _beforeChange('replace', redirect)
-
-    push
-    success: pushState(to)             fail: nop                                     redirect: _beforeChange('push', redirect)
-
-    replace
-    success: replaceState(to)          fail: nop                                     redirect: _beforeChange('replace', redirect)
-
-    pop
-    success: nop                       fail: __changeHistory('push', current)        redirect: _beforeChange('push', redirect)
-
-    dispatch
-    success: nop                       fail: nop                                     redirect: _beforeChange('dispatch', redirect)
-  */
   _beforeChange(action, to) {
-    // `to` is same as `current` and `action` is `push`, set `action` to `replace`
-    if (
-      this.current && to.path === this.current.path
-      && to.query.source.toString() === this.current.query.source.toString() && action === 'push') {
-      action = 'replace'
-    }
-
     Promise.resolve(this.beforeChange(to, this.current, action)).then(ret => {
       if (ret === undefined || ret === true) {
         if (action === 'push' || action === 'replace') {
@@ -248,7 +225,6 @@ export default class {
 
     const a = e.target.closest('a')
 
-    // force not handle the <a> element
     if (!a) {
       return
     }
@@ -271,16 +247,16 @@ export default class {
     }
 
     const to = this.normalize(a.href)
+    e.preventDefault()
 
-    // hash change
+    // same url
     if (to.path === this.current.path
       && to.query.source.toString() === this.current.query.source.toString()
-      && to.hash
+      && to.hash === this.current.hash
     ) {
-      return
+      this.replace(to)
+    } else {
+      this.push(to)
     }
-
-    e.preventDefault()
-    this.push(to)
   }
 }
