@@ -18,6 +18,10 @@ export default class {
       loc = this.normalize(loc)
     }
 
+    if (!loc.state.__position__) {
+      this.setState({})
+    }
+
     this._beforeChange('init', loc)
 
     if (SUPPORT_HISTORY_API) {
@@ -96,7 +100,7 @@ export default class {
 
       else if (ret === false) {
         if (action === 'pop') {
-          this.__changeHistory('push', this.current)
+          this.go(this.current.state.__position__ - to.state.__position__, { silent: true })
         }
       }
 
@@ -146,8 +150,12 @@ export default class {
   }
 
   setState(state) {
-    Object.assign(this.current.state, JSON.parse(JSON.stringify(state))) // dereferencing
-    this.__changeHistory('replace', { state: this.current.state })
+    const s = Object.assign({}, history.state, JSON.parse(JSON.stringify(state))) // dereferencing
+    this.__changeHistory('replace', { state: s })
+
+    if (this.current) {
+      Object.assign(this.current.state, s)
+    }
   }
 
   _changeHistory(action, to) {
@@ -173,6 +181,9 @@ export default class {
       state.__path__ = to.fullPath
       url = to.appearPath && this.url(to.appearPath)
     }
+
+    const position = history.state && history.state.__position__ || history.length
+    state.__position__ = action === 'push' ? position + 1 : position
 
     window.history[action + 'State'](Object.keys(state).length ? state : null, '', url)
   }

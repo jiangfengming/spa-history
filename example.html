@@ -50,6 +50,10 @@ const views = {
         history.back({ state: { foo: 456 } })
       })
     }
+
+    beforeLeave() {
+      return window.confirm('Are you sure you want to leave?')
+    }
   },
 
   '/buy': class {
