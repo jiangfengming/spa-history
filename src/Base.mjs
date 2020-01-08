@@ -71,7 +71,7 @@ export default class {
   }
 
   _getCurrentLocationFromBrowser() {
-    const state = window.history.state || {}
+    const state = Object.assign({}, window.history.state)
     const loc = this.normalize(state.__path__ || this._extractPathFromExternalURL(window.location))
     loc.state = state
 
