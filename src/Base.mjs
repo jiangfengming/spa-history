@@ -178,7 +178,7 @@ export default class {
     }
 
     const state = to.state
-    let url = to.url
+    let url = to.url || null
 
     if (to.hidden) {
       state.__path__ = to.fullPath
